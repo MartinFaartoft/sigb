@@ -13,8 +13,11 @@ from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/eye1.mp4"
+inputFile = "Sequences/eye1.avi"
 outputFile = "eyeTrackerResult.mp4"
+
+#seems to work okay for eye1.avi
+default_pupil_threshold = 93
 
 #--------------------------
 #         Global variable
@@ -30,17 +33,26 @@ frameNr =0;
 def GetPupil(gray,thr):
 	'''Given a gray level image, gray and threshold value return a list of pupil locations'''
 	tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
-	cv2.circle(tempResultImg,(100,200), 2, (0,0,255),4) #draw a circle
-	cv2.imshow("TempResults",tempResultImg)
-
+	
 	props = RegionProps()
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
 	cv2.imshow("Threshold",binI)
 	#Calculate blobs
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+	cv2.circle(tempResultImg,(200,200), 2, (0,0,255),4) #draw a circle
+	print "# of contours: " + str(len(contours))
 	pupils = [];
 	# YOUR IMPLEMENTATION HERE !!!!
+	prop_calc = RegionProps()
+	centroids = []
+	for contour in contours:
+		props = prop_calc.CalcContourProperties(contour, ["centroid"])
+		x, y = props["Centroid"]
+		cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
 
+		#centroids.append(centroid)
+	#print centroids
+	cv2.imshow("TempResults",tempResultImg)
 	return pupils
 
 def GetGlints(gray,thr):
@@ -336,7 +348,7 @@ def setupWindowSliders():
 	cv2.namedWindow('Threshold')
 	cv2.namedWindow("TempResults")
 	#Threshold value for the pupil intensity
-	cv2.createTrackbar('pupilThr','Threshold', 90, 255, onSlidersChange)
+	cv2.createTrackbar('pupilThr','Threshold', default_pupil_threshold, 255, onSlidersChange)
 	#Threshold value for the glint intensities
 	cv2.createTrackbar('glintThr','Threshold', 240, 255,onSlidersChange)
 	#define the minimum and maximum areas of the pupil

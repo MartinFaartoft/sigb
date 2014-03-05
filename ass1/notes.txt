@@ -1,0 +1,2 @@
+3: threshold = 93 passer godt til eye1.avi
+4: threshold = 93 passer ad helvede til på eye3.avi
