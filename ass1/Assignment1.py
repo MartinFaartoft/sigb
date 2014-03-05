@@ -13,7 +13,7 @@ from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/eye1.avi"
+inputFile = "Sequences/eye1.mp4"
 outputFile = "eyeTrackerResult.mp4"
 
 #--------------------------
