@@ -8,12 +8,12 @@ from SIGBTools import getImageSequence
 import numpy as np
 import sys
 from scipy.cluster.vq import *
-from scipy.misc import imresize
+from scipy.misc import *
 from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/eye1.avi"
+inputFile = "Sequences/eye1.mp4"
 outputFile = "eyeTrackerResult.mp4"
 
 #--------------------------
