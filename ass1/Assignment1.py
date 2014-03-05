@@ -30,25 +30,30 @@ rightTemplate = []
 frameNr =0;
 
 
-def GetPupil(gray,thr):
+def GetPupil(gray,thr, min_val, max_val):
 	'''Given a gray level image, gray and threshold value return a list of pupil locations'''
 	tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
-	
+
 	props = RegionProps()
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
 	cv2.imshow("Threshold",binI)
 	#Calculate blobs
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-	cv2.circle(tempResultImg,(200,200), 2, (0,0,255),4) #draw a circle
+
 	print "# of contours: " + str(len(contours))
 	pupils = [];
 	# YOUR IMPLEMENTATION HERE !!!!
 	prop_calc = RegionProps()
 	centroids = []
 	for contour in contours:
-		props = prop_calc.CalcContourProperties(contour, ["centroid"])
+		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
 		x, y = props["Centroid"]
-		cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
+		area = props["Area"]
+		extend = props["Extend"]
+		if (area > min_val and area < max_val and extend > 0.4 and extend < 1.0):
+			print "area",min_val, max_val
+			print extend,(x,y)
+			cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
 
 		#centroids.append(centroid)
 	#print centroids
@@ -123,7 +128,7 @@ def update(I):
 	sliderVals = getSliderVals()
 	gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
 	# Do the magic
-	pupils = GetPupil(gray,sliderVals['pupilThr'])
+	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	glints = GetGlints(gray,sliderVals['glintThr'])
 	FilterPupilGlint(pupils,glints)
 
