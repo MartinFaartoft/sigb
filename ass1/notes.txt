@@ -1,2 +1,5 @@
 3: threshold = 93 passer godt til eye1.avi
 4: threshold = 93 passer ad helvede til på eye3.avi
+
+8: area værdier mellem 1000 og 10000
+13: extend værdier mellem .4 og 1
