@@ -53,10 +53,9 @@ def GetPupil(gray,thr, min_val, max_val):
 		if (area > min_val and area < max_val and extend > 0.4 and extend < 1.0):
 			print "area",min_val, max_val
 			print extend,(x,y)
-			cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
-
-		#centroids.append(centroid)
-	#print centroids
+			pupilEllipse = cv2.fitEllipse(contour)
+			pupils.append(pupilEllipse)
+			#cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
 	cv2.imshow("TempResults",tempResultImg)
 	return pupils
 
@@ -151,14 +150,14 @@ def update(I):
 
 		#Uncomment these lines as your methods start to work to display the result in the
 		#original image
-		# for pupil in pupils:
-		#         cv2.ellipse(img,pupil,(0,255,0),1)
-		#         C = int(pupil[0][0]),int(pupil[0][1])
-		#         cv2.circle(img,C, 2, (0,0,255),4)
-		#     for glint in glints:
-		#         C = int(glint[0]),int(glint[1])
-		#         cv2.circle(img,C, 2,(255,0,255),5)
-		#     cv2.imshow("Result", img)
+	for pupil in pupils:
+		cv2.ellipse(img,pupil,(0,255,0),1)
+		C = int(pupil[0][0]),int(pupil[0][1])
+		cv2.circle(img,C, 2, (0,0,255),4)
+	# for glint in glints:
+	#     C = int(glint[0]),int(glint[1])
+	#     cv2.circle(img,C, 2,(255,0,255),5)
+		cv2.imshow("Result", img)
 
 		#For Iris detection - Week 2
 		#circularHough(gray)
