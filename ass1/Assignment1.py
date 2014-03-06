@@ -36,11 +36,19 @@ def GetPupil(gray,thr, min_val, max_val):
 
 	props = RegionProps()
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
+	#Morphology
+	st = cv2.getStructuringElement(cv2.MORPH_CROSS,(60,60))
+	binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=1)
 	cv2.imshow("Threshold",binI)
 	#Calculate blobs
+
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
+
 	print "# of contours: " + str(len(contours))
+
+
+
 	pupils = [];
 	# YOUR IMPLEMENTATION HERE !!!!
 	prop_calc = RegionProps()
@@ -57,6 +65,7 @@ def GetPupil(gray,thr, min_val, max_val):
 			pupils.append(pupilEllipse)
 			#cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
 	cv2.imshow("TempResults",tempResultImg)
+
 	return pupils
 
 def GetGlints(gray,thr):
