@@ -3,3 +3,4 @@
 
 8: area værdier mellem 1000 og 10000
 13: extend værdier mellem .4 og 1
+19: closing ville være godt til at fjerne reflections i pupiller, men kun dem der ligger helt indenfor pupillen. Hvis de ligger på kanten, har vi brug for en Hough transform til at "stemme" om den bedste cirkel/ellipse

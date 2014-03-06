@@ -13,7 +13,7 @@ from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/eye1.avi"
+inputFile = "Sequences/EyeBizaro.avi"
 outputFile = "eyeTrackerResult.mp4"
 
 #seems to work okay for eye1.avi
@@ -34,45 +34,74 @@ def GetPupil(gray,thr, min_val, max_val):
 	'''Given a gray level image, gray and threshold value return a list of pupil locations'''
 	tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
 
-	props = RegionProps()
+	#Threshold image to get a binary image
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
-	#Morphology
-	st = cv2.getStructuringElement(cv2.MORPH_CROSS,(60,60))
-	binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=1)
-	cv2.imshow("Threshold",binI)
-	#Calculate blobs
-
+	print val
+	#Morphology (close image to remove small 'holes' inside the pupil area)
+	#st = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
+	#binI = cv2.morphologyEx(binI, cv2.MORPH_OPEN, st, iterations=10)
+	#binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=3)
+	#cv2.imshow("Threshold",binI)
+	
+	#Calculate blobs, and do edge detection on entire image (modifies binI)
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
 
-	print "# of contours: " + str(len(contours))
-
-
-
 	pupils = [];
-	# YOUR IMPLEMENTATION HERE !!!!
 	prop_calc = RegionProps()
 	centroids = []
 	for contour in contours:
+		#calculate centroid, area and 'extend' (compactness of contour)
 		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
 		x, y = props["Centroid"]
 		area = props["Area"]
 		extend = props["Extend"]
+
+		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
 		if (area > min_val and area < max_val and extend > 0.4 and extend < 1.0):
-			print "area",min_val, max_val
-			print extend,(x,y)
 			pupilEllipse = cv2.fitEllipse(contour)
 			pupils.append(pupilEllipse)
 			#cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
-	cv2.imshow("TempResults",tempResultImg)
+	#cv2.imshow("TempResults",tempResultImg)
 
 	return pupils
 
 def GetGlints(gray,thr):
+	min_area = 10
+	max_area = 150
 	''' Given a gray level image, gray and threshold
 	value return a list of glint locations'''
-	# YOUR IMPLEMENTATION HERE !!!!
-	pass
+	print thr
+	val, binary_image = cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY)
+	
+
+	st = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
+	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, st, iterations=8)
+	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, st, iterations=2)
+	
+	
+	cv2.imshow("Threshold", binary_image)
+	#Calculate blobs, and do edge detection on entire image (modifies binI)
+	contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+	glints = [];
+	prop_calc = RegionProps()
+	centroids = []
+	for contour in contours:
+		#calculate centroid, area and 'extend' (compactness of contour)
+		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
+		x, y = props["Centroid"]
+		area = props["Area"]
+		extend = props["Extend"]
+
+		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
+		if area > min_area and area < max_area: #and extend > 0.4 and extend < 1.0):	
+			glints.append((x,y))
+			print x, y, area, extend
+			#cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
+	#cv2.imshow("TempResults",tempResultImg)
+
+	return glints
 
 def GetIrisUsingThreshold(gray,pupil):
 	''' Given a gray level image, gray and threshold
@@ -163,10 +192,10 @@ def update(I):
 		cv2.ellipse(img,pupil,(0,255,0),1)
 		C = int(pupil[0][0]),int(pupil[0][1])
 		cv2.circle(img,C, 2, (0,0,255),4)
-	# for glint in glints:
-	#     C = int(glint[0]),int(glint[1])
-	#     cv2.circle(img,C, 2,(255,0,255),5)
-		cv2.imshow("Result", img)
+	for glint in glints:
+	    C = int(glint[0]),int(glint[1])
+	    cv2.circle(img,C, 2,(255,0,255),5)
+	cv2.imshow("Result", img)
 
 		#For Iris detection - Week 2
 		#circularHough(gray)
