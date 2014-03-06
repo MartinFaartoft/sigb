@@ -2,3 +2,10 @@
 *.pyc
 .dropbox
 .ipynb_checkpoints
+
+#tex
+*.synctex.gz
+*.out
+*.log
+*.aux
+*.fdb_latexmk
