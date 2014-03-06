@@ -1,6 +1,7 @@
 import cv2
 import cv
 import pylab
+import math
 from SIGBTools import RegionProps
 from SIGBTools import getLineCoordinates
 from SIGBTools import ROISelector
@@ -13,7 +14,7 @@ from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/EyeBizaro.avi"
+inputFile = "Sequences/eye1.avi"
 outputFile = "eyeTrackerResult.mp4"
 
 #seems to work okay for eye1.avi
@@ -36,13 +37,13 @@ def GetPupil(gray,thr, min_val, max_val):
 
 	#Threshold image to get a binary image
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
-	print val
+	#print val
 	#Morphology (close image to remove small 'holes' inside the pupil area)
 	#st = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
 	#binI = cv2.morphologyEx(binI, cv2.MORPH_OPEN, st, iterations=10)
 	#binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=3)
 	#cv2.imshow("Threshold",binI)
-	
+
 	#Calculate blobs, and do edge detection on entire image (modifies binI)
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -60,9 +61,15 @@ def GetPupil(gray,thr, min_val, max_val):
 		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
 		if (area > min_val and area < max_val and extend > 0.4 and extend < 1.0):
 			pupilEllipse = cv2.fitEllipse(contour)
+			# center, radii, angle = pupilEllipse
+			# max_radius = max(radii)
+			# c_x = int(center[0])
+			# c_y = int(center[1])
+			# cv2.circle(tempResultImg,(c_x,c_y), int(max_radius), (0,0,255),4) #draw a circle
+			#cv2.ellipse(tempResultImg, pupilEllipse,(0,255,0),1)
 			pupils.append(pupilEllipse)
-			#cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
-	#cv2.imshow("TempResults",tempResultImg)
+
+	cv2.imshow("TempResults",tempResultImg)
 
 	return pupils
 
@@ -71,15 +78,15 @@ def GetGlints(gray,thr):
 	max_area = 150
 	''' Given a gray level image, gray and threshold
 	value return a list of glint locations'''
-	print thr
+	#print thr
 	val, binary_image = cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY)
-	
+
 
 	st = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
 	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, st, iterations=8)
 	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, st, iterations=2)
-	
-	
+
+
 	cv2.imshow("Threshold", binary_image)
 	#Calculate blobs, and do edge detection on entire image (modifies binI)
 	contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -95,9 +102,9 @@ def GetGlints(gray,thr):
 		extend = props["Extend"]
 
 		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
-		if area > min_area and area < max_area: #and extend > 0.4 and extend < 1.0):	
+		if area > min_area and area < max_area: #and extend > 0.4 and extend < 1.0):
 			glints.append((x,y))
-			print x, y, area, extend
+			#print x, y, area, extend
 			#cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
 	#cv2.imshow("TempResults",tempResultImg)
 
@@ -153,8 +160,21 @@ def GetEyeCorners(leftTemplate, rightTemplate,pupilPosition=None):
 
 def FilterPupilGlint(pupils,glints):
 	''' Given a list of pupil candidates and glint candidates returns a list of pupil and glints'''
-	pass
+	filtered_glints = []
+	filtered_pupils = pupils
+	for glint in glints:
+		for pupil in pupils:
+			if (is_glint_close_to_pupil(glint, pupil)):
+				filtered_glints.append(glint)
 
+	return filtered_pupils, filtered_glints
+
+def is_glint_close_to_pupil(glint, pupil):
+	center, radii, angle = pupil
+	max_radius = max(radii)
+	distance = euclidianDistance(center, glint)
+	print distance, max_radius
+	return (distance < max_radius)
 
 
 def update(I):
@@ -167,7 +187,7 @@ def update(I):
 	# Do the magic
 	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	glints = GetGlints(gray,sliderVals['glintThr'])
-	FilterPupilGlint(pupils,glints)
+	pupils, glints = FilterPupilGlint(pupils,glints)
 
 	#Do template matching
 	global leftTemplate
@@ -416,6 +436,11 @@ def onSlidersChange(dummy=None):
 	sv=getSliderVals()
 	if(not sv['Running']): # if pause
 		update(imgOrig)
+
+def euclidianDistance(a,b):
+	a_x, a_y = a
+	b_x, b_y = b
+	return math.sqrt((a_x - b_x) ** 2 + (a_y - b_y) **2)
 
 #--------------------------
 #         main
