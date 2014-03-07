@@ -18,7 +18,7 @@ inputFile = "Sequences/eye1.avi"
 outputFile = "eyeTrackerResult.mp4"
 
 #seems to work okay for eye1.avi
-default_pupil_threshold = 93
+default_pupil_threshold = 93 #25
 
 #--------------------------
 #         Global variable
@@ -33,17 +33,19 @@ frameNr =0;
 
 def GetPupil(gray,thr, min_val, max_val):
 	'''Given a gray level image, gray and threshold value return a list of pupil locations'''
-	tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
+	#tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
 
 	#Threshold image to get a binary image
+	#gray = cv2.equalizeHist(gray)
+	cv2.imshow("TempResults", gray)
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
 	#print val
 	#Morphology (close image to remove small 'holes' inside the pupil area)
 	#st = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
 	#binI = cv2.morphologyEx(binI, cv2.MORPH_OPEN, st, iterations=10)
 	#binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=3)
-	#cv2.imshow("Threshold",binI)
-
+	cv2.imshow("Threshold",binI)
+	#cv2.moveWindow("Threshold", 800, 0)
 	#Calculate blobs, and do edge detection on entire image (modifies binI)
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -69,7 +71,7 @@ def GetPupil(gray,thr, min_val, max_val):
 			#cv2.ellipse(tempResultImg, pupilEllipse,(0,255,0),1)
 			pupils.append(pupilEllipse)
 
-	cv2.imshow("TempResults",tempResultImg)
+	#cv2.imshow("TempResults",tempResultImg)
 
 	return pupils
 
@@ -87,7 +89,7 @@ def GetGlints(gray,thr):
 	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, st, iterations=2)
 
 
-	cv2.imshow("Threshold", binary_image)
+	#cv2.imshow("Threshold", binary_image)
 	#Calculate blobs, and do edge detection on entire image (modifies binI)
 	contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -279,7 +281,7 @@ def run(fileName,resultFile='eyeTrackingResults.avi'):
 			break
 		if(ch==32): #Spacebar
 			sliderVals = getSliderVals()
-			cv2.setTrackbarPos('Stop/Start','Threshold',not sliderVals['Running'])
+			cv2.setTrackbarPos('Stop/Start','Controls',not sliderVals['Running'])
 		if(ch==ord('r')):
 			frameNr =0
 			sequenceOK=False
@@ -403,30 +405,38 @@ def setText(dst, (x, y), s):
 	cv2.putText(dst, s, (x+1, y+1), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 0, 0), thickness = 2, lineType=cv2.CV_AA)
 	cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), lineType=cv2.CV_AA)
 
+vertical_window_size = 523
+horizontal_window_size = 640
 
 def setupWindowSliders():
 	''' Define windows for displaying the results and create trackbars'''
 	cv2.namedWindow("Result")
+	cv2.moveWindow("Result", 0, 0)
 	cv2.namedWindow('Threshold')
+	cv2.moveWindow("Threshold", 0, vertical_window_size)
+	cv2.namedWindow('Controls')
+	cv2.moveWindow("Controls", horizontal_window_size, 0)
+	cv2.resizeWindow('Controls', horizontal_window_size, 0)
 	cv2.namedWindow("TempResults")
+	cv2.moveWindow("TempResults", horizontal_window_size, vertical_window_size)
 	#Threshold value for the pupil intensity
-	cv2.createTrackbar('pupilThr','Threshold', default_pupil_threshold, 255, onSlidersChange)
+	cv2.createTrackbar('pupilThr','Controls', default_pupil_threshold, 255, onSlidersChange)
 	#Threshold value for the glint intensities
-	cv2.createTrackbar('glintThr','Threshold', 240, 255,onSlidersChange)
+	cv2.createTrackbar('glintThr','Controls', 240, 255,onSlidersChange)
 	#define the minimum and maximum areas of the pupil
-	cv2.createTrackbar('minSize','Threshold', 20, 200, onSlidersChange)
-	cv2.createTrackbar('maxSize','Threshold', 200,200, onSlidersChange)
+	cv2.createTrackbar('minSize','Controls', 20, 200, onSlidersChange)
+	cv2.createTrackbar('maxSize','Controls', 200,200, onSlidersChange)
 	#Value to indicate whether to run or pause the video
-	cv2.createTrackbar('Stop/Start','Threshold', 0,1, onSlidersChange)
+	cv2.createTrackbar('Stop/Start','Controls', 0,1, onSlidersChange)
 
 def getSliderVals():
 	'''Extract the values of the sliders and return these in a dictionary'''
 	sliderVals={}
-	sliderVals['pupilThr'] = cv2.getTrackbarPos('pupilThr', 'Threshold')
-	sliderVals['glintThr'] = cv2.getTrackbarPos('glintThr', 'Threshold')
-	sliderVals['minSize'] = 50*cv2.getTrackbarPos('minSize', 'Threshold')
-	sliderVals['maxSize'] = 50*cv2.getTrackbarPos('maxSize', 'Threshold')
-	sliderVals['Running'] = 1==cv2.getTrackbarPos('Stop/Start', 'Threshold')
+	sliderVals['pupilThr'] = cv2.getTrackbarPos('pupilThr', 'Controls')
+	sliderVals['glintThr'] = cv2.getTrackbarPos('glintThr', 'Controls')
+	sliderVals['minSize'] = 50*cv2.getTrackbarPos('minSize', 'Controls')
+	sliderVals['maxSize'] = 50*cv2.getTrackbarPos('maxSize', 'Controls')
+	sliderVals['Running'] = 1==cv2.getTrackbarPos('Stop/Start', 'Controls')
 	return sliderVals
 
 def onSlidersChange(dummy=None):
