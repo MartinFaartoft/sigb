@@ -182,28 +182,36 @@ def GetIrisUsingSimplifyedHough(gray,pupil):
 	pass
 
 def getGradientImageInfo(I):
-	g_x = cv2.Sobel(I, cv.CV_8U, 1,0)
-	g_y = cv2.Sobel(I, cv.CV_8U, 0,1) # ksize=3 som **kwargs
+	g_x = cv2.Sobel(I, cv.CV_64F, 1,0)
+	g_y = cv2.Sobel(I, cv.CV_64F, 0,1) # ksize=3 som **kwargs
 
 	x_orig_dim, y_orig_dim = I.shape
-	x_mesh_dim, y_mesh_dim = (10, 10)
+	x_mesh_dim, y_mesh_dim = (3, 3)
 
 	sample_g_x = g_x[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
 	sample_g_y = g_y[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
 	
 	X,Y = sample_g_x.shape
 	
-	orientation = np.zeros((X, Y))
-	magnitude = np.zeros((X,Y))
+	sampled_orientation = np.zeros((X, Y))
+	sampled_magnitude = np.zeros((X,Y))
 	for x in range(X):
 		for y in range(Y):
-			orientation[x][y] = np.arctan2(sample_g_y[x][y], sample_g_x[x][y]) * (180 / math.pi)
-			magnitude[x][y] = math.sqrt(sample_g_y[x][y] ** 2 + sample_g_x[x][y] ** 2)
+			sampled_orientation[x][y] = np.arctan2(sample_g_y[x][y], sample_g_x[x][y]) * (180 / math.pi)
+			sampled_magnitude[x][y] = math.sqrt(sample_g_y[x][y] ** 2 + sample_g_x[x][y] ** 2)
 
-	print max(max(orientation))
-	#print orientation
-	quiver(orientation, magnitude)
-	show()
+	X,Y = I.shape
+	orientation = np.zeros(I.shape)
+	magnitude = np.zeros(I.shape)
+	for x in range(X):
+		for y in range(Y):
+			orientation[x][y] = np.arctan2(g_y[x][y], g_x[x][y]) * (180 / math.pi)
+			magnitude[x][y] = math.sqrt(g_y[x][y] ** 2 + g_x[x][y] ** 2)
+
+
+	#quiver(magnitude, orientation)
+	#show()
+	return magnitude,orientation
 
 def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
 	if leftTemplate != [] and rightTemplate != []:
