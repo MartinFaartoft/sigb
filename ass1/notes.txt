@@ -5,6 +5,9 @@
 13: extend værdier mellem .4 og 1
 19: closing ville være godt til at fjerne reflections i pupiller, men kun dem der ligger helt indenfor pupillen. Hvis de ligger på kanten, har vi brug for en Hough transform til at "stemme" om den bedste cirkel/ellipse
 
+del 2:
+----
+2.1 (11): det virker 'lidt' på eye1.avi med thr=151, min_size=29500, max_size=70300, 0.5<extend<1.0
 
 TODO:
 	hvad skal der laves (mandatory ting)

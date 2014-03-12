@@ -59,7 +59,6 @@ def GetPupil(gray,thr, min_val, max_val):
 		x, y = props["Centroid"]
 		area = props["Area"]
 		extend = props["Extend"]
-
 		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
 		if (area > min_val and area < max_val and extend > 0.4 and extend < 1.0):
 			pupilEllipse = cv2.fitEllipse(contour)
@@ -112,11 +111,36 @@ def GetGlints(gray,thr):
 
 	return glints
 
-def GetIrisUsingThreshold(gray,pupil):
+def GetIrisUsingThreshold(gray, thr, min_val, max_val):
 	''' Given a gray level image, gray and threshold
 	value return a list of iris locations'''
-	# YOUR IMPLEMENTATION HERE !!!!
-	pass
+	val,binary_image = cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
+	cv2.imshow("Threshold", binary_image)
+
+	contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+	irises = [];
+	prop_calc = RegionProps()
+	centroids = []
+	for contour in contours:
+		#calculate centroid, area and 'extend' (compactness of contour)
+		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
+		x, y = props["Centroid"]
+		area = props["Area"]
+		extend = props["Extend"]
+		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
+		if area > min_val and area < max_val and extend > 0.5 and extend < 1.0:
+			print x,y,area,extend
+			print "params:", thr, min_val, max_val
+			irisEllipse = cv2.fitEllipse(contour)
+			# center, radii, angle = pupilEllipse
+			# max_radius = max(radii)
+			# c_x = int(center[0])
+			# c_y = int(center[1])
+			# cv2.circle(tempResultImg,(c_x,c_y), int(max_radius), (0,0,255),4) #draw a circle
+			#cv2.ellipse(tempResultImg, pupilEllipse,(0,255,0),1)
+			irises.append(irisEllipse)
+	return irises
 
 def circularHough(gray):
 	''' Performs a circular hough transform of the image, gray and shows the  detected circles
@@ -213,10 +237,10 @@ def update(I):
 	gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
 
 	# Do the magic
-	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
-	glints = GetGlints(gray,sliderVals['glintThr'])
-	pupils, glints = FilterPupilGlint(pupils,glints)
-
+	#pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
+	#glints = GetGlints(gray,sliderVals['glintThr'])
+	#pupils, glints = FilterPupilGlint(pupils,glints)
+	irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	#Do template matching
 	global leftTemplate
 	global rightTemplate
@@ -238,18 +262,23 @@ def update(I):
 
 		#Uncomment these lines as your methods start to work to display the result in the
 		#original image
-	for pupil in pupils:
-		cv2.ellipse(img,pupil,(0,255,0),1)
-		C = int(pupil[0][0]),int(pupil[0][1])
-		cv2.circle(img,C, 2, (0,0,255),4)
-	for glint in glints:
-	    C = int(glint[0]),int(glint[1])
-	    cv2.circle(img,C, 2,(255,0,255),5)
-	if corners:
-		left_from, left_to, right_from, right_to = corners
-		cv2.rectangle(img, left_from , left_to, 255)
-		cv2.rectangle(img, right_from , right_to, 255)
+	# for pupil in pupils:
+	# 	cv2.ellipse(img,pupil,(0,255,0),1)
+	# 	C = int(pupil[0][0]),int(pupil[0][1])
+	# 	cv2.circle(img,C, 2, (0,0,255),4)
+	# for glint in glints:
+	#     C = int(glint[0]),int(glint[1])
+	#     cv2.circle(img,C, 2,(255,0,255),5)
+	# if corners:
+	# 	left_from, left_to, right_from, right_to = corners
+	# 	cv2.rectangle(img, left_from , left_to, 255)
+	# 	cv2.rectangle(img, right_from , right_to, 255)
 
+	for iris in irises:
+		cv2.ellipse(img,iris,(0,255,0),1)
+		C = int(iris[0][0]),int(iris[0][1])
+		cv2.circle(img,C, 2, (0,0,255),4)
+	
 	cv2.imshow("Result", img)
 
 		#For Iris detection - Week 2
@@ -462,8 +491,8 @@ def setupWindowSliders():
 	#Threshold value for the glint intensities
 	cv2.createTrackbar('glintThr','Controls', 240, 255,onSlidersChange)
 	#define the minimum and maximum areas of the pupil
-	cv2.createTrackbar('minSize','Controls', 20, 200, onSlidersChange)
-	cv2.createTrackbar('maxSize','Controls', 200,200, onSlidersChange)
+	cv2.createTrackbar('minSize','Controls', 20, 2000, onSlidersChange)
+	cv2.createTrackbar('maxSize','Controls', 2000,2000, onSlidersChange)
 	#Value to indicate whether to run or pause the video
 	cv2.createTrackbar('Stop/Start','Controls', 0,1, onSlidersChange)
 
