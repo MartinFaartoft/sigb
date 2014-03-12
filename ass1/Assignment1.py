@@ -182,35 +182,28 @@ def GetIrisUsingSimplifyedHough(gray,pupil):
 	pass
 
 def getGradientImageInfo(I):
-	# g_x = np.gradient(I, 1, 0)
-	# g_y = np.gradient(I, 0, 1)
 	g_x = cv2.Sobel(I, cv.CV_8U, 1,0)
 	g_y = cv2.Sobel(I, cv.CV_8U, 0,1) # ksize=3 som **kwargs
 
 	x_orig_dim, y_orig_dim = I.shape
-	x_mesh_dim, y_mesh_dim = (50,50)
+	x_mesh_dim, y_mesh_dim = (10, 10)
 
-	X,Y = np.meshgrid(xrange(0, x_orig_dim, x_mesh_dim), xrange(0, y_orig_dim, y_mesh_dim))
-	# calculate orientation
+	sample_g_x = g_x[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
+	sample_g_y = g_y[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
+	
+	X,Y = sample_g_x.shape
+	
+	orientation = np.zeros((X, Y))
+	magnitude = np.zeros((X,Y))
+	for x in range(X):
+		for y in range(Y):
+			orientation[x][y] = np.arctan2(sample_g_y[x][y], sample_g_x[x][y]) * (180 / math.pi)
+			magnitude[x][y] = math.sqrt(sample_g_y[x][y] ** 2 + sample_g_x[x][y] ** 2)
 
-	orientation = np.zeros((x_mesh_dim,y_mesh_dim))
-	magnitude = np.zeros((x_mesh_dim,y_mesh_dim))
-
-	for x in xrange(0, x_orig_dim, x_mesh_dim):
-		for y in xrange(0, y_orig_dim, y_mesh_dim):
-			print x,y
-			orientation[x / x_mesh_dim][y / y_mesh_dim] = np.arctan(g_x[x][y] / g_y[x][y]) * (180 / math.pi)
-			magnitude[x / x_mesh_dim][y / y_mesh_dim] = math.sqrt(g_y[x][y] ** 2 + g_x[x][y] ** 2)
-	# orientation = None #something
-	# magnitude = None # something else
-
-	#quiver(orientation,magnitude)
-
+	print max(max(orientation))
+	#print orientation
 	quiver(orientation, magnitude)
-	#quiver(g_x, g_y)
 	show()
-
-	#cv2.imshow("magnitude", magnitude)
 
 def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
 	if leftTemplate != [] and rightTemplate != []:
