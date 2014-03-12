@@ -4,3 +4,18 @@
 8: area værdier mellem 1000 og 10000
 13: extend værdier mellem .4 og 1
 19: closing ville være godt til at fjerne reflections i pupiller, men kun dem der ligger helt indenfor pupillen. Hvis de ligger på kanten, har vi brug for en Hough transform til at "stemme" om den bedste cirkel/ellipse
+
+
+TODO:
+	hvad skal der laves (mandatory ting)
+
+		• Your written report with names and emails on the front page
+		• The name of the file should be as follows: Assignment1_GROUPINDEX. (find your group index at LearnIT>assignment1> groups),
+		• A link to where the code can be downloaded
+		• The printed program.
+		
+		your report should contain sequences that you have made your selves
+		
+	rapport skelet
+	kode
+	skriv noget rapport
