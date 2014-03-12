@@ -181,6 +181,37 @@ def GetIrisUsingSimplifyedHough(gray,pupil):
 	# YOUR IMPLEMENTATION HERE !!!!
 	pass
 
+def getGradientImageInfo(I):
+	# g_x = np.gradient(I, 1, 0)
+	# g_y = np.gradient(I, 0, 1)
+	g_x = cv2.Sobel(I, cv.CV_8U, 1,0)
+	g_y = cv2.Sobel(I, cv.CV_8U, 0,1) # ksize=3 som **kwargs
+
+	x_orig_dim, y_orig_dim = I.shape
+	x_mesh_dim, y_mesh_dim = (50,50)
+
+	X,Y = np.meshgrid(xrange(0, x_orig_dim, x_mesh_dim), xrange(0, y_orig_dim, y_mesh_dim))
+	# calculate orientation
+
+	orientation = np.zeros((x_mesh_dim,y_mesh_dim))
+	magnitude = np.zeros((x_mesh_dim,y_mesh_dim))
+
+	for x in xrange(0, x_orig_dim, x_mesh_dim):
+		for y in xrange(0, y_orig_dim, y_mesh_dim):
+			print x,y
+			orientation[x / x_mesh_dim][y / y_mesh_dim] = np.arctan(g_x[x][y] / g_y[x][y]) * (180 / math.pi)
+			magnitude[x / x_mesh_dim][y / y_mesh_dim] = math.sqrt(g_y[x][y] ** 2 + g_x[x][y] ** 2)
+	# orientation = None #something
+	# magnitude = None # something else
+
+	#quiver(orientation,magnitude)
+
+	quiver(orientation, magnitude)
+	#quiver(g_x, g_y)
+	show()
+
+	#cv2.imshow("magnitude", magnitude)
+
 def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
 	if leftTemplate != [] and rightTemplate != []:
 		ccnorm_left = cv2.matchTemplate(orig_img, leftTemplate, cv2.TM_CCOEFF_NORMED)
@@ -240,7 +271,10 @@ def update(I):
 	#pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	#glints = GetGlints(gray,sliderVals['glintThr'])
 	#pupils, glints = FilterPupilGlint(pupils,glints)
-	irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
+	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
+
+	getGradientImageInfo(gray)
+
 	#Do template matching
 	global leftTemplate
 	global rightTemplate
@@ -274,11 +308,11 @@ def update(I):
 	# 	cv2.rectangle(img, left_from , left_to, 255)
 	# 	cv2.rectangle(img, right_from , right_to, 255)
 
-	for iris in irises:
-		cv2.ellipse(img,iris,(0,255,0),1)
-		C = int(iris[0][0]),int(iris[0][1])
-		cv2.circle(img,C, 2, (0,0,255),4)
-	
+	# for iris in irises:
+	# 	cv2.ellipse(img,iris,(0,255,0),1)
+	# 	C = int(iris[0][0]),int(iris[0][1])
+	# 	cv2.circle(img,C, 2, (0,0,255),4)
+
 	cv2.imshow("Result", img)
 
 		#For Iris detection - Week 2
