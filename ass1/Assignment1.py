@@ -157,8 +157,33 @@ def GetIrisUsingSimplifyedHough(gray,pupil):
 	# YOUR IMPLEMENTATION HERE !!!!
 	pass
 
-def GetEyeCorners(leftTemplate, rightTemplate,pupilPosition=None):
-	pass
+def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
+	if leftTemplate != [] and rightTemplate != []:
+		ccnorm_left = cv2.matchTemplate(orig_img, leftTemplate, cv2.TM_CCOEFF_NORMED)
+		ccnorm_right = cv2.matchTemplate(orig_img, rightTemplate, cv2.TM_CCOEFF_NORMED)
+
+		minVal, maxVal, minLoc, maxloc_left_from = cv2.minMaxLoc(ccnorm_left)
+		minVal, maxVal, minLoc, maxloc_right_from, = cv2.minMaxLoc(ccnorm_right)
+
+		l_x,l_y = leftTemplate.shape
+		max_loc_left_from_x = maxloc_left_from[0]
+		max_loc_left_from_y = maxloc_left_from[1]
+
+		max_loc_left_to_x = max_loc_left_from_x + l_x
+		max_loc_left_to_y = max_loc_left_from_y + l_y
+
+		maxloc_left_to = (max_loc_left_to_x, max_loc_left_to_y)
+
+		r_x,r_y = leftTemplate.shape
+		max_loc_right_from_x = maxloc_right_from[0]
+		max_loc_right_from_y = maxloc_right_from[1]
+
+		max_loc_right_to_x = max_loc_right_from_x + r_x
+		max_loc_right_to_y = max_loc_right_from_y + r_y
+		maxloc_right_to = (max_loc_right_to_x, max_loc_right_to_y)
+
+		return (maxloc_left_from, maxloc_left_to, maxloc_right_from, maxloc_right_to)
+
 
 def FilterPupilGlint(pupils,glints):
 	''' Given a list of pupil candidates and glint candidates returns a list of pupil and glints'''
@@ -182,10 +207,11 @@ def is_glint_close_to_pupil(glint, pupil):
 def update(I):
 	'''Calculate the image features and display the result based on the slider values'''
 	#global drawImg
-	global frameNr,drawImg
+	global frameNr,drawImg, gray
 	img = I.copy()
 	sliderVals = getSliderVals()
 	gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+
 	# Do the magic
 	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	glints = GetGlints(gray,sliderVals['glintThr'])
@@ -194,7 +220,9 @@ def update(I):
 	#Do template matching
 	global leftTemplate
 	global rightTemplate
-	GetEyeCorners(leftTemplate, rightTemplate)
+	corners = GetEyeCorners(gray, leftTemplate, rightTemplate)
+
+
 	#Display results
 	global frameNr,drawImg
 	x,y = 10,10
@@ -217,6 +245,11 @@ def update(I):
 	for glint in glints:
 	    C = int(glint[0]),int(glint[1])
 	    cv2.circle(img,C, 2,(255,0,255),5)
+	if corners:
+		left_from, left_to, right_from, right_to = corners
+		cv2.rectangle(img, left_from , left_to, 255)
+		cv2.rectangle(img, right_from , right_to, 255)
+
 	cv2.imshow("Result", img)
 
 		#For Iris detection - Week 2
@@ -237,7 +270,7 @@ def printUsage():
 def run(fileName,resultFile='eyeTrackingResults.avi'):
 
 	''' MAIN Method to load the image sequence and handle user inputs'''
-	global imgOrig, frameNr,drawImg
+	global imgOrig, frameNr,drawImg, leftTemplate, rightTemplate, gray
 	setupWindowSliders()
 	props = RegionProps();
 	cap,imgOrig,sequenceOK = getImageSequence(fileName)
@@ -258,9 +291,14 @@ def run(fileName,resultFile='eyeTrackingResults.avi'):
 		if(ch==ord('m')):
 			if(not sliderVals['Running']):
 				roiSelect=ROISelector(imgOrig)
-				pts,regionSelected= roiSelect.SelectArea('Select left eye corner',(400,200))
+				pts,regionSelected= roiSelect.SelectArea('Select eye corner',(400,200))
 				if(regionSelected):
-					leftTemplate = imgOrig[pts[0][1]:pts[1][1],pts[0][0]:pts[1][0]]
+					if leftTemplate == []:
+						leftTemplate = gray[pts[0][1]:pts[1][1],pts[0][0]:pts[1][0]]
+						print "left", leftTemplate
+					else:
+						rightTemplate = gray[pts[0][1]:pts[1][1],pts[0][0]:pts[1][0]]
+						print "right", rightTemplate
 
 		if ch == 27:
 			break
