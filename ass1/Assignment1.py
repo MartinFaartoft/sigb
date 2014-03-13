@@ -6,6 +6,8 @@ from SIGBTools import RegionProps
 from SIGBTools import getLineCoordinates
 from SIGBTools import ROISelector
 from SIGBTools import getImageSequence
+from SIGBTools import getCircleSamples
+import SIGBTools
 import numpy as np
 import sys
 from scipy.cluster.vq import *
@@ -202,12 +204,20 @@ def getGradientImageInfo(I):
 	X,Y = I.shape
 	orientation = np.zeros(I.shape)
 	magnitude = np.zeros(I.shape)
-	for x in range(X):
-		for y in range(Y):
-			orientation[x][y] = np.arctan2(g_y[x][y], g_x[x][y]) * (180 / math.pi)
-			magnitude[x][y] = math.sqrt(g_y[x][y] ** 2 + g_x[x][y] ** 2)
+	sq_g_x = cv2.pow(g_x, 2)
+	sq_g_y = cv2.pow(g_y, 2)
+	fast_magnitude = cv2.pow(sq_g_x + sq_g_y, .5)
 
-	return magnitude,orientation
+	# for x in range(X):
+	# 	for y in range(Y):
+	# 		#orientation[x][y] = np.arctan2(g_y[x][y], g_x[x][y]) * (180 / math.pi)
+	# 		magnitude[x][y] = math.sqrt(g_y[x][y] ** 2 + g_x[x][y] ** 2)
+
+
+	#print fast_magnitude[0]
+	#print magnitude[0]
+
+	return fast_magnitude,orientation
 
 def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
 	if leftTemplate != [] and rightTemplate != []:
@@ -236,6 +246,43 @@ def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
 
 		return (maxloc_left_from, maxloc_left_to, maxloc_right_from, maxloc_right_to)
 
+bgr_yellow = (0,255,255)
+bgr_blue = 255, 0, 0
+def circleTest(img, center_point):
+	nPts = 20
+	circleRadius = 100
+	P = getCircleSamples(center=center_point, radius=circleRadius, nPoints=nPts)
+	for (x,y,dx,dy) in P:
+		point_coords = (int(x),int(y))
+		cv2.circle(img, point_coords, 2, rgb_yellow, 2)
+		cv2.line(img, point_coords, center_point, rgb_yellow)
+
+def findEllipseContour(img, gradient_magnitude, estimatedCenter, estimatedRadius, nPts=30):
+	P = getCircleSamples(center = estimatedCenter, radius = estimatedRadius, nPoints=nPts)
+	newPupil = np.zeros((nPts,1,2)).astype(np.float32)
+	t = 0
+	for (x,y,dx,dy) in P:
+		#< define normalLength as some maximum distance away from initial circle >
+		#< get the endpoints of the normal -> p1,p2>
+		point_coords = (int(x),int(y))
+		#cv2.circle(img, point_coords, 2, bgr_blue, 2)
+		center_point_coords = (int(estimatedCenter[0]), int(estimatedCenter[1]))
+		max_point = findMaxGradientValueOnNormal(gradient_magnitude, point_coords, center_point_coords)
+		cv2.circle(img, tuple(max_point), 2, bgr_yellow, 1)
+		#< store maxPoint in newPupil>
+		newPupil[t] = max_point
+		t += 1
+	#<fitPoints to model using least squares- cv2.fitellipse(newPupil)>
+	return cv2.fitEllipse(newPupil)
+
+def findMaxGradientValueOnNormal(gradient_magnitude, p1, p2):
+    #Get integer coordinates on the straight line between p1 and p2
+	pts = SIGBTools.getLineCoordinates(p1, p2)
+	values = gradient_magnitude[pts[:,1],pts[:,0]]
+	max_index = np.argmax(values)
+	#Find index of max value in normalVals
+	return pts[max_index]
+	#return coordinate of max value in image coordinates
 
 def FilterPupilGlint(pupils,glints):
 	''' Given a list of pupil candidates and glint candidates returns a list of pupil and glints'''
@@ -265,12 +312,13 @@ def update(I):
 	gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
 
 	# Do the magic
-	#pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
-	#glints = GetGlints(gray,sliderVals['glintThr'])
+	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
+	glints = GetGlints(gray,sliderVals['glintThr'])
 	#pupils, glints = FilterPupilGlint(pupils,glints)
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
-	getGradientImageInfo(gray)
+	magnitude, orientation = getGradientImageInfo(gray)
+
 	#plotVectorField(gray)
 	#Do template matching
 	global leftTemplate
@@ -291,15 +339,23 @@ def update(I):
 		cv2.putText(img, "glintThr :"+str(sliderVals['glintThr']), (x, y+2*step), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), lineType=cv2.CV_AA)
 	cv2.imshow('Result',img)
 
-		#Uncomment these lines as your methods start to work to display the result in the
-		#original image
-	# for pupil in pupils:
-	# 	cv2.ellipse(img,pupil,(0,255,0),1)
-	# 	C = int(pupil[0][0]),int(pupil[0][1])
-	# 	cv2.circle(img,C, 2, (0,0,255),4)
-	# for glint in glints:
-	#     C = int(glint[0]),int(glint[1])
-	#     cv2.circle(img,C, 2,(255,0,255),5)
+	#Uncomment these lines as your methods start to work to display the result in the
+	#original image
+	for pupil in pupils:
+		cv2.ellipse(img,pupil,(0,255,0),1)
+		C = int(pupil[0][0]),int(pupil[0][1])
+		cv2.circle(img,C, 2, (0,0,255),4)
+		#def findEllipseContour(img, gradient_magnitude, estimatedCenter, estimatedRadius, nPts=30):
+		contour = findEllipseContour(img, magnitude, C, 80)
+		print contour
+		cv2.ellipse(img, contour, bgr_yellow, 1)
+		#circleTest(img, C)
+	for glint in glints:
+	    C = int(glint[0]),int(glint[1])
+	    cv2.circle(img,C, 2,(255,0,255),5)
+
+
+	
 	# if corners:
 	# 	left_from, left_to, right_from, right_to = corners
 	# 	cv2.rectangle(img, left_from , left_to, 255)
