@@ -190,9 +190,9 @@ def getGradientImageInfo(I):
 
 	sample_g_x = g_x[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
 	sample_g_y = g_y[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
-	
+
 	X,Y = sample_g_x.shape
-	
+
 	sampled_orientation = np.zeros((X, Y))
 	sampled_magnitude = np.zeros((X,Y))
 	for x in range(X):
@@ -263,10 +263,12 @@ def is_glint_close_to_pupil(glint, pupil):
 def update(I):
 	'''Calculate the image features and display the result based on the slider values'''
 	#global drawImg
+
 	global frameNr,drawImg, gray
 	img = I.copy()
 	sliderVals = getSliderVals()
 	gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+	sliderVals = getSliderVals()
 
 	# Do the magic
 	#pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
@@ -274,7 +276,13 @@ def update(I):
 	#pupils, glints = FilterPupilGlint(pupils,glints)
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
+	#[1, 9, 17, 25, 33, 41, 49]
+	k = 3
+
+	kmeansdistanceWeight = 20
+	detectPupilKMeans(gray, k , kmeansdistanceWeight)
 	getGradientImageInfo(gray)
+
 
 	#Do template matching
 	global leftTemplate
@@ -286,7 +294,7 @@ def update(I):
 	global frameNr,drawImg
 	x,y = 10,10
 	#setText(img,(x,y),"Frame:%d" %frameNr)
-	sliderVals = getSliderVals()
+
 
 	# for non-windows machines we print the values of the threshold in the original image
 	if sys.platform != 'win32':
@@ -412,11 +420,15 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 	'''
 	#Resize for faster performance
 	smallI = cv2.resize(gray, reSize)
+	#smooth
+	kern_size = 7
+	smoothed = cv2.GaussianBlur(smallI,(kern_size,kern_size),0)
+
 	M,N = smallI.shape
 	#Generate coordinates in a matrix
 	X,Y = np.meshgrid(range(M),range(N))
 	#Make coordinates and intensity into one vectors
-	z = smallI.flatten()
+	z = smoothed.flatten()
 	x = X.flatten()
 	y = Y.flatten()
 	O = len(x)
@@ -436,6 +448,24 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 	imshow(labelIm)
 	f.canvas.draw()
 	f.show()
+
+	contours, hierarchy = cv2.findContours(labelIm, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+
+	pupils = [];
+	prop_calc = RegionProps()
+	centroids = []
+	for contour in contours:
+		#calculate centroid, area and 'extend' (compactness of contour)
+		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
+		x, y = props["Centroid"]
+		area = props["Area"]
+		extend = props["Extend"]
+		print x,y,area,extend
+
+
+
+
 
 #------------------------------------------------
 #   Methods for segmentation
