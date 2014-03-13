@@ -181,9 +181,9 @@ def GetIrisUsingSimplifyedHough(gray,pupil):
 	# YOUR IMPLEMENTATION HERE !!!!
 	pass
 
-def getGradientImageInfo(I):
-	g_x = cv2.Sobel(I, cv.CV_64F, 1,0)
-	g_y = cv2.Sobel(I, cv.CV_64F, 0,1) # ksize=3 som **kwargs
+def plotVectorField(I):
+	g_x = cv2.Sobel(I, cv.CV_64F, 1,0, ksize=3)
+	g_y = cv2.Sobel(I, cv.CV_64F, 0,1, ksize=3) # ksize=3 som **kwargs
 
 	x_orig_dim, y_orig_dim = I.shape
 	x_mesh_dim, y_mesh_dim = (3, 3)
@@ -191,14 +191,13 @@ def getGradientImageInfo(I):
 	sample_g_x = g_x[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
 	sample_g_y = g_y[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
 	
-	X,Y = sample_g_x.shape
+	quiver(sample_g_x, sample_g_y)
+	show()
 	
-	sampled_orientation = np.zeros((X, Y))
-	sampled_magnitude = np.zeros((X,Y))
-	for x in range(X):
-		for y in range(Y):
-			sampled_orientation[x][y] = np.arctan2(sample_g_y[x][y], sample_g_x[x][y]) * (180 / math.pi)
-			sampled_magnitude[x][y] = math.sqrt(sample_g_y[x][y] ** 2 + sample_g_x[x][y] ** 2)
+
+def getGradientImageInfo(I):
+	g_x = cv2.Sobel(I, cv.CV_64F, 1,0)
+	g_y = cv2.Sobel(I, cv.CV_64F, 0,1) # ksize=3 som **kwargs
 
 	X,Y = I.shape
 	orientation = np.zeros(I.shape)
@@ -208,9 +207,6 @@ def getGradientImageInfo(I):
 			orientation[x][y] = np.arctan2(g_y[x][y], g_x[x][y]) * (180 / math.pi)
 			magnitude[x][y] = math.sqrt(g_y[x][y] ** 2 + g_x[x][y] ** 2)
 
-
-	#quiver(magnitude, orientation)
-	#show()
 	return magnitude,orientation
 
 def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
@@ -275,7 +271,7 @@ def update(I):
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
 	getGradientImageInfo(gray)
-
+	#plotVectorField(gray)
 	#Do template matching
 	global leftTemplate
 	global rightTemplate
