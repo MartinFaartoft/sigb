@@ -39,6 +39,7 @@ def GetPupil(gray,thr, min_val, max_val):
 	#gray = cv2.equalizeHist(gray)
 	cv2.imshow("TempResults", gray)
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
+
 	#print val
 	#Morphology (close image to remove small 'holes' inside the pupil area)
 	#st = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
@@ -49,7 +50,8 @@ def GetPupil(gray,thr, min_val, max_val):
 	#Calculate blobs, and do edge detection on entire image (modifies binI)
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
-
+	print type(binI)
+	print binI.shape
 	pupils = [];
 	prop_calc = RegionProps()
 	centroids = []
@@ -271,17 +273,19 @@ def update(I):
 	sliderVals = getSliderVals()
 
 	# Do the magic
-	#pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
+	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	#glints = GetGlints(gray,sliderVals['glintThr'])
 	#pupils, glints = FilterPupilGlint(pupils,glints)
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
 	#[1, 9, 17, 25, 33, 41, 49]
-	k = 3
+	k = 4
+	w = 4
+	labelIm = detectPupilKMeans(gray, k , w)
+	pupil = detect_pupil_from_clustering(labelIm,k,gray)
 
-	kmeansdistanceWeight = 20
-	detectPupilKMeans(gray, k , kmeansdistanceWeight)
-	getGradientImageInfo(gray)
+
+	#getGradientImageInfo(gray)
 
 
 	#Do template matching
@@ -411,58 +415,34 @@ def run(fileName,resultFile='eyeTrackingResults.avi'):
         print "Closing videofile..."
 #------------------------
 
-def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
-	''' Detects the pupil in the image, gray, using k-means
-		gray              : grays scale image
-		K                 : Number of clusters
-		distanceWeight    : Defines the weight of the position parameters
-		reSize            : the size of the image to do k-means on
-	'''
-	#Resize for faster performance
-	smallI = cv2.resize(gray, reSize)
-	#smooth
-	kern_size = 7
-	smoothed = cv2.GaussianBlur(smallI,(kern_size,kern_size),0)
-
-	M,N = smallI.shape
-	#Generate coordinates in a matrix
-	X,Y = np.meshgrid(range(M),range(N))
-	#Make coordinates and intensity into one vectors
-	z = smoothed.flatten()
-	x = X.flatten()
-	y = Y.flatten()
-	O = len(x)
-	#make a feature vectors containing (x,y,intensity)
-	features = np.zeros((O,3))
-	features[:,0] = z;
-	features[:,1] = y/distanceWeight; #Divide so that the distance of position weighs less than intensity
-	features[:,2] = x/distanceWeight;
-	features = np.array(features,'f')
-	# cluster data
-	centroids,variance = kmeans(features,K)
-	#use the found clusters to map
-	label,distance = vq(features,centroids)
-	# re-create image from
-	labelIm = np.array(np.reshape(label,(M,N)))
-	f = figure(1)
-	imshow(labelIm)
-	f.canvas.draw()
-	f.show()
-
-	contours, hierarchy = cv2.findContours(labelIm, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
 
+
+def detect_pupil_from_clustering(labelIm, k, gray):
+	tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
+	print labelIm.shape
+	#labelIm = cv2.cvtColor(labelIm,cv2.COLOR_RGB2GRAY)
+	labelIm = np.array(labelIm, dtype='uint8')
 	pupils = [];
-	prop_calc = RegionProps()
-	centroids = []
-	for contour in contours:
-		#calculate centroid, area and 'extend' (compactness of contour)
-		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
-		x, y = props["Centroid"]
-		area = props["Area"]
-		extend = props["Extend"]
-		print x,y,area,extend
+	labelIm = cv2.resize(labelIm, gray.shape)
 
+	for label in range(k):
+		val,binI =cv2.threshold(gray, label, label, cv2.THRESH_BINARY)
+		contours, hierarchy = cv2.findContours(labelIm, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+		prop_calc = RegionProps()
+
+		for contour in contours:
+			if contour.size > 10:
+				pupilEllipse = cv2.fitEllipse(contour)
+				props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
+				x, y = props["Centroid"]
+				area = props["Area"]
+				extend = props["Extend"]
+				#cv2.circle(tempResultImg,(c_x,c_y), int(max_radius), (0,0,255),4) #draw a circle
+				cv2.ellipse(tempResultImg, pupilEllipse,(0,255,0),1)
+				print x,y,area,extend
+
+	cv2.imshow("TempResults",tempResultImg)
 
 
 
@@ -472,13 +452,18 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 #------------------------------------------------
 def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 	''' Detects the pupil in the image, gray, using k-means
-			gray              : grays scale image
-			K                 : Number of clusters
-			distanceWeight    : Defines the weight of the position parameters
-			reSize            : the size of the image to do k-means on
-		'''
+		gray              : grays scale image
+		K                 : Number of clusters
+		distanceWeight    : Defines the weight of the position parameters
+		reSize            : the size of the image to do k-means on
+	'''
 	#Resize for faster performance
+
 	smallI = cv2.resize(gray, reSize)
+	#smooth
+	kern_size = 3
+	smoothed = cv2.GaussianBlur(smallI,(kern_size,kern_size),0)
+
 	M,N = smallI.shape
 	#Generate coordinates in a matrix
 	X,Y = np.meshgrid(range(M),range(N))
@@ -503,6 +488,9 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 	imshow(labelIm)
 	f.canvas.draw()
 	f.show()
+	savefig("experiments/kmeansK=" + str(K) + ",w=" + str(distanceWeight) + ".png")
+
+	return labelIm
 
 def detectPupilHough(gray):
 	#Using the Hough transform to detect ellipses
