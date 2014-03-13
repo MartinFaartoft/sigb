@@ -27,7 +27,7 @@
 \usepackage[linesnumbered,boxed,ruled]{algorithm2e}
 % \newcommand{\BigO}[1]{\ensuremath{\operatorname{O}\left(#1\right)}}
 \newcommand{\BigO}[1]{\ensuremath{\mathop{}\mathopen{}\mathcal{O}\mathopen{}\left(#1\right)}}
-
+\graphicspath{ {./images/} }
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
@@ -78,7 +78,63 @@
 
 \section{Introduction}
 
+%billede af øje med navne på de forskellige ting
+
 \section{Pupil Detection}
+In this section, we will investigate and compare different techniques for pupil detection.
+
+\subsection{Thresholding}
+An obvious first choice of technique, is using a simple threshold to find the pupil, then do connected component (blob) analysis, and finally fit an ellipse on the most promising blobs.
+
+Fig \ref{fig:eye1_threshold_93} shows an example of an image from the 'eye1.avi' sequence and the binary image produced by, using a threshold that blacks out all pixels with intensities above 93. This manages to separate the pupil nicely from the iris. 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.2]{eye1}
+  \includegraphics[scale=0.2]{eye1_threshold_93}
+  \caption{Thresholding eye1.avi}
+  \label{fig:eye1_threshold_93}
+\end{figure}
+
+The next step, is to do connected component analysis, and fit an ellipsis through the blobs. As seen in fig \ref{fig:eye1_unfiltered}, this succesfully detects the pupil, but is extremely sensitive to noise.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.3]{eye1_unfiltered}
+  \caption{Fitting ellipses on blobs from eye1.avi (green figures are ellipses fitted through blobs, red dots are the centerpoint of each blob)}
+  \label{fig:eye1_unfiltered}
+\end{figure}
+
+By experimenting, we find that requiring that the area of the blob lies in the interval $[1000:10000]$, and the extent between $[0.4:1.0]$, we eliminate most false positives on the entire eye1 sequence, while still keeping the true positive.
+
+\paragraph{}
+This approach has several problems, however. Note how the true positive on fig \ref{fig:eye1_unfiltered} fails to follow the bottom of pupil correctly. This is due to the glints obscuring part of the boundary between pupil and iris. It also makes some sweeping assumptions:
+
+\paragraph{The pupil has size at least size 1000}
+If the person on the sequence leans back slightly, the pupil will shrink and we will fail to detect it.
+
+\paragraph{A threshold of 93 will cleanly separate pupil from iris}
+This is true for eye1.avi, but generalizes extremely poorly to the other sequences. If this approach is to be used across multiple sequences recorded in different lighting conditions, the threshold will have to be adjusted by hand for each one.
+
+This problem can be mitigated somewhat. By using Histogram Equalization, a threshold of 25 fares considerably better across several sequences.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.2]{eye1}
+  \includegraphics[scale=0.2]{eye1_hist_eq}
+  \caption{Eye1 before and after Histogram Equalization}
+  \label{fig:eye1_hist_eq}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.2]{eye3}
+  \includegraphics[scale=0.2]{eye3_hist_eq}
+  \caption{Eye3 before and after Histogram Equalization}
+  \label{fig:eye3_hist_eq}
+\end{figure}
+
+
 %current:
 %threshold->contour detection->contour filtering->ellipsis detection
 
