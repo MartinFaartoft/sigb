@@ -132,8 +132,6 @@ def GetIrisUsingThreshold(gray, thr, min_val, max_val):
 		extend = props["Extend"]
 		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
 		if area > min_val and area < max_val and extend > 0.5 and extend < 1.0:
-			print x,y,area,extend
-			print "params:", thr, min_val, max_val
 			irisEllipse = cv2.fitEllipse(contour)
 			# center, radii, angle = pupilEllipse
 			# max_radius = max(radii)
@@ -192,10 +190,10 @@ def plotVectorField(I):
 
 	sample_g_x = g_x[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
 	sample_g_y = g_y[0:x_orig_dim:x_mesh_dim,0:y_orig_dim:x_mesh_dim]
-	
+
 	quiver(sample_g_x, sample_g_y)
 	show()
-	
+
 
 def getGradientImageInfo(I):
 	g_x = cv2.Sobel(I, cv.CV_64F, 1,0)
@@ -299,8 +297,22 @@ def is_glint_close_to_pupil(glint, pupil):
 	center, radii, angle = pupil
 	max_radius = max(radii)
 	distance = euclidianDistance(center, glint)
-	print distance, max_radius
 	return (distance < max_radius)
+
+def filterGlintsIris(glints, irises):
+	new_glints = []
+	if glints and irises:
+		for glint in glints:
+			for iris in irises:
+				iris_x, irix_y, iris_radius = iris
+				print glint
+				iris_vector = np.array([iris_x, irix_y])
+				distance = np.linalg.norm(glint - iris_vector)
+				if distance < iris_radius:
+					new_glints.append(glint)
+				#print iris
+	return new_glints
+
 
 
 def update(I):
@@ -314,7 +326,7 @@ def update(I):
 	# Do the magic
 	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	glints = GetGlints(gray,sliderVals['glintThr'])
-	#pupils, glints = FilterPupilGlint(pupils,glints)
+	pupils, glints = FilterPupilGlint(pupils,glints)
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
 	magnitude, orientation = getGradientImageInfo(gray)
@@ -323,8 +335,13 @@ def update(I):
 	#Do template matching
 	global leftTemplate
 	global rightTemplate
-	corners = GetEyeCorners(gray, leftTemplate, rightTemplate)
 
+	#corners = GetEyeCorners(gray, leftTemplate, rightTemplate)
+
+	#pupils = detectPupilHough(gray, 100)
+	irises = detectIrisHough(gray, 400)
+
+	glints = filterGlintsIris(glints,irises)
 
 	#Display results
 	global frameNr,drawImg
@@ -341,21 +358,21 @@ def update(I):
 
 	#Uncomment these lines as your methods start to work to display the result in the
 	#original image
+
 	for pupil in pupils:
 		cv2.ellipse(img,pupil,(0,255,0),1)
 		C = int(pupil[0][0]),int(pupil[0][1])
 		cv2.circle(img,C, 2, (0,0,255),1)
 		#def findEllipseContour(img, gradient_magnitude, estimatedCenter, estimatedRadius, nPts=30):
-		#contour = findEllipseContour(img, magnitude, C, 80)
-		#print contour
-		#cv2.ellipse(img, contour, bgr_yellow, 1)
+		contour = findEllipseContour(img, magnitude, C, 80)
+		cv2.ellipse(img, contour, bgr_yellow, 1)
 		#circleTest(img, C)
 	for glint in glints:
 	    C = int(glint[0]),int(glint[1])
 	    #cv2.circle(img,C, 2,(255,0,255),5)
 
 
-	
+
 	# if corners:
 	# 	left_from, left_to, right_from, right_to = corners
 	# 	cv2.rectangle(img, left_from , left_to, 255)
@@ -411,10 +428,8 @@ def run(fileName,resultFile='eyeTrackingResults.avi'):
 				if(regionSelected):
 					if leftTemplate == []:
 						leftTemplate = gray[pts[0][1]:pts[1][1],pts[0][0]:pts[1][0]]
-						print "left", leftTemplate
 					else:
 						rightTemplate = gray[pts[0][1]:pts[1][1],pts[0][0]:pts[1][0]]
-						print "right", rightTemplate
 
 		if ch == 27:
 			break
@@ -526,19 +541,20 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 	f.canvas.draw()
 	f.show()
 
-def detectPupilHough(gray):
+def detectPupilHough(gray, accThr=600):
 	#Using the Hough transform to detect ellipses
-	blur = cv2.GaussianBlur(gray, (9,9),3)
+	blur = cv2.GaussianBlur(gray, (31,31),9)
 	##Pupil parameters
 	dp = 6; minDist = 10
 	highThr = 30 #High threshold for canny
-	accThr = 600; #accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
-	maxRadius = 70;
-	minRadius = 20;
+	#accThr = 600; #accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
+	maxRadius = 50;
+	minRadius = 30;
 	#See help for http://opencv.itseez.com/modules/imgproc/doc/feature_detection.html?highlight=houghcircle#cv2.HoughCirclesIn thus
 	circles = cv2.HoughCircles(blur,cv2.cv.CV_HOUGH_GRADIENT, dp,minDist, None, highThr,accThr,minRadius, maxRadius)
 	#Print the circles
 	gColor = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+	pupils = list(circles)
 	if (circles !=None):
 		#print circles
 		all_circles = circles[0]
@@ -551,6 +567,36 @@ def detectPupilHough(gray):
 		c=all_circles[0,:]
 		cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (0,0,255))
 	cv2.imshow("hough",gColor)
+	return pupils
+
+def detectIrisHough(gray, accThr=600):
+	#Using the Hough transform to detect ellipses
+	blur = cv2.GaussianBlur(gray, (11,11),9)
+	##Pupil parameters
+	dp = 6; minDist = 10
+	highThr = 30 #High threshold for canny
+	#accThr = 600; #accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
+	maxRadius = 150;
+	minRadius = 100;
+	#See help for http://opencv.itseez.com/modules/imgproc/doc/feature_detection.html?highlight=houghcircle#cv2.HoughCirclesIn thus
+	circles = cv2.HoughCircles(blur,cv2.cv.CV_HOUGH_GRADIENT, dp,minDist, None, highThr,accThr,minRadius, maxRadius)
+	#Print the circles
+	gColor = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+	irises = []
+	if (circles !=None):
+		#print circles
+		all_circles = circles[0]
+		M,N = all_circles.shape
+		k=1
+		for c in all_circles:
+			irises.append(c)
+			cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (int(k*255/M),k*128,0))
+			K=k+1
+			#Circle with max votes
+		c=all_circles[0,:]
+		cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (0,0,255))
+	cv2.imshow("hough",gColor)
+	return irises
 #--------------------------
 #         UI related
 #--------------------------
