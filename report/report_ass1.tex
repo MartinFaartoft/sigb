@@ -96,7 +96,7 @@ Fig \ref{fig:eye1_threshold_93} shows an example of an image from the 'eye1.avi'
   \label{fig:eye1_threshold_93}
 \end{figure}
 
-The next step, is to do connected component analysis, and fit an ellipsis through the blobs. As seen in fig \ref{fig:eye1_unfiltered}, this succesfully detects the pupil, but is extremely sensitive to noise.
+The next step, is to do connected component analysis, and fit an ellipsis through the blobs. As seen in fig \ref{fig:eye1_unfiltered}, this succesfully detects the pupil, but is extremely prone to false positives.
 
 \begin{figure}[ht]
   \centering
@@ -116,7 +116,7 @@ If the person on the sequence leans back slightly, the pupil will shrink and we 
 \paragraph{A threshold of 93 will cleanly separate pupil from iris}
 This is true for eye1.avi, but generalizes extremely poorly to the other sequences. If this approach is to be used across multiple sequences recorded in different lighting conditions, the threshold will have to be adjusted by hand for each one.
 
-This problem can be mitigated somewhat. By using Histogram Equalization, a threshold of 25 fares considerably better across several sequences. Note that this will still fail, if parts of the image are significantly darker than the pupil.
+This problem can be mitigated somewhat with Histogram Equalization. A threshold of 25 on Histogram Equalized images, fares considerably better across several sequences. Note that this will still fail, if parts of the image are significantly darker than the pupil, thereby messing up the equalization.
 
 \begin{figure}[ht]
   \centering
@@ -134,6 +134,27 @@ This problem can be mitigated somewhat. By using Histogram Equalization, a thres
   \label{fig:eye3_hist_eq}
 \end{figure}
 
+\paragraph{Morphology}
+Using Morphology, we can improve the detected pupil. The problem with the glints obscuring part of the boundary can be mitigated with the 'closing' operator - used to fill in holes in binary images. Fig \ref{fig:morph} shows binary images before and after applying the closing operator. Notice how the noise inside the pupil is completely removed, and the glints are mostly removed.
+A downside to using the closing operation, is that adjacent, sparse structures may merge and resemble circles.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.2]{eye1_close_5}
+  \includegraphics[scale=0.2]{eye1_no_morph}
+  \caption{Eye1 before and after Closing (5 iterations, 5x5 CROSS structuring element)}
+  \label{fig:morph}
+\end{figure}
+
+\paragraph{Tracking} The pupil tracker can be further improved, by using information about the pupil positions from the previous frame. We do it as follows:
+\begin{description}
+\item[1.]{Search within some threshold distance from each pupil in previous frame}
+\item[2.]{One or more pupils were found within the distance, return those}
+\item[3.]{No pupils were found within the distance, search the entire image}
+\end{description}
+Because of the fallback clause in '3', it is very unlikely that the true positive is not detected in each frame. The only case I can think of where this approach fails, is if the pupil is obscured for a frame (subject blinking for example), while a false positive is still detected. In that case, the pupil will improperly detected for as long as the false positive continues to be present.
+
+
 
 %current:
 %threshold->contour detection->contour filtering->ellipsis detection
@@ -145,7 +166,7 @@ This problem can be mitigated somewhat. By using Histogram Equalization, a thres
 %test on own sequence
 
 %improvements:
-\subsection{Pupil Detection by circular hough transformation}
+\subsection{Pupil Detection by circular Hough transformation}
 
 In an attempt to make our pupil detection more robust we now investigate the result of applying a
 circular hough transformation on the eye images.
@@ -188,17 +209,17 @@ The next step is to experimentally find the parameters that yields the best resu
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{houghk9s9}
-  \caption{Size=9, \sigma = 9}
-  \label{fig:sub1}
+  \caption{Size=9, $\sigma$ = 9}
+  \label{fig:sub3}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{houghk31s9}
-  \caption{Size=31, \sigma = 9}
-  \label{fig:sub2}
+  \caption{Size=31, $\sigma$ = 9}
+  \label{fig:sub4}
 \end{subfigure}
 \caption{Preprocessing by smothing with a gaussian kernel}
-\label{fig:test}
+\label{fig:test2}
 \end{figure}
 
 \paragraph{Discussion}
