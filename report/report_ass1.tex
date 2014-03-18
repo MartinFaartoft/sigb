@@ -116,7 +116,7 @@ If the person on the sequence leans back slightly, the pupil will shrink and we 
 \paragraph{A threshold of 93 will cleanly separate pupil from iris}
 This is true for eye1.avi, but generalizes extremely poorly to the other sequences. If this approach is to be used across multiple sequences recorded in different lighting conditions, the threshold will have to be adjusted by hand for each one.
 
-This problem can be mitigated somewhat. By using Histogram Equalization, a threshold of 25 fares considerably better across several sequences.
+This problem can be mitigated somewhat. By using Histogram Equalization, a threshold of 25 fares considerably better across several sequences. Note that this will still fail, if parts of the image are significantly darker than the pupil.
 
 \begin{figure}[ht]
   \centering
