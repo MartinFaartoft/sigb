@@ -16,7 +16,7 @@ from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/eye3.avi"
+inputFile = "Sequences/eye1.avi"
 outputFile = "eyeTrackerResult.mp4"
 
 #seems to work okay for eye1.avi
@@ -38,14 +38,14 @@ def GetPupil(gray,thr, min_val, max_val):
 	#tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
 
 	#Threshold image to get a binary image
-	#gray = cv2.equalizeHist(gray)
+	gray = cv2.equalizeHist(gray)
 	cv2.imshow("TempResults", gray)
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
 	#print val
 	#Morphology (close image to remove small 'holes' inside the pupil area)
-	#st = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
+	st = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
 	#binI = cv2.morphologyEx(binI, cv2.MORPH_OPEN, st, iterations=10)
-	#binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=3)
+	#binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=5)
 	cv2.imshow("Threshold",binI)
 	#cv2.moveWindow("Threshold", 800, 0)
 	#Calculate blobs, and do edge detection on entire image (modifies binI)
@@ -62,7 +62,7 @@ def GetPupil(gray,thr, min_val, max_val):
 		area = props["Area"]
 		extend = props["Extend"]
 		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
-		if (area > min_val and area < max_val and extend > 0.4 and extend < 1.0):
+		if (area > min_val and area < max_val and extend > 0.5 and extend < 1.0):
 			pupilEllipse = cv2.fitEllipse(contour)
 			# center, radii, angle = pupilEllipse
 			# max_radius = max(radii)
@@ -326,7 +326,7 @@ def update(I):
 	# Do the magic
 	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 	glints = GetGlints(gray,sliderVals['glintThr'])
-	pupils, glints = FilterPupilGlint(pupils,glints)
+	#pupils, glints = FilterPupilGlint(pupils,glints)
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
 	magnitude, orientation = getGradientImageInfo(gray)
@@ -338,7 +338,7 @@ def update(I):
 
 	#corners = GetEyeCorners(gray, leftTemplate, rightTemplate)
 
-	detectPupilHough(gray, 100)
+	#detectPupilHough(gray, 100)
 	#irises = detectIrisHough(gray, 400)
 
 	#glints = filterGlintsIris(glints,irises)
@@ -364,8 +364,8 @@ def update(I):
 		C = int(pupil[0][0]),int(pupil[0][1])
 		cv2.circle(img,C, 2, (0,0,255),1)
 		#def findEllipseContour(img, gradient_magnitude, estimatedCenter, estimatedRadius, nPts=30):
-		contour = findEllipseContour(img, magnitude, C, 80)
-		cv2.ellipse(img, contour, bgr_yellow, 1)
+		#contour = findEllipseContour(img, magnitude, C, 80)
+		#cv2.ellipse(img, contour, bgr_yellow, 1)
 		#circleTest(img, C)
 	for glint in glints:
 	    C = int(glint[0]),int(glint[1])
