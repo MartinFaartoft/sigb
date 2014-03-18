@@ -16,11 +16,11 @@ from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/eye1.avi"
+inputFile = "Sequences/eye3.avi"
 outputFile = "eyeTrackerResult.mp4"
 
 #seems to work okay for eye1.avi
-default_pupil_threshold = 93 #25
+default_pupil_threshold = 25 #93
 
 #--------------------------
 #         Global variable
@@ -362,14 +362,14 @@ def update(I):
 	for pupil in pupils:
 		cv2.ellipse(img,pupil,(0,255,0),1)
 		C = int(pupil[0][0]),int(pupil[0][1])
-		cv2.circle(img,C, 2, (0,0,255),4)
+		cv2.circle(img,C, 2, (0,0,255),1)
 		#def findEllipseContour(img, gradient_magnitude, estimatedCenter, estimatedRadius, nPts=30):
 		contour = findEllipseContour(img, magnitude, C, 80)
 		cv2.ellipse(img, contour, bgr_yellow, 1)
 		#circleTest(img, C)
 	for glint in glints:
 	    C = int(glint[0]),int(glint[1])
-	    cv2.circle(img,C, 2,(255,0,255),5)
+	    #cv2.circle(img,C, 2,(255,0,255),5)
 
 
 
