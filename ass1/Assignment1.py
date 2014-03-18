@@ -338,10 +338,10 @@ def update(I):
 
 	#corners = GetEyeCorners(gray, leftTemplate, rightTemplate)
 
-	#pupils = detectPupilHough(gray, 100)
-	irises = detectIrisHough(gray, 400)
+	detectPupilHough(gray, 100)
+	#irises = detectIrisHough(gray, 400)
 
-	glints = filterGlintsIris(glints,irises)
+	#glints = filterGlintsIris(glints,irises)
 
 	#Display results
 	global frameNr,drawImg
@@ -543,7 +543,7 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 
 def detectPupilHough(gray, accThr=600):
 	#Using the Hough transform to detect ellipses
-	blur = cv2.GaussianBlur(gray, (31,31),9)
+	blur = cv2.GaussianBlur(gray, (9,9),9)
 	##Pupil parameters
 	dp = 6; minDist = 10
 	highThr = 30 #High threshold for canny
