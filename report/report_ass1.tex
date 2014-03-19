@@ -154,18 +154,41 @@ A downside to using the closing operation, is that adjacent, sparse structures m
 \end{description}
 Because of the fallback clause in '3', it is very unlikely that the true positive is not detected in each frame. The only case I can think of where this approach fails, is if the pupil is obscured for a frame (subject blinking for example), while a false positive is still detected. In that case, the pupil will improperly detected for as long as the false positive continues to be present.
 
+\subsection{Pupil Detection using Gradient Magnitude}
+So far, we have been looking at the intensity values of the image. This has yielded reasonable approximate results, but is not as robust as we would like. In the following, we investigate what happens if we look at the change in intensity (the image gradient / first derivative), instead of the absolute intensity value at a given point.
+The gradients in the X and Y directions, are easily calculated with a Sobel filter. And from these, we can calculate the Gradient Magnitude as: $\sqrt{x^2 + y^2}$ (the Euclidean length of the vector x + y), and the orientation as: $arctan(y, x)$. Fig \ref{fig:quiver} shows a subsampled cutout of the Gradient image of Eye1, featuring the pupil and glints.
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.5]{quiver_cutout}
+  \caption{Quiver plot of Eye1 gradients (zoomed on pupil area)}
+  \label{fig:quiver}
+\end{figure}
 
-%current:
-%threshold->contour detection->contour filtering->ellipsis detection
+Note that the pupil boundary is clearly visible on fig \ref{fig:quiver}. We will attempt to use this information as follows: given an approximate centerpoint and radius for the pupil, scan in a number of directions, $d$ from the centerpoint, find the location of the maximum gradient magnitudes along the line-segments that are described by the centerpoint, a direction from $d$ and the radius. Use this set of points to fit an ellipse, and use that as improved pupil detection. 
 
-%clustering (part 2)
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.25]{gradient_circle}
+  \includegraphics[scale=0.25]{gradient_pupil}
+  \caption{Left: Eye1 showing line-segments for gradient magnitude maximization (yellow) and maximum gradient values along the lines (red). Right: Eye1 showing pupil approximation (green), and new pupil detection (red)}
+  \label{fig:gradient_circle}
+\end{figure}
 
-%what assumptions do we make?
-%how does it perform, when does it work, what causes it to fail
-%test on own sequence
+Figure \ref{fig:gradient_circle}(left) shows the lines considered, and the max gradient points found. Figure \ref{fig:gradient_circle}(right) shows the old and new pupil detections. This approach suffers the same problem as earlier. When the glints obscure part of the boundary, the pupil detection fails to follow the lower boundary. On top of that, there are also issues with noise, notice the red dots inside the top part of the pupil on fig \ref{fig:gradient_circle}, these are caused by non-system light reflecting off the pupil.
 
-%improvements:
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.25]{gradient_circle_gaussian_blur}
+  \includegraphics[scale=0.25]{gradient_pupil_gaussian_blur}
+  \caption{as fig \ref{fig:gradient_circle}, but pre-processed with a 9x9 Gaussian Blur}
+  \label{fig:gradient_circle_gaussian_blur}
+\end{figure}
+
+The noise issues can be drastically reduced with proper pre-processing. Fig \ref{fig:gradient_circle_gaussian_blur} shows much improved results, when blurring the image beforehand.
+
+We experimented with ignoring gradient points where the orientation was too far from the orientation of the circle normal, but did not see any improvements to the pupil detection.
+
 \subsection{Pupil Detection by circular Hough transformation}
 
 In an attempt to make our pupil detection more robust we now investigate the result of applying a

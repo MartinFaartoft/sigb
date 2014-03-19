@@ -20,7 +20,7 @@ inputFile = "Sequences/eye1.avi"
 outputFile = "eyeTrackerResult.mp4"
 
 #seems to work okay for eye1.avi
-default_pupil_threshold = 25 #93
+default_pupil_threshold = 93
 
 #--------------------------
 #         Global variable
@@ -38,7 +38,7 @@ def GetPupil(gray,thr, min_val, max_val):
 	#tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
 
 	#Threshold image to get a binary image
-	gray = cv2.equalizeHist(gray)
+	#gray = cv2.equalizeHist(gray)
 	cv2.imshow("TempResults", gray)
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
 	#print val
@@ -47,10 +47,8 @@ def GetPupil(gray,thr, min_val, max_val):
 	#binI = cv2.morphologyEx(binI, cv2.MORPH_OPEN, st, iterations=10)
 	#binI = cv2.morphologyEx(binI, cv2.MORPH_CLOSE, st, iterations=5)
 	cv2.imshow("Threshold",binI)
-	#cv2.moveWindow("Threshold", 800, 0)
 	#Calculate blobs, and do edge detection on entire image (modifies binI)
 	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
 
 	pupils = [];
 	prop_calc = RegionProps()
@@ -208,7 +206,7 @@ def getGradientImageInfo(I):
 
 	# for x in range(X):
 	# 	for y in range(Y):
-	# 		#orientation[x][y] = np.arctan2(g_y[x][y], g_x[x][y]) * (180 / math.pi)
+	# 		orientation[x][y] = np.arctan2(g_y[x][y], g_x[x][y]) * (180 / math.pi)
 	# 		magnitude[x][y] = math.sqrt(g_y[x][y] ** 2 + g_x[x][y] ** 2)
 
 
@@ -244,41 +242,60 @@ def GetEyeCorners(orig_img, leftTemplate, rightTemplate,pupilPosition=None):
 
 		return (maxloc_left_from, maxloc_left_to, maxloc_right_from, maxloc_right_to)
 
-bgr_yellow = (0,255,255)
+bgr_yellow = 0,255,255
 bgr_blue = 255, 0, 0
+bgr_red = 0, 0, 255
 def circleTest(img, center_point):
 	nPts = 20
 	circleRadius = 100
 	P = getCircleSamples(center=center_point, radius=circleRadius, nPoints=nPts)
 	for (x,y,dx,dy) in P:
 		point_coords = (int(x),int(y))
-		cv2.circle(img, point_coords, 2, rgb_yellow, 2)
-		cv2.line(img, point_coords, center_point, rgb_yellow)
+		cv2.circle(img, point_coords, 2, bgr_yellow, 2)
+		cv2.line(img, point_coords, center_point, bgr_yellow)
 
-def findEllipseContour(img, gradient_magnitude, estimatedCenter, estimatedRadius, nPts=30):
+def findEllipseContour(img, gradient_magnitude, gradient_orientation, estimatedCenter, estimatedRadius, nPts=30):
+	center_point_coords = (int(estimatedCenter[0]), int(estimatedCenter[1]))
 	P = getCircleSamples(center = estimatedCenter, radius = estimatedRadius, nPoints=nPts)
+	for (x,y,dx,dy) in P:
+		point_coords = (int(x),int(y))
+		cv2.circle(img, point_coords, 2, bgr_yellow, 2)
+		cv2.line(img, point_coords, center_point_coords, bgr_yellow)
+
 	newPupil = np.zeros((nPts,1,2)).astype(np.float32)
 	t = 0
 	for (x,y,dx,dy) in P:
 		#< define normalLength as some maximum distance away from initial circle >
 		#< get the endpoints of the normal -> p1,p2>
 		point_coords = (int(x),int(y))
+		normal_gradient = dx, dy
 		#cv2.circle(img, point_coords, 2, bgr_blue, 2)
-		center_point_coords = (int(estimatedCenter[0]), int(estimatedCenter[1]))
-		max_point = findMaxGradientValueOnNormal(gradient_magnitude, point_coords, center_point_coords)
-		cv2.circle(img, tuple(max_point), 2, bgr_yellow, 1)
+		max_point = findMaxGradientValueOnNormal(gradient_magnitude, gradient_orientation, point_coords, center_point_coords, normal_gradient)
+		cv2.circle(img, tuple(max_point), 2, bgr_red, 2) #locate the max points
 		#< store maxPoint in newPupil>
 		newPupil[t] = max_point
 		t += 1
 	#<fitPoints to model using least squares- cv2.fitellipse(newPupil)>
 	return cv2.fitEllipse(newPupil)
 
-def findMaxGradientValueOnNormal(gradient_magnitude, p1, p2):
+def findMaxGradientValueOnNormal(gradient_magnitude, gradient_orientation, p1, p2, normal_orientation):
     #Get integer coordinates on the straight line between p1 and p2
 	pts = SIGBTools.getLineCoordinates(p1, p2)
 	values = gradient_magnitude[pts[:,1],pts[:,0]]
+	#orientations = gradient_orientation[pts[:,1],pts[:,0]]
+	#normal_angle = np.arctan2(normal_orientation[1], normal_orientation[0]) * (180 / math.pi)
+	
+	# orientation_difference = abs(orientations - normal_angle)
+	# print orientation_difference[0:10]
+	# max_index = 0 #np.argmax(values)
+	# max_value = 0
+	# for index in range(len(values)):
+	# 	if orientation_difference[index] < 20:
+	# 		if values[index] > max_value:
+	# 			max_index = index
+	# 			max_value = values[index]
+	#print orientations[max_index], normal_angle
 	max_index = np.argmax(values)
-	#Find index of max value in normalVals
 	return pts[max_index]
 	#return coordinate of max value in image coordinates
 
@@ -322,6 +339,7 @@ def update(I):
 	img = I.copy()
 	sliderVals = getSliderVals()
 	gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+	#gray = cv2.GaussianBlur(gray, (9,9),9)
 
 	# Do the magic
 	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
@@ -360,12 +378,12 @@ def update(I):
 	#original image
 
 	for pupil in pupils:
-		cv2.ellipse(img,pupil,(0,255,0),1)
+		#cv2.ellipse(img,pupil,(0,255,0),1)
 		C = int(pupil[0][0]),int(pupil[0][1])
+		
+		contour = findEllipseContour(img, magnitude, orientation, C, 70)
+		#cv2.ellipse(img, contour, bgr_red, 1)
 		cv2.circle(img,C, 2, (0,0,255),1)
-		#def findEllipseContour(img, gradient_magnitude, estimatedCenter, estimatedRadius, nPts=30):
-		#contour = findEllipseContour(img, magnitude, C, 80)
-		#cv2.ellipse(img, contour, bgr_yellow, 1)
 		#circleTest(img, C)
 	for glint in glints:
 	    C = int(glint[0]),int(glint[1])
