@@ -154,6 +154,59 @@ A downside to using the closing operation, is that adjacent, sparse structures m
 \end{description}
 Because of the fallback clause in '3', it is very unlikely that the true positive is not detected in each frame. The only case I can think of where this approach fails, is if the pupil is obscured for a frame (subject blinking for example), while a false positive is still detected. In that case, the pupil will improperly detected for as long as the false positive continues to be present.
 
+\subsection{Pupil Detection using k-means}
+A method to enhance the BLOB detection of pupil detection is k-means clustering. The method separates the picture in K clusters. Each cluster is a set of pixels, which have values closer to the cluster center, than to other cluster centres -  a cluster center corresponds to mean value of the pixels in cluster. The value of K is arbitrarily chosen, so that for a sufficiently large number of K the pupil is evaluated as a single separate cluster. If the pupil is a single cluster a binary image can easily be created and BLOB detection would only need to look at the one object. The following figure illustrates how different values of K impacts the segmentation.
+
+\begin{figure}[ht]
+\centering
+\begin{subfigure}{.33\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{kmean_k4_v70}
+  \caption{$K=4$}
+  \label{fig:kmeans_sub1}
+\end{subfigure}%
+\begin{subfigure}{.33\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{kmean_k10_v70}
+  \caption{$K=10$}
+  \label{fig:kmeans_sub2}
+\end{subfigure}
+\begin{subfigure}{.33\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{kmean_k80_v70}
+  \caption{$K=80$}
+  \label{fig:kmeans_sub3}
+\end{subfigure}
+\caption{K-means for different values of $K$}
+\label{fig:kmeans_small}
+\end{figure}
+
+For performance reasons, k-mean can not be calculated from the original image, the clustering is therefore done on a resized 70x70 pixel image. To reduce the impact of noise, the resized image is filtered with a gaussian filter. It is clear in figure \ref{fig:kmeans_small} that even for a very high K, the pupil is not a separate cluster, Experiments has revealed that at a K value in the range of 10 to 20 gives a reasonably clustered image, while not having a massive impact on performance.\\
+
+Each pixel in the reduced picture is assigned to a cluster(label), selecting the pixels in the label with the lowest mean value, we can create a binary image, which now can be resized to the original image size. Because the cluster also contains pixels from other regions than the pupil area, the resulting binary image, on which we can do BLOB detection, is not optimal. Figure \ref{fig:kmeans} shows this.
+
+\begin{figure}[ht]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{kmean_bin}
+  \caption{Binary image}
+  \label{fig:kmeans_binary}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{kmean_result}
+  \caption{Resulting image}
+  \label{fig:kmeans_result}
+\end{subfigure}
+\caption{Pupil detection using k-means}
+\label{fig:kmeans}
+\end{figure}
+
+Eyelashes and shadows become a part of the pupil cluster, and much like the issues with morphology, they often become connected components, which makes BLOB detection very difficult.\\
+
+In conclusion the use of k-means did not yield a better result than ordinary thresholding, in many cases the result was actually worse, This is unfortunate because, if the pupil could be found as a single cluster, the amount of evaluation on the BLOB could be reduced and give better scalability on the position of the eye relative to the camera.
+
 \subsection{Pupil Detection using Gradient Magnitude}
 So far, we have been looking at the intensity values of the image. This has yielded reasonable approximate results, but is not as robust as we would like. In the following, we investigate what happens if we look at the change in intensity (the image gradient / first derivative), instead of the absolute intensity value at a given point.
 The gradients in the X and Y directions, are easily calculated with a Sobel filter. And from these, we can calculate the Gradient Magnitude as: $\sqrt{x^2 + y^2}$ (the Euclidean length of the vector x + y), and the orientation as: $arctan2(y, x)$. Fig \ref{fig:quiver} shows a subsampled cutout of the Gradient image of Eye1, featuring the pupil and glints.
@@ -268,8 +321,63 @@ The drawback of setting a constant size for the gaussian kernel is that is is no
 %histogram equalization/normalization for making thresholding more robust across sequences
 %experiments with morphology
 
-
 \section{Glint Detection}
+In this section, we will investigate and discuss glint detection.
+
+\subsection{Thresholding}
+Like pupil detection thresholding seems like an obvious place to start. The methods are almost identical. By first creating a binary image from a threshold value, and then do a BLOB analysis, resulting  in a set of points where glints are present.\\
+
+Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are very close to white, a fairly high threshold gives a good result. Furthermore by experimenting we found that, by requiring that the BLOB area lies int the interval $[10:150]$, we exclude a great deal of unwanted glint detections, it is although clear that there is still a good amount of false positives.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.48\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{glint_bin}
+  \caption{Binary image}
+  \label{fig:glint_binary}
+\end{subfigure}
+\begin{subfigure}{.48\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{glint_result}
+  \caption{Resulting image}
+  \label{fig:glint_result}
+\end{subfigure}
+\caption{Glint detection with threshold of 240}
+\label{fig:glint}
+\end{figure}
+
+\paragraph{Morphology} To mitigate the false positives, we make use of morphology to remove small “spots” of white by first closing and then opening, we get rid of a lot of unwanted glints, as can be seen in figure \ref{fig:glint_morph}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.48\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{glint_bin_morph}
+  \caption{Binary image}
+  \label{fig:glint_binary_morph}
+\end{subfigure}
+\begin{subfigure}{.48\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{glint_result_morph}
+  \caption{Resulting image}
+  \label{fig:glint_result_morph_morph}
+\end{subfigure}
+\caption{Glint detection with threshold of 240 - using morphology}
+\label{fig:glint_morph}
+\end{figure}
+
+\paragraph{Filter glints using eye features} To further enhance glint detection we have added a function function that excludes glints that have an Euclidian distance from the center of the pupil greater than the largest radius of the eclipse representing the pupil. Figure \ref{fig:glint_filtered}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.6\linewidth]{glint_filtered} 
+\caption{Glint detection with threshold of 240 - using morphology and filter}
+\label{fig:glint_filtered}
+\end{figure}
+
+\paragraph{Discussion} The method works very well, but fail when more than one pupil is detected, in other words the stability of glint detection is dependent the quality of the pupil detection.
+
 %current:
 %threshold->morphology->contour detection->contour filtering->distance from pupil center
 
