@@ -347,6 +347,11 @@ def update(I):
 	#pupils, glints = FilterPupilGlint(pupils,glints)
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
+	K=10
+	d=40
+	#labelIm,centroids = detectPupilKMeans(gray,K=K,distanceWeight=d,reSize=(70,70))
+	#pupils = get_pupils_from_kmean(labelIm,centroids,gray,sliderVals['minSize'],sliderVals['maxSize'])
+
 	magnitude, orientation = getGradientImageInfo(gray)
 
 	#plotVectorField(gray)
@@ -382,7 +387,7 @@ def update(I):
 		C = int(pupil[0][0]),int(pupil[0][1])
 		
 		contour = findEllipseContour(img, magnitude, orientation, C, 70)
-		#cv2.ellipse(img, contour, bgr_red, 1)
+		cv2.ellipse(img, contour, bgr_red, 1)
 		cv2.circle(img,C, 2, (0,0,255),1)
 		#circleTest(img, C)
 	for glint in glints:
@@ -497,6 +502,7 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 	'''
 	#Resize for faster performance
 	smallI = cv2.resize(gray, reSize)
+	smallI = cv2.GaussianBlur(smallI,(3,3),20)
 	M,N = smallI.shape
 	#Generate coordinates in a matrix
 	X,Y = np.meshgrid(range(M),range(N))
@@ -517,47 +523,34 @@ def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
 	label,distance = vq(features,centroids)
 	# re-create image from
 	labelIm = np.array(np.reshape(label,(M,N)))
-	f = figure(1)
-	imshow(labelIm)
-	f.canvas.draw()
-	f.show()
+	return labelIm,centroids
 
-#------------------------------------------------
-#   Methods for segmentation
-#------------------------------------------------
-def detectPupilKMeans(gray,K=2,distanceWeight=2,reSize=(40,40)):
-	''' Detects the pupil in the image, gray, using k-means
-			gray              : grays scale image
-			K                 : Number of clusters
-			distanceWeight    : Defines the weight of the position parameters
-			reSize            : the size of the image to do k-means on
-		'''
-	#Resize for faster performance
-	smallI = cv2.resize(gray, reSize)
-	M,N = smallI.shape
-	#Generate coordinates in a matrix
-	X,Y = np.meshgrid(range(M),range(N))
-	#Make coordinates and intensity into one vectors
-	z = smallI.flatten()
-	x = X.flatten()
-	y = Y.flatten()
-	O = len(x)
-	#make a feature vectors containing (x,y,intensity)
-	features = np.zeros((O,3))
-	features[:,0] = z;
-	features[:,1] = y/distanceWeight; #Divide so that the distance of position weighs less than intensity
-	features[:,2] = x/distanceWeight;
-	features = np.array(features,'f')
-	# cluster data
-	centroids,variance = kmeans(features,K)
-	#use the found clusters to map
-	label,distance = vq(features,centroids)
-	# re-create image from
-	labelIm = np.array(np.reshape(label,(M,N)))
-	f = figure(1)
-	imshow(labelIm)
-	f.canvas.draw()
-	f.show()
+def get_pupils_from_kmean(labelIm, centroids, gray, min_val,max_val):
+	result = np.zeros((labelIm.shape))
+	label = np.argmin(centroids[:,0])
+	result[labelIm == label] = [255]
+	y,x=gray.shape
+	result = cv2.resize(result,(x,y)) 
+	semi_binI = np.array(result, dtype='uint8')
+	#remove gray elements created from the linear interpolation
+	val,binI =cv2.threshold(semi_binI, 0, 255, cv2.THRESH_BINARY)
+	cv2.imshow("Threshold",binI)
+	#Calculate blobs, and do edge detection on entire image (modifies binI)
+	contours, hierarchy = cv2.findContours(binI, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+	pupils = [];
+	prop_calc = RegionProps()
+	for contour in contours:
+		#calculate centroid, area and 'extend' (compactness of contour)
+		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
+		x, y = props["Centroid"]
+		area = props["Area"]
+		extend = props["Extend"]
+		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
+		if (area > min_val and area < max_val and extend > 0.4 and extend < 1.0):
+			pupilEllipse = cv2.fitEllipse(contour)
+			pupils.append(pupilEllipse)
+	return pupils
 
 def detectPupilHough(gray, accThr=600):
 	#Using the Hough transform to detect ellipses

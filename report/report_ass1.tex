@@ -154,6 +154,40 @@ A downside to using the closing operation, is that adjacent, sparse structures m
 \end{description}
 Because of the fallback clause in '3', it is very unlikely that the true positive is not detected in each frame. The only case I can think of where this approach fails, is if the pupil is obscured for a frame (subject blinking for example), while a false positive is still detected. In that case, the pupil will improperly detected for as long as the false positive continues to be present.
 
+\subsection{Pupil Detection using k-means}
+An alternative method of pupil detection is by k-means clustering. The method separates the picture in K clusters. Each cluster is a set of pixels with values closer to the value of the cluster center, than the value of other cluster centres - cluster centres correspond to mean value of the cluster. The value of K is arbitrarily chosen, so that for a sufficiently large number of K the pupil is evaluated as a single separate cluster. If the pupil is a single cluster a binary image can easily be created and BLOB detection would only need to look at the one object. The following figure illustrates how different values of K impacts the segmentation.
+
+\begin{figure}[ht]
+\centering
+\begin{subfigure}{.33\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{kmean_k4_v70}
+  \caption{$K=4$}
+  \label{fig:kmeans_sub1}
+\end{subfigure}%
+\begin{subfigure}{.33\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{kmean_k10_v70}
+  \caption{$K=10$}
+  \label{fig:kmeans_sub2}
+\end{subfigure}
+\begin{subfigure}{.33\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{kmean_k80_v70}
+  \caption{$K=80$}
+  \label{fig:kmeans_sub3}
+\end{subfigure}
+\caption{K-means for different values of $K$}
+\label{fig:kmeans}
+\end{figure}
+
+For performance reasons, k-mean can not be calculated from the original image, the clustering is therefore done on a resized 70x70 pixel image. To reduce the impact of noise, the resized image is filtered with a gaussian filter. It is clear in figure \ref{fig:kmeans} that even for a very high K, the pupil is not a separate cluster, Experiments has revealed that at a K value in the range of 10 to 20 gives a reasonably clustered image, while
+
+Kmeans could also be used calculate a  dynamic threshold value
+
+
+ The use use of k-means did not give a better result than order nary thresholding.
+
 \subsection{Pupil Detection using Gradient Magnitude}
 So far, we have been looking at the intensity values of the image. This has yielded reasonable approximate results, but is not as robust as we would like. In the following, we investigate what happens if we look at the change in intensity (the image gradient / first derivative), instead of the absolute intensity value at a given point.
 The gradients in the X and Y directions, are easily calculated with a Sobel filter. And from these, we can calculate the Gradient Magnitude as: $\sqrt{x^2 + y^2}$ (the Euclidean length of the vector x + y), and the orientation as: $arctan2(y, x)$. Fig \ref{fig:quiver} shows a subsampled cutout of the Gradient image of Eye1, featuring the pupil and glints.
