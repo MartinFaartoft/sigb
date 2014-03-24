@@ -169,6 +169,30 @@ def circularHough(gray):
 	 cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (0,0,255),5)
 	 cv2.imshow("hough",gColor)
 
+def simplifiedHough(edgeImage,circleCenter,minR,maxR,N,thr):
+	samplePoints  = 100
+	accumulator_line = {}
+
+	for radius in range(minR, maxR, N):
+
+		points = getCircleSamples(center=circleCenter, radius=radius, nPoints=samplePoints)
+		accumulator_line[radius] = 0
+		for point in points:
+			try:
+				if edgeImage[point[0], point[1]] > 0:
+					accumulator_line[radius] += 1
+			except IndexError:
+				continue
+	radii = []
+	for radius in accumulator_line:
+		value = accumulator_line[radius]
+		if value > thr:
+			radii.append(radius)
+			print value
+	return radii
+
+
+
 def GetIrisUsingNormals(gray,pupil,normalLength):
 	''' Given a gray level image, gray and the length of the normals, normalLength
 	 return a list of iris locations'''
@@ -178,8 +202,19 @@ def GetIrisUsingNormals(gray,pupil,normalLength):
 def GetIrisUsingSimplifyedHough(gray,pupil):
 	''' Given a gray level image, gray
 	return a list of iris locations using a simplified Hough transformation'''
-	# YOUR IMPLEMENTATION HERE !!!!
-	pass
+	if pupil:
+		edges = cv2.Canny(gray, 30, 20)
+		pupil = pupil[0]
+		pupil_x = int(pupil[0])
+		pupil_y = int(pupil[1])
+		#cv2.imshow("edges", edges)
+		radii = simplifiedHough(edges, pupil, 120, 200, 1, 15)
+		for radius in radii:
+			cv2.circle(gray, (pupil_x, pupil_y), radius, (0, 0, 0), 1)
+			#cv2.circle(gray, pupil, radius, (127,127,127), 2)
+			cv2.imshow("GetIrisUsingSimplifyedHough", gray)
+
+
 
 def plotVectorField(I):
 	g_x = cv2.Sobel(I, cv.CV_64F, 1,0, ksize=3)
@@ -330,6 +365,8 @@ def update(I):
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
 	magnitude, orientation = getGradientImageInfo(gray)
+	if pupils:
+		GetIrisUsingSimplifyedHough(gray, pupils[0])
 
 	#plotVectorField(gray)
 	#Do template matching
