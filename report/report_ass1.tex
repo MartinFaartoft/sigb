@@ -61,7 +61,7 @@
 
 \bibliographystyle{plain}
 \begin{document}
-\date{TODO DATO}
+\date{26. March 2014}
 \title{Eye Tracking\\SIGB Spring 2014}
 
 \author{Marcus Gregersen\\
@@ -218,7 +218,7 @@ The gradients in the X and Y directions, are easily calculated with a Sobel filt
   \label{fig:quiver}
 \end{figure}
 
-Note that the pupil boundary is clearly visible on fig \ref{fig:quiver}. We will attempt to use this information as follows: given an approximate centerpoint and radius for the pupil, scan in a number of directions, $d$ from the centerpoint, find the location of the maximum gradient magnitudes along the line-segments that are described by the centerpoint, a direction from $d$ and the radius. Use this set of points to fit an ellipse, and use that as improved pupil detection. 
+Note that the pupil boundary is clearly visible on fig \ref{fig:quiver}. We will attempt to use this information as follows: given an approximate centerpoint and radius for the pupil, scan in a number of directions, $d$ from the centerpoint, find the location of the maximum gradient magnitudes along the line-segments that are described by the centerpoint, a direction from $d$ and the radius. Use this set of points to fit an ellipse, and use that as improved pupil detection.
 
 \begin{figure}[ht]
   \centering
@@ -309,13 +309,7 @@ By preprocessing the image by smooting some of the noise is going to be filtered
 
 The drawback of setting a constant size for the gaussian kernel is that is is not scale independent. An ideal kernel in some frame may smooth away the pupil in some other frame is the subject moved closer or futher away from the camera.
 
-
-
-
-
-
-
-
+% subsection simplified_hough_transformation (end)
 
 %Hough-transform for ellipsis fitting/detection
 %histogram equalization/normalization for making thresholding more robust across sequences
@@ -371,7 +365,7 @@ Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are ve
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=.6\linewidth]{glint_filtered} 
+\includegraphics[width=.6\linewidth]{glint_filtered}
 \caption{Glint detection with threshold of 240 - using morphology and filter}
 \label{fig:glint_filtered}
 \end{figure}
@@ -396,7 +390,58 @@ Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are ve
 %test on own sequence
 
 \section{Iris / Limbus Detection}
+\subsection{Hough Transformation with position prior}
+If we assume that we are somehow able to detect the pupil in a robust way, we can use this position as input to a circular hough tranformation.
 
+In this way the hough tranformation will be one dimensional since the only free variable is the radius of the circle.
+
+The procedure is then to itearate over the circles in a range between some minimum and maximum radius with some step size. We then discretize the periphery of the circle and iterate over this discretization. We then increment the value of the current radius, in a parametric accumulator table, if the corresponding point in the Canny edge image is larger than zero.
+
+The radius with the highest value in the accumulator table is thus the circle that yields the best fit.
+
+\paragraph{Examples}\\
+\label{par:examples}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.48\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{circhoughavg}
+  \caption{One correct circle and some false positives}
+  \label{fig:circhoughavg}
+\end{subfigure}
+\begin{subfigure}{.48\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{circhoughgood}
+  \caption{Multiple true positives}
+  \label{fig:circhoughgood}
+\end{subfigure}
+\caption{Detecting circles using hough transformation with position prior }
+\label{fig:houghcircles}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+  \includegraphics[width=.8\linewidth]{houghcanny}
+  \caption{The canny edge image on which the circles in figure (a) are found}
+  \label{fig:canny}
+\end{figure}
+In figure (a) the method positively identifies the limbus and some false positives.
+
+In figure (b) the method yields more circles above some given threshold since the perspective distortion exhibits a limbus that appears to be more circular than it actually is.
+
+\paragraph{Discussion} % (fold)
+\label{par:discussion}
+The method works but is sensitive on numerous parameters. The threshold should be carefully chosen, and is dependent on the granularity of the Canny edge image it takes as input. A canny edge image with a lot of edges yields an accumulator table with more votes, and thus more iris candidates.
+
+Looking at Figure \ref{fig:canny} we see that one possible improvement could be to smooth the image before producing the Canny edge image. This would remove the noise produced by eye lashes and other non-circular features.
+
+
+
+
+
+
+% subsection  (end)
 %what assumptions do we make?
 %how does it perform, when does it work, what causes it to fail
 %test on own sequence
