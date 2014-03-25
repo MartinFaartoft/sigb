@@ -384,10 +384,45 @@ Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are ve
 %hist equal?
 
 \section{Eye Corner Detection}
+We detect eye corners simply by template matching.TM_CCOEFF_NORMED
+\todo{More intro text}
 
-%what assumptions do we make?
-%how does it perform, when does it work, what causes it to fail
-%test on own sequence
+\paragraph{Examples}\\
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.32\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{templatematch}
+  \caption{image}
+  \label{fig:templatemathing1}
+\end{subfigure}
+\begin{subfigure}{.32\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{templatematched}
+  \caption{A good template match of both the left and right patch}
+  \label{fig:templatemathing2}
+\end{subfigure}
+\begin{subfigure}{.32\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{templateproblem}
+  \caption{A bad match of the left template}
+  \label{fig:templatemathing2}
+\end{subfigure}
+\caption{Template Matching }
+\label{fig:templatemathing}
+\end{figure}
+
+The technique works best in a stable environment. Thus if the test subject moves his/her head on any of the 3 axis, or closer/farther away from the camera, the chosen template will of course produce a lower result at the position of the actual eye corner.
+
+The changes in scale can be mitigated by using an image pyramid, i.e. convolving the template with multiple versions of a downsampled or upscaled version of the input frame.
+
+Changes in rotation can be mitigated in a similar manner by rotating the template in a number of steps around its own axis.
+
+Changes in perspective, i.e if the person turns his/her head, could possibly be mitigated by transforming the image by a homography.
+
+The methods can be combined to detect a change in both scale and rotation. A problem with these techniques is that they introduce some computational complexity.
+
+
 
 \section{Iris / Limbus Detection}
 \subsection{Hough Transformation with position prior}
@@ -435,10 +470,6 @@ In figure (b) the method yields more circles above some given threshold since th
 The method works but is sensitive on numerous parameters. The threshold should be carefully chosen, and is dependent on the granularity of the Canny edge image it takes as input. A canny edge image with a lot of edges yields an accumulator table with more votes, and thus more iris candidates.
 
 Looking at Figure \ref{fig:canny} we see that one possible improvement could be to smooth the image before producing the Canny edge image. This would remove the noise produced by eye lashes and other non-circular features.
-
-
-
-
 
 
 % subsection  (end)
