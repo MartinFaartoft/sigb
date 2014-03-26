@@ -477,25 +477,35 @@ The method works but is sensitive on numerous parameters. The threshold should b
 
 Looking at Figure \ref{fig:canny} we see that one possible improvement could be to smooth the image before producing the Canny edge image. This would remove the noise produced by eye lashes and other non-circular features.
 
-
-% subsection  (end)
-%what assumptions do we make?
-%how does it perform, when does it work, what causes it to fail
-%test on own sequence
-
-
 \section{Conclusion}
+After ample experimentation, we find that the following techniques perform best:
+\paragraph{Pupil}
+Hough transform gives a robust pupil detection, that works on image gradient, instead of actual intensity. This makes it much more tolerant of changing lighting conditions. We preprocess the input image with a Gaussian blur, to minimize the effect of noise.
 
+\paragraph{Eye Corners}
+We have only experimented with Template Matching for eye corner detection. We have not attempted to use a generic set of templates across multiple sequences, but have settled with having to define templates for each sequence.
+
+\paragraph{Glints}
+Our thresholding approach is extremely good at finding all the highlights of the image, but results in many false positives. Filtering those with blob detection eliminates most of the false positives. Further, requiring that the glints are close to the pupil center, results in a very robust glint detection (given that the pupil is correctly detected)
+
+\paragraph{Iris / Limbus}
+We use our own, simplified Hough transform, that assumes the pupil center has been found correctly, and that the limbus is approximately circular. This is the least robust of our feature detections, but works well enough in practice to be useful.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.3]{resgood}
+  \includegraphics[scale=0.3]{resnoiris}
+  \includegraphics[scale=0.3]{resnotworking}
+  \caption{Left: working detection, middle: Iris detection failed, right: Totally failed detection (blink)}
+  \label{fig:results}
+\end{figure}
+
+\paragraph{Performance}
+We have recorded our own sequence: 'Julie.avi', using an iSlim 321r camera with infrared capabilities. Figure \ref{fig:results} shows an image from 'Julie.avi' where detection is successful, and an image where the detection fails. Enclosed on the CD-ROM is the full sequence 'Julie.avi' (unedited recording), and 'Julie\_Detection.avi' that shows the performance of our eye tracker across the entire sequence. \\
+
+There is certainly room for improvement, especially in the areas of eye corner and iris detection. But overall we are happy with the performance of our eye tracker, especially the various Hough transforms we apply, perform very well. 
 \newpage
 
-\begin{thebibliography}{}
-      %Sådan her ref'er man en URL
-      %\bibitem{lit:json}
-      %\url{http://tools.ietf.org/html/rfc4627}
-      %Retrieved: 2013-05-02
-\end{thebibliography}
-
-%code in appendix
 \section*{Appendix}
 \subsection{Assignment1.py}
 \lstinputlisting[language=Python]{../ass1/Assignment1.py}
