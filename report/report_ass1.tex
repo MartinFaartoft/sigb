@@ -119,9 +119,9 @@ This approach has several problems, however. Note how the true positive on Figur
 If the person on the sequence leans back slightly, the pupil will shrink and we will fail to detect it.
 
 \paragraph{A threshold of 93 will cleanly separate pupil from iris}
-This is true for eye1.avi, but generalizes extremely poorly to the other sequences. If this approach is to be used across multiple sequences recorded in different lighting conditions, the threshold will have to be adjusted by hand for each one.
+This is true for eye1.avi, but does not generalize to other sequences. If this approach is to be used across multiple sequences recorded in different lighting conditions, the threshold will have to be adjusted by hand for each one.
 
-This problem can be mitigated somewhat with Histogram Equalization. A threshold of 25 on Histogram Equalized images, fares considerably better across several sequences. Note that this will still fail, if parts of the image are significantly darker than the pupil, thereby messing up the equalization.
+This problem can be mitigated somewhat with Histogram Equalization. A threshold of 25 on Histogram Equalized images, fares considerably better across several sequences.
 
 \begin{figure}[H]
   \centering
@@ -141,7 +141,7 @@ This problem can be mitigated somewhat with Histogram Equalization. A threshold 
 
 \paragraph{Morphology}
 Using Morphology, we can improve the detected pupil. The problem with the glints obscuring part of the boundary can be mitigated with the 'closing' operator - used to fill in holes in binary images. Figure \ref{fig:morph} shows binary images before and after applying the closing operator. Notice how the noise inside the pupil is completely removed, and the glints are mostly removed.
-A downside to using the closing operation, is that adjacent, sparse structures may merge and resemble circles.
+A downside to using the closing operation, is that adjacent, sparse structures may merge into something resembling a circle, thereby giving a false positive.
 
 \begin{figure}[H]
   \centering
@@ -160,7 +160,7 @@ A downside to using the closing operation, is that adjacent, sparse structures m
 Because of the fallback clause in '3', it is very unlikely that the true positive is not detected in each frame. The only case where this approach fails, is if the pupil is obscured for a frame (subject blinking for example), while a false positive is still detected. In that case, the pupil will be improperly detected for as long as the false positive continues to be present.
 
 \subsection{Pupil Detection using k-means}
-A method to enhance the BLOB detection of pupil detection is k-means clustering. The method separates the picture in K clusters. Each cluster is a set of pixels, which have values closer to the cluster center, than to other cluster centres -  a cluster center corresponds to mean value of the pixels in cluster. The value of K is arbitrarily chosen, so that for a sufficiently large number of K the pupil is evaluated as a single separate cluster. If the pupil is a single cluster a binary image can easily be created and BLOB detection would only need to look at the one object. The following figure illustrates how different values of K impacts the segmentation.
+A method to enhance the BLOB detection of pupil detection is k-means clustering. The method separates the picture in K clusters. Each cluster is a set of pixels, which have values closer to the cluster center, than to other cluster centres -  a cluster center corresponds to mean value of the pixels in the cluster. The value of K is arbitrarily chosen, so that for a sufficiently large number, K the pupil is evaluated as a single separate cluster. If the pupil is a single cluster a binary image can easily be created and BLOB detection would only need to look at the one object. The following figure illustrates how different values of K impacts the segmentation.
 
 \begin{figure}[H]
 \centering
@@ -186,7 +186,7 @@ A method to enhance the BLOB detection of pupil detection is k-means clustering.
 \label{fig:kmeans_small}
 \end{figure}
 
-For performance reasons, the k-means procedure can not be calculated from the original image, the clustering is therefore done on a resized 70x70 pixel image. To reduce the impact of noise, the resized image is filtered with a gaussian filter. It is clear in figure \ref{fig:kmeans_small} that even for a very high K, the pupil is not a separate cluster, Experiments has revealed that at a K value in the range of 10 to 20 gives a reasonably clustered image, while not having a massive impact on performance.\\
+For performance reasons, the k-means procedure can not be calculated from the original image, the clustering is therefore done on a resized 70x70 pixel image. To reduce the impact of noise, the resized image is filtered with a Gaussian filter. It is clear in figure \ref{fig:kmeans_small} that even for a very high K, the pupil is not a separate cluster, Experiments has revealed that at a K value in the range of 10 to 20 gives a reasonably clustered image, while not having a massive impact on performance.\\
 
 Each pixel in the reduced picture is assigned to a cluster(label), selecting the pixels in the label with the lowest mean value, we can create a binary image, which now can be resized to the original image size. Because the cluster also contains pixels from other regions than the pupil area, the resulting binary image, on which we can do BLOB detection, is not optimal. Figure \ref{fig:kmeans} shows this.
 
@@ -312,7 +312,7 @@ In a non ideal setting, for example in a frame were the eye is seen from the sid
 
 By preprocessing the image by smooting some of the noise is going to be filtered out. The idea is to choose a kernel that is rougly of the same size as the pupil. In this manner smaller features, such as eye lashes will be smoothed away, but still maintaining the pupil feature.
 
-The drawback of setting a constant size for the gaussian kernel is that is is not scale independent. An ideal kernel in some frame may smooth away the pupil in some other frame if the had subject moved closer or futher away from the camera.
+The drawback of setting a constant size for the gaussian kernel is that is is not scale independent. An ideal kernel in some frame may smoothe away the pupil in some other frame if the had subject moved closer or further away from the camera.
 
 % subsection simplified_hough_transformation (end)
 
@@ -475,7 +475,7 @@ In figure (b) the method yields more circles above some given threshold since th
 \label{par:discussion}
 The method works but is sensitive on numerous parameters. The threshold should be carefully chosen, and is dependent on the granularity of the Canny edge image it takes as input. A canny edge image with a lot of edges yields an accumulator table with more votes, and thus more iris candidates.
 
-Looking at Figure \ref{fig:canny} we see that one possible improvement could be to smooth the image before producing the Canny edge image. This would remove the noise produced by eye lashes and other non-circular features.
+Looking at Figure \ref{fig:canny} we see that one possible improvement could be to smoothe the image before producing the Canny edge image. This would remove the noise produced by eye lashes and other non-circular features.
 
 \section{Conclusion}
 After ample experimentation, we find that the following techniques perform best:
