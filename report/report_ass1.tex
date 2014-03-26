@@ -61,7 +61,7 @@
 
 \bibliographystyle{plain}
 \begin{document}
-\date{26. March 2014}
+\date{March 26th 2014\\ IT University of Copenhagen}
 \title{Eye Tracking\\SIGB Spring 2014}
 
 \author{Marcus Gregersen\\
@@ -70,7 +70,6 @@
 \texttt{mlfa@itu.dk}
 \and Mads Westi\\
 \texttt{mwek@itu.dk}}
-%TODO vejleder og institut
 \clearpage\maketitle
 \thispagestyle{empty}
 \setcounter{page}{1}
@@ -390,8 +389,7 @@ Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are ve
 %hist equal?
 
 \section{Eye Corner Detection}
-We detect eye corners simply by template matching.
-\todo{More intro text}
+We detect eye corners simply by template matching. We use template matching by normalized cross-correlation, which is invariant to lighting and exposure conditions, at the expense of performance. Because of the large changes in intensities in the different sequences, we find this to be the preferred method.
 
 \paragraph{Examples}
 \begin{figure}[H]
@@ -431,6 +429,8 @@ The methods can be combined to detect a change in both scale and rotation. A pro
 
 
 \section{Iris / Limbus Detection}
+\subsection{Iris detection using thresholding}
+We experimented with simple thresholding, to detect the shape and position of the iris. What we found, was that it will work under ideal circumstances, but is extremely brittle with regards to chosen threshold and system lighting. Furthermore, because the iris intensities lies in the middle range (with glints being very bright, and pupil being very dark), many false positives were being picked up in the skin-tone range. This experiment yielded no usable results, and are not discussed further.
 \subsection{Hough Transformation with position prior}
 If we assume that we are somehow able to detect the pupil in a robust way, we can use this position as input to a circular Hough tranformation.
 
@@ -456,7 +456,7 @@ The radius with the highest value in the accumulator table is thus the circle th
   \caption{Multiple true positives}
   \label{fig:circhoughgood}
 \end{subfigure}
-\caption{Detecting circles using hough transformation with position prior }
+\caption{Detecting circles using Hough transformation with position prior }
 \label{fig:houghcircles}
 \end{figure}
 
@@ -489,9 +489,6 @@ Looking at Figure \ref{fig:canny} we see that one possible improvement could be 
 \newpage
 
 \begin{thebibliography}{}
-
-\bibitem{paper:foo}
-Foo
       %Sådan her ref'er man en URL
       %\bibitem{lit:json}
       %\url{http://tools.ietf.org/html/rfc4627}
@@ -500,7 +497,8 @@ Foo
 
 %code in appendix
 \section*{Appendix}
-%\lstinputlisting[language=Python]{../tools/size_estimator.py}
+\subsection{Assignment1.py}
+\lstinputlisting[language=Python]{../ass1/Assignment1.py}
 
 
 \end{document}
