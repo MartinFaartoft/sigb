@@ -16,7 +16,7 @@ from matplotlib.pyplot import *
 
 
 
-inputFile = "Sequences/eye1.avi"
+inputFile = "own_Sequences/julie.avi"
 outputFile = "eyeTrackerResult.mp4"
 
 #seems to work okay for eye1.avi
@@ -38,7 +38,7 @@ def GetPupil(gray,thr, min_val, max_val):
 	#tempResultImg = cv2.cvtColor(gray,cv2.COLOR_GRAY2BGR) #used to draw temporary results
 
 	#Threshold image to get a binary image
-	#gray = cv2.equalizeHist(gray)
+
 	cv2.imshow("TempResults", gray)
 	val,binI =cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY_INV)
 	#print val
@@ -75,7 +75,7 @@ def GetPupil(gray,thr, min_val, max_val):
 	return pupils
 
 def GetGlints(gray,thr):
-	min_area = 10
+	min_area = 2
 	max_area = 150
 	''' Given a gray level image, gray and threshold
 	value return a list of glint locations'''
@@ -84,8 +84,8 @@ def GetGlints(gray,thr):
 
 
 	st = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
-	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, st, iterations=8)
-	binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, st, iterations=2)
+	#binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, st, iterations=8)
+	#binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, st, iterations=2)
 
 
 	#cv2.imshow("Threshold", binary_image)
@@ -96,16 +96,18 @@ def GetGlints(gray,thr):
 	prop_calc = RegionProps()
 	centroids = []
 	for contour in contours:
+
 		#calculate centroid, area and 'extend' (compactness of contour)
 		props = prop_calc.CalcContourProperties(contour, ["centroid", "area", "extend"])
 		x, y = props["Centroid"]
 		area = props["Area"]
 		extend = props["Extend"]
+		print x, y, area, extend
 
 		#filter contours, so that their area lies between min_val and max_val, and then extend lies between 0.4 and 1.0
 		if area > min_area and area < max_area: #and extend > 0.4 and extend < 1.0):
 			glints.append((x,y))
-			#print x, y, area, extend
+
 			#cv2.circle(tempResultImg,(int(x),int(y)), 2, (0,0,255),4) #draw a circle
 	#cv2.imshow("TempResults",tempResultImg)
 
@@ -144,35 +146,35 @@ def circularHough(gray):
 	''' Performs a circular hough transform of the image, gray and shows the  detected circles
 	The circe with most votes is shown in red and the rest in green colors '''
  #See help for http://opencv.itseez.com/modules/imgproc/doc/feature_detection.html?highlight=houghcircle#cv2.HoughCircles
-	blur = cv2.GaussianBlur(gray, (31,31), 11)
+	blur = cv2.GaussianBlur(gray, (13,13), 9)
 
 	dp = 6; minDist = 30
-	highThr = 20 #High threshold for canny
-	accThr = 850; #accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
-	maxRadius = 50;
-	minRadius = 155;
+	highThr = 10 #High threshold for canny
+	accThr = 20; #accumulator threshold for the circle centers at the detection stage. The smaller it is, the more false circles may be detected
+	maxRadius = 10;
+	minRadius = 20;
 	circles = cv2.HoughCircles(blur,cv2.cv.CV_HOUGH_GRADIENT, dp,minDist, None, highThr,accThr,maxRadius, minRadius)
-
 	#Make a color image from gray for display purposes
 	gColor = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
 	if (circles !=None):
-	 #print circles
-	 all_circles = circles[0]
-	 M,N = all_circles.shape
-	 k=1
-	 for c in all_circles:
-			cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (int(k*255/M),k*128,0))
-			K=k+1
-	 c=all_circles[0,:]
-	 cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (0,0,255),5)
-	 cv2.imshow("hough",gColor)
+		#print circles
+	 	all_circles = circles[0]
+	 	M,N = all_circles.shape
+	 	k=1
+	 	#for c in all_circles:
+		#	cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (int(k*255/M),k*128,0))
+		#	K=k+1
+		c=all_circles[0,:]
+		cv2.circle(gColor, (int(c[0]),int(c[1])),c[2], (0,0,255),5)
+		#cv2.imshow("hough",gColor)
+	return [c]
+
 
 def simplifiedHough(edgeImage,circleCenter,minR,maxR,N,thr):
-	samplePoints  = 100
+	samplePoints  = 200
 	accumulator_line = {}
 
 	for radius in range(minR, maxR, N):
-
 		points = getCircleSamples(center=circleCenter, radius=radius, nPoints=samplePoints)
 		accumulator_line[radius] = 0
 		for point in points:
@@ -200,17 +202,20 @@ def GetIrisUsingNormals(gray,pupil,normalLength):
 def GetIrisUsingSimplifyedHough(gray,pupil):
 	''' Given a gray level image, gray
 	return a list of iris locations using a simplified Hough transformation'''
-	if pupil:
+	if pupil != None:
 		edges = cv2.Canny(gray, 30, 20)
-		pupil = pupil[0]
+		pupil = pupil
 		pupil_x = int(pupil[0])
 		pupil_y = int(pupil[1])
-		#cv2.imshow("edges", edges)
-		radii = simplifiedHough(edges, pupil, 120, 200, 1, 15)
+		cv2.imshow("edges", edges)
+		radii = simplifiedHough(edges, pupil, 30, 40, 1, 50)
+		irises = []
 		for radius in radii:
-			cv2.circle(gray, (pupil_x, pupil_y), radius, (0, 0, 0), 1)
+			#cv2.circle(gray, (pupil_x, pupil_y), radius, (0, 0, 0), 1)
 			#cv2.circle(gray, pupil, radius, (127,127,127), 2)
-			cv2.imshow("GetIrisUsingSimplifyedHough", gray)
+			#cv2.imshow("GetIrisUsingSimplifyedHough", gray)
+			irises.append((pupil_x,pupil_y,radius))
+	return irises
 
 
 
@@ -319,7 +324,7 @@ def findMaxGradientValueOnNormal(gradient_magnitude, gradient_orientation, p1, p
 	values = gradient_magnitude[pts[:,1],pts[:,0]]
 	#orientations = gradient_orientation[pts[:,1],pts[:,0]]
 	#normal_angle = np.arctan2(normal_orientation[1], normal_orientation[0]) * (180 / math.pi)
-	
+
 	# orientation_difference = abs(orientations - normal_angle)
 	# print orientation_difference[0:10]
 	# max_index = 0 #np.argmax(values)
@@ -346,10 +351,10 @@ def FilterPupilGlint(pupils,glints):
 	return filtered_pupils, filtered_glints
 
 def is_glint_close_to_pupil(glint, pupil):
-	center, radii, angle = pupil
-	max_radius = max(radii)
+	x, y, radius = pupil
+	center = (x,y)
 	distance = euclidianDistance(center, glint)
-	return (distance < max_radius)
+	return (distance < radius* 1.5)
 
 def filterGlintsIris(glints, irises):
 	new_glints = []
@@ -374,12 +379,13 @@ def update(I):
 	img = I.copy()
 	sliderVals = getSliderVals()
 	gray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
-	#gray = cv2.GaussianBlur(gray, (9,9),9)
+	gray = cv2.equalizeHist(gray)
 
 	# Do the magic
-	pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
+	#pupils = GetPupil(gray,sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
+	pupils = circularHough(gray)
 	glints = GetGlints(gray,sliderVals['glintThr'])
-	#pupils, glints = FilterPupilGlint(pupils,glints)
+	pupils, glints = FilterPupilGlint(pupils,glints)
 	#irises = GetIrisUsingThreshold(gray, sliderVals['pupilThr'], sliderVals['minSize'], sliderVals['maxSize'])
 
 	K=10
@@ -387,16 +393,16 @@ def update(I):
 	#labelIm,centroids = detectPupilKMeans(gray,K=K,distanceWeight=d,reSize=(70,70))
 	#pupils = get_pupils_from_kmean(labelIm,centroids,gray,sliderVals['minSize'],sliderVals['maxSize'])
 
-	magnitude, orientation = getGradientImageInfo(gray)
+	#magnitude, orientation = getGradientImageInfo(gray)
 	if pupils:
-		GetIrisUsingSimplifyedHough(gray, pupils[0])
+		irises = GetIrisUsingSimplifyedHough(gray, pupils[0])
 
 	#plotVectorField(gray)
 	#Do template matching
 	global leftTemplate
 	global rightTemplate
 
-	#corners = GetEyeCorners(gray, leftTemplate, rightTemplate)
+	corners = GetEyeCorners(gray, leftTemplate, rightTemplate)
 
 	#detectPupilHough(gray, 100)
 	#irises = detectIrisHough(gray, 400)
@@ -419,34 +425,39 @@ def update(I):
 	#Uncomment these lines as your methods start to work to display the result in the
 	#original image
 
+	#Elipse
+	# for pupil in pupils:
+	# 	#cv2.ellipse(img,pupil,(0,255,0),1)
+	# 	C = int(pupil[0][0]),int(pupil[0][1])
+	#Circle
 	for pupil in pupils:
-		#cv2.ellipse(img,pupil,(0,255,0),1)
-		C = int(pupil[0][0]),int(pupil[0][1])
-		
-		contour = findEllipseContour(img, magnitude, orientation, C, 70)
-		cv2.ellipse(img, contour, bgr_red, 1)
-		cv2.circle(img,C, 2, (0,0,255),1)
+		cv2.circle(img, (int(pupil[0]),int(pupil[1])),pupil[2], (0,0,255),2)
+
+	# 	contour = findEllipseContour(img, magnitude, orientation, C, 70)
+	# 	cv2.ellipse(img, contour, bgr_red, 1)
+	# 	cv2.circle(img,C, 2, (0,0,255),1)
 		#circleTest(img, C)
 	for glint in glints:
 	    C = int(glint[0]),int(glint[1])
-	    #cv2.circle(img,C, 2,(255,0,255),5)
+	    cv2.circle(img,C, 2,(255,0,255),5)
 
 
 
-	# if corners:
-	# 	left_from, left_to, right_from, right_to = corners
-	# 	cv2.rectangle(img, left_from , left_to, 255)
-	# 	cv2.rectangle(img, right_from , right_to, 255)
+	if corners:
+		left_from, left_to, right_from, right_to = corners
+		cv2.rectangle(img, left_from , left_to, 255)
+		cv2.rectangle(img, right_from , right_to, 255)
 
-	# for iris in irises:
-	# 	cv2.ellipse(img,iris,(0,255,0),1)
-	# 	C = int(iris[0][0]),int(iris[0][1])
-	# 	cv2.circle(img,C, 2, (0,0,255),4)
+	for iris in irises:
+		#cv2.ellipse(img,iris,(0,255,0),1)
+		C = int(iris[0]),int(iris[1])
+		radius = int(iris[2])
+		cv2.circle(img, C, radius, (255,0,255), 1)
 
 	cv2.imshow("Result", img)
 
 		#For Iris detection - Week 2
-		#circularHough(gray)
+	#
 
 	#copy the image so that the result image (img) can be saved in the movie
 	drawImg = img.copy()
@@ -567,7 +578,7 @@ def get_pupils_from_kmean(labelIm, centroids, gray, min_val,max_val):
 	label = np.argmin(centroids[:,0])
 	result[labelIm == label] = [255]
 	y,x=gray.shape
-	result = cv2.resize(result,(x,y)) 
+	result = cv2.resize(result,(x,y))
 	semi_binI = np.array(result, dtype='uint8')
 	#remove gray elements created from the linear interpolation
 	val,binI =cv2.threshold(semi_binI, 0, 255, cv2.THRESH_BINARY)
