@@ -152,7 +152,7 @@ A downside to using the closing operation, is that adjacent, sparse structures m
 \item[2.]{One or more pupils were found within the distance, return those}
 \item[3.]{No pupils were found within the distance, search the entire image}
 \end{description}
-Because of the fallback clause in '3', it is very unlikely that the true positive is not detected in each frame. The only case I can think of where this approach fails, is if the pupil is obscured for a frame (subject blinking for example), while a false positive is still detected. In that case, the pupil will improperly detected for as long as the false positive continues to be present.
+Because of the fallback clause in '3', it is very unlikely that the true positive is not detected in each frame. The only case where this approach fails, is if the pupil is obscured for a frame (subject blinking for example), while a false positive is still detected. In that case, the pupil will be improperly detected for as long as the false positive continues to be present.
 
 \subsection{Pupil Detection using k-means}
 A method to enhance the BLOB detection of pupil detection is k-means clustering. The method separates the picture in K clusters. Each cluster is a set of pixels, which have values closer to the cluster center, than to other cluster centres -  a cluster center corresponds to mean value of the pixels in cluster. The value of K is arbitrarily chosen, so that for a sufficiently large number of K the pupil is evaluated as a single separate cluster. If the pupil is a single cluster a binary image can easily be created and BLOB detection would only need to look at the one object. The following figure illustrates how different values of K impacts the segmentation.
@@ -245,16 +245,16 @@ We experimented with ignoring gradient points where the orientation was too far 
 \subsection{Pupil Detection by circular Hough transformation}
 
 In an attempt to make our pupil detection more robust we now investigate the result of applying a
-circular hough transformation on the eye images.
+circular Hough transformation on the eye images.
 
 The main challenge is finding the correct parameters for the process. We consider the following parameters:
 
 \begin{description}
-  \item[Gauss kernel size] The size of the gaussian kernel that is applied to the image before the hough transformation
+  \item[Gauss kernel size] The size of the gaussian kernel that is applied to the image before the Hough transformation
 
   \item[$\sigma$ - value] the standard deviation value used to construct the gaussian kernel.
 
-  \item[Accumulator threshold] The minimum cummulative vote thresshold in which some parameters for a circle are considered.
+  \item[Accumulator threshold] The minimum cumulative vote threshold in which some parameters for a circle are considered.
 
   \item[Minimum and Maxiumum Radius] The minumum and maximum radius of circles to consider.
 
@@ -294,18 +294,18 @@ The next step is to experimentally find the parameters that yields the best resu
   \caption{Size=31, $\sigma$ = 9}
   \label{fig:sub4}
 \end{subfigure}
-\caption{Preprocessing by smothing with a gaussian kernel}
+\caption{Preprocessing by smoothing with a gaussian kernel}
 \label{fig:test2}
 \end{figure}
 
 \paragraph{Discussion}
-The circular hough transformation yields the most robust pupil detection we have been able to produce so far.
+The circular Hough transformation yields the most robust pupil detection we have been able to produce so far.
 
-The intuition behind this is that in an ideal setting, where the eye for example is not distorted by perspective, the pupil is going to be near-circular, so the process of hough tranforming and then voting for circles is likely to succeed.
+The intuition behind this is that in an ideal setting, where the eye for example is not distorted by perspective, the pupil is going to be near-circular, so the process of Hough tranforming and then voting for circles is likely to succeed.
 
 In a non ideal setting, for example in a frame were the eye is seen from the side the pupil is not going to yield the same circular properties, and the process is going to fail.
 
-By preprocessing the image by smooting some of the noise is going to be filtered out. The idea is to choose a kernel that is rougly of the same size as the pupil. In this manner smaller features, such as eye lashes will be smothed away, but still maintaining the pupil feature.
+By preprocessing the image by smooting some of the noise is going to be filtered out. The idea is to choose a kernel that is rougly of the same size as the pupil. In this manner smaller features, such as eye lashes will be smoothed away, but still maintaining the pupil feature.
 
 The drawback of setting a constant size for the gaussian kernel is that is is not scale independent. An ideal kernel in some frame may smooth away the pupil in some other frame is the subject moved closer or futher away from the camera.
 
@@ -321,7 +321,7 @@ In this section, we will investigate and discuss glint detection.
 \subsection{Thresholding}
 Like pupil detection thresholding seems like an obvious place to start. The methods are almost identical. By first creating a binary image from a threshold value, and then do a BLOB analysis, resulting  in a set of points where glints are present.\\
 
-Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are very close to white, a fairly high threshold gives a good result. Furthermore by experimenting we found that, by requiring that the BLOB area lies int the interval $[10:150]$, we exclude a great deal of unwanted glint detections, it is although clear that there is still a good amount of false positives.
+Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are very close to white, a fairly high threshold gives a good result. Furthermore by experimenting we found that, by requiring that the BLOB area lies in the interval $[10:150]$, we exclude a great deal of unwanted glint detections, it is although clear that there is still a good amount of false positives.
 
 \begin{figure}[H]
 \centering
@@ -426,11 +426,11 @@ The methods can be combined to detect a change in both scale and rotation. A pro
 
 \section{Iris / Limbus Detection}
 \subsection{Hough Transformation with position prior}
-If we assume that we are somehow able to detect the pupil in a robust way, we can use this position as input to a circular hough tranformation.
+If we assume that we are somehow able to detect the pupil in a robust way, we can use this position as input to a circular Hough tranformation.
 
-In this way the hough tranformation will be one dimensional since the only free variable is the radius of the circle.
+In this way the Hough tranformation will be one dimensional since the only free variable is the radius of the circle.
 
-The procedure is then to itearate over the circles in a range between some minimum and maximum radius with some step size. We then discretize the periphery of the circle and iterate over this discretization. We then increment the value of the current radius, in a parametric accumulator table, if the corresponding point in the Canny edge image is larger than zero.
+The procedure is then to iterate over the circles in a range between some minimum and maximum radius with some step size. We then discretize the periphery of the circle and iterate over this discretization. We then increment the value of the current radius, in a parametric accumulator table, if the corresponding point in the Canny edge image is larger than zero.
 
 The radius with the highest value in the accumulator table is thus the circle that yields the best fit.
 
