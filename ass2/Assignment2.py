@@ -74,8 +74,7 @@ def displayTrace(squareInVideo):
     p1, p2 = squareInVideo
     p1_map = multiplyPointByHomography(p1, H)
     p2_map = multiplyPointByHomography(p2, H)
-    #cv2.rectangle(ituMap, p1_map, p2_map, green)
-    cv2.circle(ituMap, p1_map, 1, blue, 5)
+    cv2.rectangle(ituMap, p1_map, p2_map, green)
     cv2.imshow("Tracking", ituMap)
 
 
