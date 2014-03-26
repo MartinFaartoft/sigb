@@ -86,7 +86,7 @@ In this section, we will investigate and compare different techniques for pupil 
 \subsection{Thresholding}
 An obvious first choice of technique, is using a simple threshold to find the pupil, then do connected component (blob) analysis, and finally fit an ellipse on the most promising blobs.
 
-Fig \ref{fig:eye1_threshold_93} shows an example of an image from the 'eye1.avi' sequence and the binary image produced by, using a threshold that blacks out all pixels with intensities above 93. This manages to separate the pupil nicely from the iris.
+Figure \ref{fig:eye1_threshold_93} shows an example of an image from the 'eye1.avi' sequence and the binary image produced by, using a threshold that blacks out all pixels with intensities above 93. This manages to separate the pupil nicely from the iris.
 
 \begin{figure}[ht]
   \centering
@@ -96,7 +96,7 @@ Fig \ref{fig:eye1_threshold_93} shows an example of an image from the 'eye1.avi'
   \label{fig:eye1_threshold_93}
 \end{figure}
 
-The next step, is to do connected component analysis, and fit an ellipsis through the blobs. As seen in fig \ref{fig:eye1_unfiltered}, this succesfully detects the pupil, but is extremely prone to false positives.
+The next step, is to do connected component analysis, and fit an ellipsis through the blobs. As seen in Figure \ref{fig:eye1_unfiltered}, this succesfully detects the pupil, but is extremely prone to false positives.
 
 \begin{figure}[ht]
   \centering
@@ -108,7 +108,7 @@ The next step, is to do connected component analysis, and fit an ellipsis throug
 By experimenting, we find that requiring that the area of the blob lies in the interval $[1000:10000]$, and the extent between $[0.4:1.0]$, we eliminate most false positives on the entire eye1 sequence, while still keeping the true positive.
 
 \paragraph{}
-This approach has several problems, however. Note how the true positive on fig \ref{fig:eye1_unfiltered} fails to follow the bottom of pupil correctly. This is due to the glints obscuring part of the boundary between pupil and iris. It also makes some sweeping assumptions:
+This approach has several problems, however. Note how the true positive on Figure \ref{fig:eye1_unfiltered} fails to follow the bottom of pupil correctly. This is due to the glints obscuring part of the boundary between pupil and iris. It also makes some sweeping assumptions:
 
 \paragraph{The pupil has size at least size 1000}
 If the person on the sequence leans back slightly, the pupil will shrink and we will fail to detect it.
@@ -135,7 +135,7 @@ This problem can be mitigated somewhat with Histogram Equalization. A threshold 
 \end{figure}
 
 \paragraph{Morphology}
-Using Morphology, we can improve the detected pupil. The problem with the glints obscuring part of the boundary can be mitigated with the 'closing' operator - used to fill in holes in binary images. Fig \ref{fig:morph} shows binary images before and after applying the closing operator. Notice how the noise inside the pupil is completely removed, and the glints are mostly removed.
+Using Morphology, we can improve the detected pupil. The problem with the glints obscuring part of the boundary can be mitigated with the 'closing' operator - used to fill in holes in binary images. Figure \ref{fig:morph} shows binary images before and after applying the closing operator. Notice how the noise inside the pupil is completely removed, and the glints are mostly removed.
 A downside to using the closing operation, is that adjacent, sparse structures may merge and resemble circles.
 
 \begin{figure}[ht]
@@ -209,7 +209,7 @@ In conclusion the use of k-means did not yield a better result than ordinary thr
 
 \subsection{Pupil Detection using Gradient Magnitude}
 So far, we have been looking at the intensity values of the image. This has yielded reasonable approximate results, but is not as robust as we would like. In the following, we investigate what happens if we look at the change in intensity (the image gradient / first derivative), instead of the absolute intensity value at a given point.
-The gradients in the X and Y directions, are easily calculated with a Sobel filter. And from these, we can calculate the Gradient Magnitude as: $\sqrt{x^2 + y^2}$ (the Euclidean length of the vector x + y), and the orientation as: $arctan2(y, x)$. Fig \ref{fig:quiver} shows a subsampled cutout of the Gradient image of Eye1, featuring the pupil and glints.
+The gradients in the X and Y directions, are easily calculated with a Sobel filter. And from these, we can calculate the Gradient Magnitude as: $\sqrt{x^2 + y^2}$ (the Euclidean length of the vector x + y), and the orientation as: $arctan2(y, x)$. Figure \ref{fig:quiver} shows a subsampled cutout of the Gradient image of Eye1, featuring the pupil and glints.
 
 \begin{figure}[ht]
   \centering
@@ -218,7 +218,7 @@ The gradients in the X and Y directions, are easily calculated with a Sobel filt
   \label{fig:quiver}
 \end{figure}
 
-Note that the pupil boundary is clearly visible on fig \ref{fig:quiver}. We will attempt to use this information as follows: given an approximate centerpoint and radius for the pupil, scan in a number of directions, $d$ from the centerpoint, find the location of the maximum gradient magnitudes along the line-segments that are described by the centerpoint, a direction from $d$ and the radius. Use this set of points to fit an ellipse, and use that as improved pupil detection.
+Note that the pupil boundary is clearly visible on Figure \ref{fig:quiver}. We will attempt to use this information as follows: given an approximate centerpoint and radius for the pupil, scan in a number of directions, $d$ from the centerpoint, find the location of the maximum gradient magnitudes along the line-segments that are described by the centerpoint, a direction from $d$ and the radius. Use this set of points to fit an ellipse, and use that as improved pupil detection.
 
 \begin{figure}[ht]
   \centering
@@ -228,17 +228,17 @@ Note that the pupil boundary is clearly visible on fig \ref{fig:quiver}. We will
   \label{fig:gradient_circle}
 \end{figure}
 
-Figure \ref{fig:gradient_circle}(left) shows the lines considered, and the max gradient points found. Figure \ref{fig:gradient_circle}(right) shows the old and new pupil detections. This approach suffers the same problem as earlier. When the glints obscure part of the boundary, the pupil detection fails to follow the lower boundary. On top of that, there are also issues with noise, notice the red dots inside the top part of the pupil on fig \ref{fig:gradient_circle}, these are caused by non-system light reflecting off the pupil.
+Figure \ref{fig:gradient_circle}(left) shows the lines considered, and the max gradient points found. Figure \ref{fig:gradient_circle}(right) shows the old and new pupil detections. This approach suffers the same problem as earlier. When the glints obscure part of the boundary, the pupil detection fails to follow the lower boundary. On top of that, there are also issues with noise, notice the red dots inside the top part of the pupil on Figure \ref{fig:gradient_circle}, these are caused by non-system light reflecting off the pupil.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=0.25]{gradient_circle_gaussian_blur}
   \includegraphics[scale=0.25]{gradient_pupil_gaussian_blur}
-  \caption{as fig \ref{fig:gradient_circle}, but pre-processed with a 9x9 Gaussian Blur}
+  \caption{as Figure \ref{fig:gradient_circle}, but pre-processed with a 9x9 Gaussian Blur}
   \label{fig:gradient_circle_gaussian_blur}
 \end{figure}
 
-The noise issues can be drastically reduced with proper pre-processing. Fig \ref{fig:gradient_circle_gaussian_blur} shows much improved results, when blurring the image beforehand.
+The noise issues can be drastically reduced with proper pre-processing. Figure \ref{fig:gradient_circle_gaussian_blur} shows much improved results, when blurring the image beforehand.
 
 We experimented with ignoring gradient points where the orientation was too far from the orientation of the circle normal, but did not see any improvements to the pupil detection.
 
