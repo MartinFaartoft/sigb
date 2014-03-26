@@ -208,7 +208,7 @@ def GetIrisUsingSimplifyedHough(gray,pupil):
 		pupil_x = int(pupil[0])
 		pupil_y = int(pupil[1])
 		cv2.imshow("edges", edges)
-		radii = simplifiedHough(edges, pupil, 30, 40, 1, 50)
+		radii = simplifiedHough(edges, pupil, 10, 100, 1, 50)
 		irises = []
 		for radius in radii:
 			#cv2.circle(gray, (pupil_x, pupil_y), radius, (0, 0, 0), 1)
