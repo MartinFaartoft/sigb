@@ -389,8 +389,7 @@ Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are ve
 %hist equal?
 
 \section{Eye Corner Detection}
-We detect eye corners simply by template matching.
-\todo{More intro text}
+We detect eye corners simply by template matching. We use template matching by normalized cross-correlation, which is invariant to lighting and exposure conditions, at the expense of performance. Because of the large changes in intensities in the different sequences, we find this to be the preferred method.
 
 \paragraph{Examples}
 \begin{figure}[H]
