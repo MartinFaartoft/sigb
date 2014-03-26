@@ -430,6 +430,8 @@ The methods can be combined to detect a change in both scale and rotation. A pro
 
 
 \section{Iris / Limbus Detection}
+\subsection{Iris detection using thresholding}
+We experimented with simple thresholding, to detect the shape and position of the iris. What we found, was that it will work under ideal circumstances, but is extremely brittle with regards to chosen threshold and system lighting. Furthermore, because the iris intensities lies in the middle range (with glints being very bright, and pupil being very dark), many false positives were being picked up in the skin-tone range. This experiment yielded no usable results, and are not discussed further.
 \subsection{Hough Transformation with position prior}
 If we assume that we are somehow able to detect the pupil in a robust way, we can use this position as input to a circular Hough tranformation.
 
@@ -455,7 +457,7 @@ The radius with the highest value in the accumulator table is thus the circle th
   \caption{Multiple true positives}
   \label{fig:circhoughgood}
 \end{subfigure}
-\caption{Detecting circles using hough transformation with position prior }
+\caption{Detecting circles using Hough transformation with position prior }
 \label{fig:houghcircles}
 \end{figure}
 
