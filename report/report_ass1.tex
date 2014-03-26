@@ -78,7 +78,7 @@
 \section{Introduction}
 In the following, we will experiment with, and discuss different approaches to detecting major eye features. Figure \ref{fig:eye_features} gives the names of the eye features that are used throughout this report.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.4]{eye_features}
   \caption{Names and positions of major eye features}
@@ -93,7 +93,7 @@ An obvious first choice of technique, is using a simple threshold to find the pu
 
 Figure \ref{fig:eye1_threshold_93} shows an example of an image from the 'eye1.avi' sequence and the binary image produced by, using a threshold that blacks out all pixels with intensities above 93. This manages to separate the pupil nicely from the iris.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.2]{eye1}
   \includegraphics[scale=0.2]{eye1_threshold_93}
@@ -103,7 +103,7 @@ Figure \ref{fig:eye1_threshold_93} shows an example of an image from the 'eye1.a
 
 The next step, is to do connected component analysis, and fit an ellipsis through the blobs. As seen in Figure \ref{fig:eye1_unfiltered}, this succesfully detects the pupil, but is extremely prone to false positives.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.3]{eye1_unfiltered}
   \caption{Fitting ellipses on blobs from eye1.avi (green figures are ellipses fitted through blobs, red dots are the centerpoint of each blob)}
@@ -123,7 +123,7 @@ This is true for eye1.avi, but generalizes extremely poorly to the other sequenc
 
 This problem can be mitigated somewhat with Histogram Equalization. A threshold of 25 on Histogram Equalized images, fares considerably better across several sequences. Note that this will still fail, if parts of the image are significantly darker than the pupil, thereby messing up the equalization.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.2]{eye1}
   \includegraphics[scale=0.2]{eye1_hist_eq}
@@ -131,7 +131,7 @@ This problem can be mitigated somewhat with Histogram Equalization. A threshold 
   \label{fig:eye1_hist_eq}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.2]{eye3}
   \includegraphics[scale=0.2]{eye3_hist_eq}
@@ -143,7 +143,7 @@ This problem can be mitigated somewhat with Histogram Equalization. A threshold 
 Using Morphology, we can improve the detected pupil. The problem with the glints obscuring part of the boundary can be mitigated with the 'closing' operator - used to fill in holes in binary images. Figure \ref{fig:morph} shows binary images before and after applying the closing operator. Notice how the noise inside the pupil is completely removed, and the glints are mostly removed.
 A downside to using the closing operation, is that adjacent, sparse structures may merge and resemble circles.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.2]{eye1_close_5}
   \includegraphics[scale=0.2]{eye1_no_morph}
@@ -162,7 +162,7 @@ Because of the fallback clause in '3', it is very unlikely that the true positiv
 \subsection{Pupil Detection using k-means}
 A method to enhance the BLOB detection of pupil detection is k-means clustering. The method separates the picture in K clusters. Each cluster is a set of pixels, which have values closer to the cluster center, than to other cluster centres -  a cluster center corresponds to mean value of the pixels in cluster. The value of K is arbitrarily chosen, so that for a sufficiently large number of K the pupil is evaluated as a single separate cluster. If the pupil is a single cluster a binary image can easily be created and BLOB detection would only need to look at the one object. The following figure illustrates how different values of K impacts the segmentation.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \begin{subfigure}{.33\textwidth}
   \centering
@@ -190,7 +190,7 @@ For performance reasons, the k-means procedure can not be calculated from the or
 
 Each pixel in the reduced picture is assigned to a cluster(label), selecting the pixels in the label with the lowest mean value, we can create a binary image, which now can be resized to the original image size. Because the cluster also contains pixels from other regions than the pupil area, the resulting binary image, on which we can do BLOB detection, is not optimal. Figure \ref{fig:kmeans} shows this.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -216,7 +216,7 @@ In conclusion the use of k-means did not yield a better result than ordinary thr
 So far, we have been looking at the intensity values of the image. This has yielded reasonable approximate results, but is not as robust as we would like. In the following, we investigate what happens if we look at the change in intensity (the image gradient / first derivative), instead of the absolute intensity value at a given point.
 The gradients in the X and Y directions, are easily calculated with a Sobel filter. And from these, we can calculate the Gradient Magnitude as: $\sqrt{x^2 + y^2}$ (the Euclidean length of the vector x + y), and the orientation as: $arctan2(y, x)$. Figure \ref{fig:quiver} shows a subsampled cutout of the Gradient image of Eye1, featuring the pupil and glints.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.5]{quiver_cutout}
   \caption{Quiver plot of Eye1 gradients (zoomed on pupil area)}
@@ -225,7 +225,7 @@ The gradients in the X and Y directions, are easily calculated with a Sobel filt
 
 Note that the pupil boundary is clearly visible on Figure \ref{fig:quiver}. We will attempt to use this information as follows: given an approximate centerpoint and radius for the pupil, scan in a number of directions, $d$ from the centerpoint, find the location of the maximum gradient magnitudes along the line-segments that are described by the centerpoint, a direction from $d$ and the radius. Use this set of points to fit an ellipse, and use that as improved pupil detection.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.25]{gradient_circle}
   \includegraphics[scale=0.25]{gradient_pupil}
@@ -235,7 +235,7 @@ Note that the pupil boundary is clearly visible on Figure \ref{fig:quiver}. We w
 
 Figure \ref{fig:gradient_circle}(left) shows the lines considered, and the max gradient points found. Figure \ref{fig:gradient_circle}(right) shows the old and new pupil detections. This approach suffers the same problem as earlier. When the glints obscure part of the boundary, the pupil detection fails to follow the lower boundary. On top of that, there are also issues with noise, notice the red dots inside the top part of the pupil on Figure \ref{fig:gradient_circle}, these are caused by non-system light reflecting off the pupil.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.25]{gradient_circle_gaussian_blur}
   \includegraphics[scale=0.25]{gradient_pupil_gaussian_blur}
@@ -491,7 +491,7 @@ Our thresholding approach is extremely good at finding all the highlights of the
 \paragraph{Iris / Limbus}
 We use our own, simplified Hough transform, that assumes the pupil center has been found correctly, and that the limbus is approximately circular. This is the least robust of our feature detections, but works well enough in practice to be useful.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.3]{resgood}
   \includegraphics[scale=0.3]{resnoiris}
