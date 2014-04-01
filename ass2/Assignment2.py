@@ -156,6 +156,62 @@ def texturemapGridSequence():
             cv2.imshow("win2",imgOrig)
             cv2.waitKey(1)
 
+def textureOnGrid():
+     #create H_T_G from first frame of sequence
+    texture = cv2.imread('Images/ITULogo.jpg')
+    texture = cv2.pyrDown(texture)
+    t_x ,t_y, t_d = texture.shape
+
+    fn = "GridVideos/grid1.mp4"
+    sequence = cv2.VideoCapture(fn)
+    running, frame = sequence.read()    
+    
+    
+    pattern_size = (9, 6)
+
+    idx = [53,45,0,8]
+    #fig = figure()
+    while running:
+        running, frame = sequence.read()
+        if not running:
+            return
+
+        frame = cv2.pyrDown(frame)
+        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        found, corners = cv2.findChessboardCorners(gray, pattern_size)
+    
+        # m,n,d = I1.shape
+        #Define corner points
+        #imagePoints.append([(float(0.0),float(0.0)),(float(n),0),(float(n),float(m)),(0,m)])
+        ip1 = np.array([[0.,0.],[float(t_x),0.],[float(t_x),float(t_y)],[0.,float(t_y)]])
+        #ip2 = [[x,y] for (_, x, y) in corners[idx,]]
+       
+        if not found:
+            continue
+
+        r = []
+
+        c = [(0,0,0),(75,75,75),(125,125,125),(255,255,255)]
+        for i,t in enumerate(idx):
+            r.append([float(corners[t,0,0]),float(corners[t,0,1])])
+            cv2.circle(frame,(int(corners[t,0,0]),int(corners[t,0,1])),10,c[i])
+        
+        ip2 = np.array(r)
+        
+        h_t_s,mask = cv2.findHomography(ip1, ip2)
+
+
+        #texture map
+        h,w,d = frame.shape
+        warped_texture = cv2.warpPerspective(texture, h_t_s,(w, h))
+        result = cv2.addWeighted(frame, .2, warped_texture, .8, 50)
+
+        #display
+        cv2.imshow("Texture Mapping", result)
+        cv2.waitKey(1)
+
+    #run sequence and map texture onto it according to H_T_G
+
 
 
 def realisticTexturemap(scale,point,map):
@@ -279,6 +335,7 @@ def texturemapObjectSequence():
 #createHomography()
 #showFloorTrackingData()
 #simpleTextureMap()
-textureMapGroundFloor()
+#textureMapGroundFloor()
 #realisticTexturemap(0,0,0)
 #texturemapGridSequence()
+textureOnGrid()
