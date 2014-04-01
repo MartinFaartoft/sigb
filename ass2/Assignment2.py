@@ -157,35 +157,28 @@ def texturemapGridSequence():
             cv2.waitKey(1)
 
 def textureOnGrid():
-     #create H_T_G from first frame of sequence
     texture = cv2.imread('Images/ITULogo.jpg')
     texture = cv2.pyrDown(texture)
-    t_x ,t_y, t_d = texture.shape
+    m,n,d = texture.shape
 
     fn = "GridVideos/grid1.mp4"
     sequence = cv2.VideoCapture(fn)
     running, frame = sequence.read()    
     
-    
     pattern_size = (9, 6)
-
-    idx = [53,45,0,8]
-    #fig = figure()
+    idx = [0,8,53,45]
+    
     while running:
         running, frame = sequence.read()
-        if not running:
+        if not running:            
             return
-
         frame = cv2.pyrDown(frame)
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
         found, corners = cv2.findChessboardCorners(gray, pattern_size)
     
-        # m,n,d = I1.shape
-        #Define corner points
-        #imagePoints.append([(float(0.0),float(0.0)),(float(n),0),(float(n),float(m)),(0,m)])
-        ip1 = np.array([[0.,0.],[float(t_x),0.],[float(t_x),float(t_y)],[0.,float(t_y)]])
-        #ip2 = [[x,y] for (_, x, y) in corners[idx,]]
-       
+        #Define corner points of texture
+        ip1 = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
+      
         if not found:
             continue
 
@@ -200,11 +193,10 @@ def textureOnGrid():
         
         h_t_s,mask = cv2.findHomography(ip1, ip2)
 
-
         #texture map
         h,w,d = frame.shape
         warped_texture = cv2.warpPerspective(texture, h_t_s,(w, h))
-        result = cv2.addWeighted(frame, .2, warped_texture, .8, 50)
+        result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
 
         #display
         cv2.imshow("Texture Mapping", result)
