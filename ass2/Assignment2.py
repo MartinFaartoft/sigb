@@ -58,7 +58,7 @@ def textureMapGroundFloor():
         #texture map
         h,w,d = frame.shape
         warped_texture = cv2.warpPerspective(texture, h_t_g,(w, h))
-        result = cv2.addWeighted(frame, .8, warped_texture, .2, 0)
+        result = cv2.addWeighted(frame, .8, warped_texture, .2, 50)
 
         #display
         cv2.imshow("Texture Mapping", result)
