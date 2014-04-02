@@ -210,42 +210,52 @@ def realisticTexturemap(H_G_M, scale):
     map_img = cv2.imread('Images/ITUMap.bmp')
     point = getMousePointsForImageWithParameter(map_img, 1)[0]
 
-    H_T_M = np.zeros(9).reshape(3,3)
-    H_T_M[0][0] = scale
-    H_T_M[1][1] = scale
-
-    H_T_M[2][0] = point[0]
-    H_T_M[2][0] = point[1]
-
-    H_T_M[2][2] = 1
-
-    #For sjov
-    H_T_M = np.identity(3)
-
-
-    H_M_G = np.linalg.inv(H_G_M)
-
-    H_T_G = np.dot(H_T_M, H_M_G)
-
-    H_T_G = H_T_G / H_T_G[2][2]
-
-
-
     texture = cv2.imread('Images/ITULogo.jpg')
+    #texture = cv2.cvtColor(texture,cv2.COLOR_BGR2GRAY)
+    t_x, t_y, _ = texture.shape
+
+    scaled_width = t_x * scale
+    scaled_height = t_y * scale
+
+    point1_x, point1_y = point
+    point1 = point
+
+    point2_x = point1_x + scaled_width
+    point2_y = point1_y
+    point2 = (point2_x, point2_y)
+
+
+    point3_x = point1_x + scaled_width
+    point3_y = point1_y + scaled_height
+    point3 = (point3_x, point3_y)
+
+    point4_x = point1_x
+    point4_y = point1_y + scaled_height
+    point4 = (point4_x, point4_y)
+
+    ip1 = np.array([[0.,0.],[float(t_x),0.],[float(t_x),float(t_y)],[0.,float(t_y)]])
+    ip2 = np.array([point1, point2, point3, point4])
+
+    H_T_M, mask = cv2.findHomography(ip1, ip2)
+    print point
+    print H_T_M
+
+    #H_T_G = np.dot(H_T_M, H_M_G)
 
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
     #load Tracking data
     running, frame = cap.read()
 
-    h,w,d = frame.shape
+    h,w,d = map_img.shape
 
-    print H_T_G
 
-    warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
-    result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
+    warped_texture = cv2.warpPerspective(texture, H_T_M,(w, h))
 
-    cv2.imshow("Result", warped_texture)
+    #print map_img.shape,
+    result = cv2.addWeighted(map_img, .6, warped_texture, .4, 50)
+
+    cv2.imshow("Result", result)
     cv2.waitKey(0)
 
 
