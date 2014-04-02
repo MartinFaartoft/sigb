@@ -77,7 +77,36 @@
 
 \section{Introduction}
 LOLZ
-\section{Person tracking on map}
+\section{Person Location on Map}
+In this section, we will take a video of a person walking around the ITU atrium, and map his movement onto an overview map of the ITU building. This effectively eliminates the perspective, and allows for easy measurement of speed, acceleration and heading.
+
+\subsection{Theory}
+Both The ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
+
+$H = 
+\begin{matrix}
+ h_{1,1} & h_{1,2} & h_{1,3} \\
+ h_{2,1} & h_{2,2} & h_{2,3} \\
+ h_{3,1} & h_{3,2} & h_{3,3}
+\end{matrix}
+$
+
+When the correct homography is found, points $(x,y)$ in the original plane, can be mapped to points $(x',y')$ in the new plane, by multiplication as follows:
+
+$
+\begin{matrix}
+x' \\
+y' \\
+1
+\end{matrix}
+= H * 
+\begin{matrix}
+x \\
+y \\
+1
+\end{matrix}
+$
+
 \section{Linear texture mapping}
 
 
