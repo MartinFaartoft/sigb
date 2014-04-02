@@ -156,6 +156,24 @@ def texturemapGridSequence():
             cv2.imshow("win2",imgOrig)
             cv2.waitKey(1)
 
+def calibrateSharpening():
+    frame = cv2.imread("failed_frame_224.png")
+    new_frame = sharpen(frame)
+    found, _ = cv2.findChessboardCorners(new_frame, (9,6))
+    print found
+    cv2.imshow("sharpened", new_frame)
+    cv2.waitKey(0)
+
+def sharpen(gray):
+    #sharpening idea 1: use the laplacian to sharpen up the image
+    #sharpen_mask = copy(gray)
+    #cv2.cv.Laplace(cv2.cv.fromarray(gray), cv2.cv.fromarray(sharpen_mask), 3)
+    #return sharpen_mask + gray
+
+    #sharpening idea 2: subtract a blurred version from the original
+    blur = cv2.GaussianBlur(gray, (0,0), 10)
+    return cv2.addWeighted(gray, 1.5, blur, -.5, 0)
+
 def textureOnGrid():
     texture = cv2.imread('Images/ITULogo.jpg')
     texture = cv2.pyrDown(texture)
@@ -164,22 +182,28 @@ def textureOnGrid():
     fn = "GridVideos/grid1.mp4"
     sequence = cv2.VideoCapture(fn)
     running, frame = sequence.read()    
-    
     pattern_size = (9, 6)
     idx = [0,8,53,45]
-    
+    frame_no = 1
+    failed = 0
     while running:
         running, frame = sequence.read()
+        frame_no += 1
         if not running:            
+            print "FAILED: ", failed
             return
         frame = cv2.pyrDown(frame)
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        gray = sharpen(gray)
         found, corners = cv2.findChessboardCorners(gray, pattern_size)
     
         #Define corner points of texture
         ip1 = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
       
         if not found:
+            failed += 1
+            print "GEMMER LIGE"
+            cv2.imwrite("failed_frame_{}.png".format(frame_no), frame)
             continue
 
         r = []
@@ -324,10 +348,12 @@ def texturemapObjectSequence():
             cv2.circle(imgOrig,(100,100),10,(255,0,0))
             cv2.imshow("Detection",imgOrig)
             cv2.waitKey(1)
+
 #createHomography()
 #showFloorTrackingData()
 #simpleTextureMap()
 #textureMapGroundFloor()
 #realisticTexturemap(0,0,0)
 #texturemapGridSequence()
-textureOnGrid()
+#textureOnGrid()
+#calibrateSharpening()
