@@ -160,6 +160,24 @@ def texturemapGridSequence():
             cv2.imshow("win2",imgOrig)
             cv2.waitKey(1)
 
+def calibrateSharpening():
+    frame = cv2.imread("failed_frame_224.png")
+    new_frame = sharpen(frame)
+    found, _ = cv2.findChessboardCorners(new_frame, (9,6))
+    print found
+    cv2.imshow("sharpened", new_frame)
+    cv2.waitKey(0)
+
+def sharpen(gray):
+    #sharpening idea 1: use the laplacian to sharpen up the image
+    #sharpen_mask = copy(gray)
+    #cv2.cv.Laplace(cv2.cv.fromarray(gray), cv2.cv.fromarray(sharpen_mask), 3)
+    #return sharpen_mask + gray
+
+    #sharpening idea 2: subtract a blurred version from the original
+    blur = cv2.GaussianBlur(gray, (0,0), 10)
+    return cv2.addWeighted(gray, 1.5, blur, -.5, 0)
+
 def textureOnGrid():
     texture = cv2.imread('Images/ITULogo.jpg')
     texture = cv2.pyrDown(texture)
@@ -168,22 +186,28 @@ def textureOnGrid():
     fn = "GridVideos/grid1.mp4"
     sequence = cv2.VideoCapture(fn)
     running, frame = sequence.read()
-
     pattern_size = (9, 6)
     idx = [0,8,53,45]
-
+    frame_no = 1
+    failed = 0
     while running:
         running, frame = sequence.read()
+        frame_no += 1
         if not running:
-            return
+            print "FAILED: ", failed
+
         frame = cv2.pyrDown(frame)
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        gray = sharpen(gray)
         found, corners = cv2.findChessboardCorners(gray, pattern_size)
 
         #Define corner points of texture
         ip1 = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
 
         if not found:
+            failed += 1
+            print "GEMMER LIGE"
+            cv2.imwrite("failed_frame_{}.png".format(frame_no), frame)
             continue
 
         r = []
@@ -211,46 +235,41 @@ def textureOnGrid():
 
 
 def realisticTexturemap(H_G_M, scale):
-    map_img = cv2.imread('Images/ITUMap.bmp')
+    map_img = cv2.imread('Images/ITULogo.jpg')
     point = getMousePointsForImageWithParameter(map_img, 1)[0]
 
+    texture = cv2.imread('Images/velux_logo.png')
+    #texture = cv2.cvtColor(texture,cv2.COLOR_BGR2GRAY)
     H_T_M = np.zeros(9).reshape(3,3)
     H_T_M[0][0] = scale
     H_T_M[1][1] = scale
 
-    H_T_M[2][0] = point[0]
-    H_T_M[2][0] = point[1]
+    H_T_M[0][2] = point[0]
+    H_T_M[1][2] = point[1]
 
     H_T_M[2][2] = 1
 
-    #For sjov
-    H_T_M = np.identity(3)
-
-
     H_M_G = np.linalg.inv(H_G_M)
 
-    H_T_G = np.dot(H_T_M, H_M_G)
-
-    H_T_G = H_T_G / H_T_G[2][2]
-
-
-
-    texture = cv2.imread('Images/ITULogo.jpg')
+    H_T_G = np.dot(H_M_G, H_T_M)
 
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
     #load Tracking data
     running, frame = cap.read()
+    while running:
+        running, frame = cap.read()
 
-    h,w,d = frame.shape
+        h,w,d = frame.shape
 
-    print H_T_G
+        warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
 
-    warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
-    result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
+        result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
 
-    cv2.imshow("Result", warped_texture)
-    cv2.waitKey(0)
+        cv2.imshow("Result", result)
+        cv2.waitKey(0)
+
+
 
 
 def createHomography():
@@ -397,6 +416,6 @@ def getMousePointsForImageWithParameter(image, points=1):
 showFloorTrackingData()
 #simpleTextureMap()
 #textureMapGroundFloor()
-#realisticTexturemap(H, 0.5)
+realisticTexturemap(H, 0.2)
 #texturemapGridSequence()
 #textureOnGrid()
