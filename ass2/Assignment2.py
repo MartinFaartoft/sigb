@@ -1,5 +1,6 @@
 #from scipy import ndimage
 import cv2
+import cv
 import numpy as np
 from pylab import *
 from matplotlib import *
@@ -97,13 +98,16 @@ def showImageandPlot(N):
 blue = 255, 0, 0
 green = 0, 255, 0
 
-def displayTrace(squareInVideo):
+def displayTrace(squareInVideo, recording = False, videoWriter=0):
     ituMap = cv2.imread('Images/ITUMap.bmp')
     p1, p2 = squareInVideo
     p1_map = multiplyPointByHomography(p1, H)
     p2_map = multiplyPointByHomography(p2, H)
     cv2.rectangle(ituMap, p1_map, p2_map, green)
     cv2.imshow("Tracking", ituMap)
+    
+    if recording:
+        videoWriter.write(ituMap)
 
 
 def multiplyPointByHomography(point, homography):
@@ -267,6 +271,13 @@ def showFloorTrackingData():
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
 
+    #load map and videowriter
+    resultFile = 'output/trace.avi'
+    ituMap = cv2.imread('Images/ITUMap.bmp')
+    imSize = np.shape(ituMap)
+    fps = cap.get(cv.CV_CAP_PROP_FPS)
+    videoWriter = cv2.VideoWriter(resultFile, cv.CV_FOURCC('D','I','V','3'), fps,(imSize[1],imSize[0]),True)
+
     #load Tracking data
     running, imgOrig = cap.read()
     dataFile = np.loadtxt('GroundFloorData/trackingdata.dat')
@@ -282,8 +293,10 @@ def showFloorTrackingData():
                 aBox = boxes[k]
                 cv2.rectangle(imgOrig, aBox[0], aBox[1], boxColors[k])
             cv2.imshow("boxes",imgOrig);
-            displayTrace(boxes[1])
+            displayTrace(boxes[1],recording=True,videoWriter = videoWriter)
             cv2.waitKey(1)
+
+    videoWriter.release()
 
 def angle_cos(p0, p1, p2):
     d1, d2 = p0-p1, p2-p1
@@ -381,9 +394,9 @@ def getMousePointsForImageWithParameter(image, points=1):
     return clickPoints
 
 #createHomography()
-#showFloorTrackingData()
+showFloorTrackingData()
 #simpleTextureMap()
 #textureMapGroundFloor()
-realisticTexturemap(H, 0.5)
+#realisticTexturemap(H, 0.5)
 #texturemapGridSequence()
 #textureOnGrid()
