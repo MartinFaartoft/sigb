@@ -231,10 +231,10 @@ def textureOnGrid():
 
 
 def realisticTexturemap(H_G_M, scale):
-    map_img = cv2.imread('Images/ITUMap.bmp')
+    map_img = cv2.imread('Images/ITULogo.jpg')
     point = getMousePointsForImageWithParameter(map_img, 1)[0]
 
-    texture = cv2.imread('Images/ITULogo.jpg')
+    texture = cv2.imread('Images/velux_logo.png')
     #texture = cv2.cvtColor(texture,cv2.COLOR_BGR2GRAY)
     H_T_M = np.zeros(9).reshape(3,3)
     H_T_M[0][0] = scale
@@ -253,15 +253,32 @@ def realisticTexturemap(H_G_M, scale):
     cap = cv2.VideoCapture(fn)
     #load Tracking data
     running, frame = cap.read()
+    while running:
+        running, frame = cap.read()
 
-    h,w,d = frame.shape
 
-    warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
 
-    result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
 
-    cv2.imshow("Result", result)
-    cv2.waitKey(0)
+
+
+
+
+
+
+
+
+
+
+        h,w,d = frame.shape
+
+        warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
+
+        result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
+
+        cv2.imshow("Result", result)
+        cv2.waitKey(0)
+
+
 
 
 def createHomography():
