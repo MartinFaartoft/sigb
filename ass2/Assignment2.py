@@ -181,7 +181,7 @@ def textureOnGrid():
 
     fn = "GridVideos/grid1.mp4"
     sequence = cv2.VideoCapture(fn)
-    running, frame = sequence.read()    
+    running, frame = sequence.read()
     pattern_size = (9, 6)
     idx = [0,8,53,45]
     frame_no = 1
@@ -189,7 +189,7 @@ def textureOnGrid():
     while running:
         running, frame = sequence.read()
         frame_no += 1
-        if not running:            
+        if not running:
             print "FAILED: ", failed
 
         frame = cv2.pyrDown(frame)
@@ -236,33 +236,23 @@ def realisticTexturemap(H_G_M, scale):
 
     texture = cv2.imread('Images/ITULogo.jpg')
     #texture = cv2.cvtColor(texture,cv2.COLOR_BGR2GRAY)
-    t_x, t_y, _ = texture.shape
+    H_T_M = np.zeros(9).reshape(3,3)
+    H_T_M[0][0] = scale
+    H_T_M[1][1] = scale
 
-    scaled_width = t_x * scale
-    scaled_height = t_y * scale
+    H_T_M[0][2] = point[0]
+    H_T_M[1][2] = point[1]
 
-    point1_x, point1_y = point
-    point1 = point
-
-    point2_x = point1_x + scaled_width
-    point2_y = point1_y
-    point2 = (point2_x, point2_y)
+    H_T_M[2][2] = 1
+    print H_T_M, point
 
 
-    point3_x = point1_x + scaled_width
-    point3_y = point1_y + scaled_height
-    point3 = (point3_x, point3_y)
+    H_M_G = np.linalg.inv(H_G_M)
 
-    point4_x = point1_x
-    point4_y = point1_y + scaled_height
-    point4 = (point4_x, point4_y)
+    H_T_G = np.dot(H_T_M, H_M_G)
 
-    ip1 = np.array([[0.,0.],[float(t_x),0.],[float(t_x),float(t_y)],[0.,float(t_y)]])
-    ip2 = np.array([point1, point2, point3, point4])
+    H_T_G = H_T_G / H_T_G[2][2]
 
-    H_T_M, mask = cv2.findHomography(ip1, ip2)
-    print point
-    print H_T_M
 
     #H_T_G = np.dot(H_T_M, H_M_G)
 
@@ -271,14 +261,15 @@ def realisticTexturemap(H_G_M, scale):
     #load Tracking data
     running, frame = cap.read()
 
-    h,w,d = map_img.shape
+    h,w,d = frame.shape
 
 
-    warped_texture = cv2.warpPerspective(texture, H_T_M,(w, h))
+    warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
 
     #print map_img.shape,
-    result = cv2.addWeighted(map_img, .6, warped_texture, .4, 50)
+    result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
 
+    cv2.imshow("Warped", warped_texture)
     cv2.imshow("Result", result)
     cv2.waitKey(0)
 
