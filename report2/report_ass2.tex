@@ -111,7 +111,7 @@ $
 \subsection*{Texture mapping on static object}
 The function \texttt{textmapGroundFloor} takes a texture an maps it to each frame of the sequence 'sunclipds.avi'. A homography is created using the four corners of the the texture, and four points in the sequence selected by clicking on the first frame. The result is a texture placed 'statically' in the sequence. Figure \ref{fig:floor} show two different frames from the sequence.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \begin{subfigure}{.4\textwidth}
   \centering
@@ -130,7 +130,7 @@ The function \texttt{textmapGroundFloor} takes a texture an maps it to each fram
 \noindent
 The function uses SIGBTools \texttt{getHomographyFromMousepoints} to create the homography, it should be noted that the order of the points are essential for the homography to work - the order of the four mouse clicks should be clockwise, the first point corresponds to the top left corner of the texture. Figure \ref{fig:floor_fail} illustrates the distortion as a result of click ordering.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.32\linewidth]{floor_fail}
 \caption{Distorted texture}
