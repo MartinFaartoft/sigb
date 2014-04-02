@@ -244,17 +244,10 @@ def realisticTexturemap(H_G_M, scale):
     H_T_M[1][2] = point[1]
 
     H_T_M[2][2] = 1
-    print H_T_M, point
-
 
     H_M_G = np.linalg.inv(H_G_M)
 
-    H_T_G = np.dot(H_T_M, H_M_G)
-
-    H_T_G = H_T_G / H_T_G[2][2]
-
-
-    #H_T_G = np.dot(H_T_M, H_M_G)
+    H_T_G = np.dot(H_M_G, H_T_M)
 
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
@@ -263,13 +256,10 @@ def realisticTexturemap(H_G_M, scale):
 
     h,w,d = frame.shape
 
-
     warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
 
-    #print map_img.shape,
     result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
 
-    cv2.imshow("Warped", warped_texture)
     cv2.imshow("Result", result)
     cv2.waitKey(0)
 
@@ -409,6 +399,6 @@ def getMousePointsForImageWithParameter(image, points=1):
 #showFloorTrackingData()
 #simpleTextureMap()
 #textureMapGroundFloor()
-realisticTexturemap(H, 0.5)
+realisticTexturemap(H, 0.2)
 #texturemapGridSequence()
 #textureOnGrid()
