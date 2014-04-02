@@ -47,7 +47,7 @@ def textureMapGroundFloor():
     running, frame = sequence.read()
 
     h_t_g, calibration_points = SIGBTools.getHomographyFromMouse(texture, frame, -4)
-
+    print h_t_g
     #fig = figure()
     while running:
         running, frame = sequence.read()
@@ -235,7 +235,6 @@ def realisticTexturemap(H_G_M, scale):
     point = getMousePointsForImageWithParameter(map_img, 1)[0]
 
     texture = cv2.imread('Images/ITULogo.jpg')
-    #texture = cv2.cvtColor(texture,cv2.COLOR_BGR2GRAY)
     H_T_M = np.zeros(9).reshape(3,3)
     H_T_M[0][0] = scale
     H_T_M[1][1] = scale
@@ -244,32 +243,28 @@ def realisticTexturemap(H_G_M, scale):
     H_T_M[1][2] = point[1]
 
     H_T_M[2][2] = 1
-    print H_T_M, point
+    #print H_T_M, point
 
 
     H_M_G = np.linalg.inv(H_G_M)
 
     H_T_G = np.dot(H_T_M, H_M_G)
 
-    H_T_G = H_T_G / H_T_G[2][2]
-
-
-    #H_T_G = np.dot(H_T_M, H_M_G)
+    #H_T_G = H_T_G / H_T_G[2][2]
 
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
-    #load Tracking data
     running, frame = cap.read()
 
     h,w,d = frame.shape
 
-
     warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
 
-    #print map_img.shape,
-    result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
+    print "point:", point
+    print "H_T_M:", H_T_M
+    print "H_T_G:", H_T_G
 
-    cv2.imshow("Warped", warped_texture)
+    result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
     cv2.imshow("Result", result)
     cv2.waitKey(0)
 
@@ -406,9 +401,9 @@ def getMousePointsForImageWithParameter(image, points=1):
     return clickPoints
 
 #createHomography()
-#showFloorTrackingData()
+showFloorTrackingData()
 #simpleTextureMap()
 #textureMapGroundFloor()
-realisticTexturemap(H, 0.5)
+#realisticTexturemap(H, 0.5)
 #texturemapGridSequence()
 #textureOnGrid()

@@ -266,9 +266,10 @@ DownFace = box[i,j]
 
 
 ''' <000> Here Call the calibrateCamera from the SIGBTools to calibrate the camera and saving the data''' 
-# your code here
+#calibrateCamera(5, (9,6), 2, 0)
 ''' <001> Here Load the numpy data files saved by the cameraCalibrate2''' 
-
+translationVectors = np.load('numpyData/translationVectors.npy')
+cameraMatrix = np.load('numpyData/camera_matrix.npy')
 ''' <002> Here Define the camera matrix of the first view image (01.png) recorded by the cameraCalibrate2''' 
 
 ''' <003> Here Load the first view image (01.png) and find the chess pattern and store the 4 corners of the pattern needed for homography estimation''' 
