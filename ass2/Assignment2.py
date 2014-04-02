@@ -20,7 +20,7 @@ def frameTrackingData2BoxData(data):
     boxes = [];
     for i in range(0,7,2):
         box = tuple(pts[i:i+2])
-        boxes.append(box)   
+        boxes.append(box)
     return boxes
 
 
@@ -44,14 +44,14 @@ def textureMapGroundFloor():
 
     fn = "GroundFloorData/sunclipds.avi"
     sequence = cv2.VideoCapture(fn)
-    running, frame = sequence.read()    
-    
+    running, frame = sequence.read()
+
     h_t_g, calibration_points = SIGBTools.getHomographyFromMouse(texture, frame, -4)
 
     #fig = figure()
     while running:
         running, frame = sequence.read()
-        
+
         if not running:
             return
 
@@ -71,16 +71,16 @@ def showImageandPlot(N):
     I = cv2.imread('groundfloor.bmp')
     drawI = I.copy()
     #make figure and two subplots
-    fig = figure(1) 
-    ax1  = subplot(1,2,1) 
-    ax2  = subplot(1,2,2) 
-    ax1.imshow(I) 
+    fig = figure(1)
+    ax1  = subplot(1,2,1)
+    ax2  = subplot(1,2,2)
+    ax1.imshow(I)
     ax2.imshow(drawI)
-    ax1.axis('image') 
-    ax1.axis('off') 
-    points = fig.ginput(5) 
+    ax1.axis('image')
+    ax1.axis('off')
+    points = fig.ginput(5)
     fig.hold('on')
-    
+
     for p in points:
         #Draw on figure
         subplot(1,2,1)
@@ -89,7 +89,7 @@ def showImageandPlot(N):
         cv2.circle(drawI,(int(p[0]),int(p[1])),2,(0,255,0),10)
     ax2.cla
     ax2.imshow(drawI)
-    draw() #update display: updates are usually defered 
+    draw() #update display: updates are usually defered
     show()
     savefig('somefig.jpg')
     cv2.imwrite("drawImage.jpg", drawI)
@@ -163,22 +163,22 @@ def textureOnGrid():
 
     fn = "GridVideos/grid1.mp4"
     sequence = cv2.VideoCapture(fn)
-    running, frame = sequence.read()    
-    
+    running, frame = sequence.read()
+
     pattern_size = (9, 6)
     idx = [0,8,53,45]
-    
+
     while running:
         running, frame = sequence.read()
-        if not running:            
+        if not running:
             return
         frame = cv2.pyrDown(frame)
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
         found, corners = cv2.findChessboardCorners(gray, pattern_size)
-    
+
         #Define corner points of texture
         ip1 = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
-      
+
         if not found:
             continue
 
@@ -188,9 +188,9 @@ def textureOnGrid():
         for i,t in enumerate(idx):
             r.append([float(corners[t,0,0]),float(corners[t,0,1])])
             cv2.circle(frame,(int(corners[t,0,0]),int(corners[t,0,1])),10,c[i])
-        
+
         ip2 = np.array(r)
-        
+
         h_t_s,mask = cv2.findHomography(ip1, ip2)
 
         #texture map
@@ -206,19 +206,55 @@ def textureOnGrid():
 
 
 
-def realisticTexturemap(scale,point,map):
-    #H = np.load('H_G_M')
-    print "Not implemented yet\n"*30
+def realisticTexturemap(H_G_M, scale):
+    map_img = cv2.imread('Images/ITUMap.bmp')
+    point = getMousePointsForImageWithParameter(map_img, 1)[0]
 
-    #open picture and first frame of video
-    #call getHomographyFromMouse
-    #print resulting 3x3 matrix
+    H_T_M = np.zeros(9).reshape(3,3)
+    H_T_M[0][0] = scale
+    H_T_M[1][1] = scale
+
+    H_T_M[2][0] = point[0]
+    H_T_M[2][0] = point[1]
+
+    H_T_M[2][2] = 1
+
+    #For sjov
+    H_T_M = np.identity(3)
+
+
+    H_M_G = np.linalg.inv(H_G_M)
+
+    H_T_G = np.dot(H_T_M, H_M_G)
+
+    H_T_G = H_T_G / H_T_G[2][2]
+
+
+
+    texture = cv2.imread('Images/ITULogo.jpg')
+
+    fn = "GroundFloorData/sunclipds.avi"
+    cap = cv2.VideoCapture(fn)
+    #load Tracking data
+    running, frame = cap.read()
+
+    h,w,d = frame.shape
+
+    print H_T_G
+
+    warped_texture = cv2.warpPerspective(texture, H_T_G,(w, h))
+    result = cv2.addWeighted(frame, .6, warped_texture, .4, 50)
+
+    cv2.imshow("Result", warped_texture)
+    cv2.waitKey(0)
+
+
 def createHomography():
     img1 = cv2.imread('Images/ITUMap.bmp')
 
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
-    
+
     #load Tracking data
     _, img2 = cap.read()
 
@@ -230,15 +266,15 @@ def showFloorTrackingData():
     #Load videodata
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
-    
+
     #load Tracking data
     running, imgOrig = cap.read()
     dataFile = np.loadtxt('GroundFloorData/trackingdata.dat')
     m,n = dataFile.shape
-    
+
     fig = figure()
     for k in range(m):
-        running, imgOrig = cap.read() 
+        running, imgOrig = cap.read()
         if(running):
             boxes= frameTrackingData2BoxData(dataFile[k,:])
             boxColors = [(255,0,0),(0,255,0),(0,0,255)]
@@ -254,7 +290,7 @@ def angle_cos(p0, p1, p2):
     return abs( np.dot(d1, d2) / np.sqrt( np.dot(d1, d1)*np.dot(d2, d2) ) )
 
 def findSquares(img,minSize = 2000,maxAngle = 1):
-    """ findSquares intend to locate rectangle in the image of minimum area, minSize, and maximum angle, maxAngle, between 
+    """ findSquares intend to locate rectangle in the image of minimum area, minSize, and maximum angle, maxAngle, between
     sides"""
     squares = []
     contours, hierarchy = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -269,65 +305,85 @@ def findSquares(img,minSize = 2000,maxAngle = 1):
     return squares
 
 def DetectPlaneObject(I,minSize=1000):
-      """ A simple attempt to detect rectangular 
+      """ A simple attempt to detect rectangular
       color regions in the image"""
       HSV = cv2.cvtColor(I, cv2.COLOR_BGR2HSV)
       h = HSV[:,:,0].astype('uint8')
       s = HSV[:,:,1].astype('uint8')
       v = HSV[:,:,2].astype('uint8')
-      
+
       b = I[:,:,0].astype('uint8')
       g = I[:,:,1].astype('uint8')
       r = I[:,:,2].astype('uint8')
-     
+
       # use red channel for detection.
       s = (255*(r>230)).astype('uint8')
       iShow = cv2.cvtColor(s, cv2.COLOR_GRAY2BGR)
       cv2.imshow('ColorDetection',iShow)
       squares = findSquares(s,minSize)
       return squares
-  
+
 def texturemapObjectSequence():
     """ Poor implementation of simple texturemap """
     fn = 'BookVideos/Seq3_scene.mp4'
-    cap = cv2.VideoCapture(fn) 
+    cap = cv2.VideoCapture(fn)
     drawContours = True;
-    
+
     texture = cv2.imread('images/ITULogo.jpg')
     #texture = cv2.transpose(texture)
     mTex,nTex,t = texture.shape
-    
+
     #load Tracking data
     running, imgOrig = cap.read()
     mI,nI,t = imgOrig.shape
-    
-    print running 
+
+    print running
     while(running):
         for t in range(20):
-            running, imgOrig = cap.read() 
-        
+            running, imgOrig = cap.read()
+
         if(running):
             squares = DetectPlaneObject(imgOrig)
-            
+
             for sqr in squares:
                  #Do texturemap here!!!!
                  #TODO
-                 
-                 if(drawContours):                
+
+                 if(drawContours):
                      for p in sqr:
-                         cv2.circle(imgOrig,(int(p[0]),int(p[1])),3,(255,0,0)) 
-                 
-            
-            if(drawContours and len(squares)>0):    
+                         cv2.circle(imgOrig,(int(p[0]),int(p[1])),3,(255,0,0))
+
+
+            if(drawContours and len(squares)>0):
                 cv2.drawContours( imgOrig, squares, -1, (0, 255, 0), 3 )
 
             cv2.circle(imgOrig,(100,100),10,(255,0,0))
             cv2.imshow("Detection",imgOrig)
             cv2.waitKey(1)
+
+def getMousePointsForImageWithParameter(image, points=1):
+    '''GUI for inputting 4 points within an images width and height
+
+       image is the image to input points within
+    '''
+    #Copy image
+    drawImage1 = copy(image)
+
+    #Make figure
+    fig = figure("Point selection")
+    title("Click 4 places on a plane in the image")
+
+    #Show image and request input
+    imshow(drawImage1)
+    clickPoints = fig.ginput(points, -1)
+
+    #Return points
+    return clickPoints
+
 #createHomography()
 #showFloorTrackingData()
 #simpleTextureMap()
 #textureMapGroundFloor()
-#realisticTexturemap(0,0,0)
+realisticTexturemap(H, 0.5)
 #texturemapGridSequence()
-textureOnGrid()
+#textureOnGrid()
