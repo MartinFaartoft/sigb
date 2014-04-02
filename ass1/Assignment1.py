@@ -511,7 +511,7 @@ def run(fileName,resultFile='eyeTrackingResults.avi'):
 				print "End recording"
 			else:
 				imSize = np.shape(imgOrig)
-				videoWriter = cv2.VideoWriter(resultFile, cv.CV_FOURCC('D','I','V','3'), 15.0,(imSize[1],imSize[0]),True) #Make a video writer
+				videoWriter = cv2.VideoWriter(resultFile, cv.CV_FOURCC('D','I','V','3'), 30.0,(imSize[1],imSize[0]),True) #Make a video writer
 				saveFrames = True
 				print "Recording..."
 
