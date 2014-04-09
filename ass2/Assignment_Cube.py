@@ -31,7 +31,8 @@ def update(img):
         firstViewCorners = True
 
     if Undistorting:  #Use previous stored camera matrix and distortion coefficient to undistort the image
-        ''' <004> Here Undistoret the image'''
+        ''' <004> Here Undistort the image'''
+        image = cv2.undistort(image, cameraMatrix, distortionCoefficient)
 
     if (ProcessFrame):
 
@@ -49,7 +50,7 @@ def update(img):
             h, _ = cv2.findHomography(first_corners, this_frame_corners)
 
             ''' <006> Here Define the cameraMatrix P=K[R|t] of the current frame'''
-                H_cs_1
+                #H_cs_1
 
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
@@ -227,9 +228,14 @@ def run(speed,video):
             image, isSequenceOK = getImageSequence(capture,speed)
 
 def loadCalibrationData():
+    global translationVectors
     translationVectors = np.load('numpyData/translationVectors.npy')
+    global cameraMatrix
     cameraMatrix = np.load('numpyData/camera_matrix.npy')
+    global rotatioVectors
     rotatioVectors = np.load('numpyData/rotatioVectors.npy')
+    global distortionCoefficient
+    distortionCoefficient = np.load('numpyData/distortionCoefficient.npy')
     return cameraMatrix,rotatioVectors[0],translationVectors[0]
 
 def calculateP(K,r,t):
@@ -237,7 +243,6 @@ def calculateP(K,r,t):
     Rt = np.hstack((R,t))
     P = np.dot(K,Rt)
     return P
-
 
 def displayNumpyPoints(C):
     points = np.load('numpyData/obj_points.npy')
@@ -278,6 +283,7 @@ def projectChessBoardPoints(C, points):
 
 '''-------variables------'''
 global cameraMatrix
+cameraMatrix = None
 global distortionCoefficient
 global homographyPoints
 global calibrationPoints
@@ -338,7 +344,8 @@ DownFace = box[i,j]
 #calibrateCamera(5, (9,6), 2.0, 0)
 ''' <001> Here Load the numpy data files saved by the cameraCalibrate2'''
 K,r,t = loadCalibrationData()
-
+print "LOADED"
+print cameraMatrix
 ''' <002> Here Define the camera matrix of the first view image (01.png) recorded by the cameraCalibrate2'''
 
 P = calculateP(K,r,t)
