@@ -82,7 +82,7 @@ In this section, we will take a video of a person walking around the ITU atrium,
 
 \subsection{Theory}
 Both The ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
-
+\begin{center}
 $H = 
 \begin{matrix}
  h_{1,1} & h_{1,2} & h_{1,3} \\
@@ -90,9 +90,11 @@ $H =
  h_{3,1} & h_{3,2} & h_{3,3}
 \end{matrix}
 $
+\end{center}
 
 When the correct homography is found, points $(x,y)$ in the original plane, can be mapped to points $(x',y')$ in the new plane, by multiplication as follows:
 
+\begin{center}
 $
 \begin{matrix}
 x' \\
@@ -106,6 +108,31 @@ y \\
 1
 \end{matrix}
 $
+\end{center}
+
+The homography has 8 degrees of freedom ($h_{3,3}$ is always 1), meaning that we need 8 to solve 8 equations with 8 unknows, to form H. This is done by choosing at least 4 points in one of the planes, and the 4 points that corresponds to those, in the other plane. These points allows opencv to calculate the homography. We experimented with using just 4 points, but got really inconsistent results, so we ended up using 6 sets of reference points for the homography calculation.
+
+\subsection{Experiment}
+Using the calculated homography, we can map coordinates from the video sequence 'sunclipds.avi' to the corresponding coordinates on the overview map 'ITUMap.bmp'. Figure \ref{fig:persontracking} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.4\textwidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{groundfloorboxes}
+  \label{fig:persontracking}
+\end{subfigure}
+\begin{subfigure}{1\textwidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{maplocation}
+  \label{fig:persontracking2}
+\end{subfigure}
+\caption{The green dot on the map, corresponds to the position of the green box in the video frame.}
+\label{fig:floor}
+\end{figure}
+
+
+It is important to note, that this approach only holds for movement within a plane, so when the subject in the video starts moving up the stairs, he leaves the plane that is the floor of the atrium, and the overview map coordinates stops being accurate. In the actual sequence, this is hard to detect, because the stairs have a very small slope.
 
 \section{Linear texture mapping}
 \subsection*{Texture mapping on static object}
