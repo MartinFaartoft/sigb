@@ -11,7 +11,6 @@ import cv2
 import cv2.cv as cv
 from SIGBTools import *
 
-
 def DrawLines(img, points):
     for i in range(1, 17):
          x1 = points[0, i - 1]
@@ -50,7 +49,7 @@ def update(img):
             h, _ = cv2.findHomography(first_corners, this_frame_corners)
 
             ''' <006> Here Define the cameraMatrix P=K[R|t] of the current frame'''
-
+                H_cs_1
 
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
@@ -258,6 +257,17 @@ def displayNumpyPoints(C):
     cv2.imshow('result',img)
     cv2.waitKey(0)
 
+def projectChessBoardPoints(C, points):
+
+    X = points[0]
+    ones = np.ones((X.shape[0],1))
+    X =np.column_stack((X,ones)).T
+
+    x = C.project(X)
+    x = x.T
+
+    return x
+
 
 
 '''-------------------MAIN BODY--------------------------------------------------------------------'''
@@ -333,6 +343,8 @@ K,r,t = loadCalibrationData()
 
 P = calculateP(K,r,t)
 C = Camera(P)
+
+
 #displayNumpyPoints(C)
 
 ''' <003> Here Load the first view image (01.png) and find the chess pattern and store the 4 corners of the pattern needed for homography estimation'''
@@ -345,6 +357,23 @@ C = Camera(P)
 # FindHomography on these H_cs^1
 
 ''' <003a> Find homography H_cs^1 '''
+idx = [0,8,45,53]
+points_from_chess_board_plane = np.load('numpyData/obj_points.npy') 
+points_from_first_view_plane = projectChessBoardPoints(C,points_from_chess_board_plane)
+
+p1 = []
+p2 = []
+for i in idx:
+    x11 = points_from_chess_board_plane[0][i][0]
+    y12 = points_from_chess_board_plane[0][i][1]
+    p1.append([float(x11),float(y12)])
+    x21 = points_from_first_view_plane[i][0]
+    y22 = points_from_first_view_plane[i][1]
+    p2.append([float(x21),float(y22)])
+p1 = np.array(p1)
+p2 = np.array(p2)
+H_cs_1,_ = cv2.findHomography(p1,p2)
+
 
 # TODO find out what this means. Part in assignment Augmentation. 1.
 
