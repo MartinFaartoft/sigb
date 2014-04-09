@@ -54,21 +54,28 @@ def update(img):
 
             H_cs_2 = np.dot(h_1_2, H_cs_1)
 
-            homographyTest(image, H_cs_2)
+            P2 = np.dot(H_cs_2, P)
+
+            #A = np.dot(np.linalg.inv(K),cam2.P[:,:3])
+            A = np.dot(np.linalg.inv(K), H_cs_2)
+
+            R = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T
 
 
-            # P2 = np.dot(H_cs_2, P)
+            t = np.array([A[:,2]]).T
 
-            # cam2 = Camera(P2)
+            Rt = np.hstack((R, t))
 
-            # A = np.dot(np.linalg.inv(K),cam2.P[:,:3])
-            # A = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T
-            # cam2.P[:,:3] = np.dot(K,A)
+            P2 = np.dot(K,Rt)
+            cam2 = Camera(P2)
+
+            X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
+
+            for p in X:
+                C = int(p[0]),int(p[1])
+                cv2.circle(image,C, 2,(255,0,255),4)
 
 
-            # X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
-
-            # print X
 
 
             if ShowText:
@@ -261,6 +268,8 @@ def calculateP(K,r,t):
     R,_ = cv2.Rodrigues(r)
     Rt = np.hstack((R,t))
     P = np.dot(K,Rt)
+    print R.shape, t.shape
+
     return P
 
 def displayNumpyPoints(C):
@@ -415,9 +424,6 @@ def homographyTest(img, H):
     # Project chess world points according to H
     points_from_chess_board_plane = points_from_chess_board_plane[0]
     points_from_chess_board_plane[:,2] = 1.0
-
-
-
 
     for point in points_from_chess_board_plane:
         point = np.dot(H, point)
