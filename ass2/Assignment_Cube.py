@@ -99,8 +99,10 @@ def update(img):
                     C = int(p[0]),int(p[1])
                     cv2.circle(image,C, 2,(255,0,255),4)
 
+
+
+
             if WireFrame:
-                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
                 cam2 = Camera(P2_Method1)
                 X = box.T
                 ones = np.ones((X.shape[0],1))
@@ -108,6 +110,7 @@ def update(img):
 
                 projected_box = cam2.project(X)
                 DrawLines(image,projected_box)
+                ''' <009> Here Project the box into the current camera image and draw the box edges'''
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
