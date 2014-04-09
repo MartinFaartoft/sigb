@@ -43,13 +43,32 @@ def update(img):
 
 
         if patternFound ==True:
-            for t in this_frame_corners:
-                cv2.circle(image, (int(t[0]), int(t[1])), 10, (255,0,0))
+            # for t in this_frame_corners:
+            #     cv2.circle(image, (int(t[0]), int(t[1])), 10, (255,0,0))
+
             # Find the homography from first_view to this frame
-            h, _ = cv2.findHomography(first_corners, this_frame_corners)
+            h_1_2, _ = cv2.findHomography(first_corners, this_frame_corners)
 
             ''' <006> Here Define the cameraMatrix P=K[R|t] of the current frame'''
-                H_cs_1
+
+            H_cs_2 = np.dot(h_1_2, H_cs_1)
+
+            homographyTest(image, H_cs_2)
+
+
+            # P2 = np.dot(H_cs_2, P)
+
+            # cam2 = Camera(P2)
+
+            # A = np.dot(np.linalg.inv(K),cam2.P[:,:3])
+            # A = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T
+            # cam2.P[:,:3] = np.dot(K,A)
+
+
+            # X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
+
+            # print X
+
 
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
@@ -270,6 +289,7 @@ def projectChessBoardPoints(C, points):
 
 
 
+
 '''-------------------MAIN BODY--------------------------------------------------------------------'''
 '''--------------------------------------------------------------------------------------------------------------'''
 
@@ -350,7 +370,6 @@ C = Camera(P)
 ''' <003> Here Load the first view image (01.png) and find the chess pattern and store the 4 corners of the pattern needed for homography estimation'''
 
 
-
 # Load 01.png
 # Find four points in 01.png
 # Find corresponding points in world coordinate chessboard
@@ -358,7 +377,7 @@ C = Camera(P)
 
 ''' <003a> Find homography H_cs^1 '''
 idx = [0,8,45,53]
-points_from_chess_board_plane = np.load('numpyData/obj_points.npy') 
+points_from_chess_board_plane = np.load('numpyData/obj_points.npy')
 points_from_first_view_plane = projectChessBoardPoints(C,points_from_chess_board_plane)
 
 p1 = []
@@ -379,7 +398,34 @@ H_cs_1,_ = cv2.findHomography(p1,p2)
 
 
 
+def homographyTest(img, H):
+    # Load first view
+    if img == None:
+        img = cv2.imread("01.png")
+
+    # Load chess world points
+    points_from_chess_board_plane = np.load('numpyData/obj_points.npy')
+    # Project chess world points according to H
+    points_from_chess_board_plane = points_from_chess_board_plane[0]
+    points_from_chess_board_plane[:,2] = 1.0
 
 
 
+
+    for point in points_from_chess_board_plane:
+        point = np.dot(H, point)
+        point = point / point[2]
+        #print "Fejl"
+        #point = point / point[2]
+        cv2.circle(img, (int(point[0]), int(point[1])), 10, (255,0,0))
+
+    cv2.imshow("LOL", img)
+    cv2.waitKey(0)
+
+    # Draw
+
+    # Profit
+
+
+#homographyTest(H_cs_1)
 run(1,0) #run(1,"Pattern.avi")
