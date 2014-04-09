@@ -194,7 +194,11 @@ def run(speed,video):
             update(image)
             image, isSequenceOK = getImageSequence(capture,speed)          
 
-
+def loadCalibrationData():
+    translationVectors = np.load('numpyData/translationVectors.npy')
+    cameraMatrix = np.load('numpyData/camera_matrix.npy')
+    rotatioVectors = np.load('numpyData/rotatioVectors.npy')
+    return cameraMatrix,rotatioVectors[0],translationVectors[0]
 
 
 
@@ -267,31 +271,22 @@ DownFace = box[i,j]
 
 ''' <000> Here Call the calibrateCamera from the SIGBTools to calibrate the camera and saving the data''' 
 #calibrateCamera(4, (9,6), 2.0, 0)
-''' <001> Here Load the numpy data files saved by the cameraCalibrate2''' 
-translationVectors = np.load('numpyData/translationVectors.npy')
-cameraMatrix = np.load('numpyData/camera_matrix.npy')
-rotatioVectors = np.load('numpyData/rotatioVectors.npy')
-translationVectors = np.load('numpyData/rotatioVectors.npy')
+''' <001> Here Load the numpy data files saved by the cameraCalibrate2'''
+K,r,t = loadCalibrationData()
 
 ''' <002> Here Define the camera matrix of the first view image (01.png) recorded by the cameraCalibrate2''' 
-R1,_ = cv2.Rodrigues(rotatioVectors[0])
-t1 = translationVectors[0]
-Rt = np.hstack((R1,t1))
+R,_ = cv2.Rodrigues(r)
+Rt = np.hstack((R,t))
 
-
-
-P = np.dot(cameraMatrix,Rt)
-
-print P
+P = np.dot(K,Rt)
 
 C = Camera(P)
 
-K,R,t = C.factor()
 
 ''' <003> Here Load the first view image (01.png) and find the chess pattern and store the 4 corners of the pattern needed for homography estimation''' 
+
 points = np.load('numpyData/obj_points.npy')
 img = cv2.imread('01.png')
-
 
 X = points[0]
 ones = np.ones((X.shape[0],1))
@@ -300,14 +295,13 @@ X =np.column_stack((X,ones)).T
 x = C.project(X)
 x = x.T
 
-
-
 for p in x:
+    print p
     C = int(p[0]),int(p[1])
-    cv2.circle(img,C, 2,(255,0,255),10)
+    cv2.circle(img,C, 2,(255,0,255),4)
 
-#cv2.imshow('result',img)
-#cv2.waitKey(0)
+cv2.imshow('result',img)
+cv2.waitKey(0)
 
 
 #run(1,0) run(1,"Pattern.avi") 
