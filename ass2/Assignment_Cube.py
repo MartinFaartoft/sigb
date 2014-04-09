@@ -66,14 +66,10 @@ def update(img):
 
             Rt = np.hstack((R, t))
 
-            P2 = np.dot(K,Rt)
-            cam2 = Camera(P2)
+            P2_Method1 = np.dot(K,Rt)
 
-            X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
 
-            for p in X:
-                C = int(p[0]),int(p[1])
-                cv2.circle(image,C, 2,(255,0,255),4)
+
 
 
 
@@ -96,11 +92,22 @@ def update(img):
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
+                cam2 = Camera(P2_Method1)
+                X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
 
-
+                for p in X:
+                    C = int(p[0]),int(p[1])
+                    cv2.circle(image,C, 2,(255,0,255),4)
 
             if WireFrame:
-                ''' <009> Here Project the box into the current camera image and draw the box edges'''
+                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
+                cam2 = Camera(P2_Method1)
+                X = box.T
+                ones = np.ones((X.shape[0],1))
+                X =np.column_stack((X,ones)).T
+
+                projected_box = cam2.project(X)
+                DrawLines(image,projected_box)
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
@@ -441,4 +448,5 @@ def homographyTest(img, H):
 
 
 #homographyTest(H_cs_1)
+print box.T
 run(1,0) #run(1,"Pattern.avi")
