@@ -295,18 +295,20 @@ img = cv2.imread('01.png')
 
 X = points[0]
 ones = np.ones((X.shape[0],1))
-X =np.column_stack((X,ones)) 
+X =np.column_stack((X,ones)).T 
 
-""" Jeg tror det virker.... mangler bedre calibartion data
-for x in X:
-    p = np.dot(P,x)
-    p = x/x[2]
+x = C.project(X)
+x = x.T
+
+
+
+for p in x:
     C = int(p[0]),int(p[1])
     cv2.circle(img,C, 2,(255,0,255),10)
 
-cv2.imshow('result',img)
-cv2.waitKey(0)
-"""
+#cv2.imshow('result',img)
+#cv2.waitKey(0)
+
 
 #run(1,0) run(1,"Pattern.avi") 
 
