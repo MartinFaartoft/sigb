@@ -200,6 +200,25 @@ def loadCalibrationData():
     rotatioVectors = np.load('numpyData/rotatioVectors.npy')
     return cameraMatrix,rotatioVectors[0],translationVectors[0]
 
+def displayNumpyPoints(C):
+    points = np.load('numpyData/obj_points.npy')
+    img = cv2.imread('01.png')
+
+    X = points[0]
+    ones = np.ones((X.shape[0],1))
+    X =np.column_stack((X,ones)).T 
+
+    x = C.project(X)
+    x = x.T
+
+    for p in x:
+        print p
+        C = int(p[0]),int(p[1])
+        cv2.circle(img,C, 2,(255,0,255),4)
+
+    cv2.imshow('result',img)
+    cv2.waitKey(0)
+
 
 
 
@@ -282,26 +301,9 @@ P = np.dot(K,Rt)
 
 C = Camera(P)
 
-
 ''' <003> Here Load the first view image (01.png) and find the chess pattern and store the 4 corners of the pattern needed for homography estimation''' 
+displayNumpyPoints(C)
 
-points = np.load('numpyData/obj_points.npy')
-img = cv2.imread('01.png')
-
-X = points[0]
-ones = np.ones((X.shape[0],1))
-X =np.column_stack((X,ones)).T 
-
-x = C.project(X)
-x = x.T
-
-for p in x:
-    print p
-    C = int(p[0]),int(p[1])
-    cv2.circle(img,C, 2,(255,0,255),4)
-
-cv2.imshow('result',img)
-cv2.waitKey(0)
 
 
 #run(1,0) run(1,"Pattern.avi") 
