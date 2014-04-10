@@ -71,7 +71,7 @@ def update(img):
 
             ''' <008> Here Draw the world coordinate system in the image'''
             cam2 = Camera(P2_Method1)
-            coordinate_system = getCoordinateSystemChessPlane(axis_length = 4)
+            coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
             drawCoordinateSystem(image,transformed_coordinate_system)
 
@@ -298,7 +298,7 @@ def getCoordinateSystemChessPlane(axis_length = 2.0):
     o = [0., 0., 0.]
     x = [axis_length, 0., 0.]
     y = [0., axis_length, 0.]
-    z = [0., 0., axis_length]
+    z = [0., 0., -25*axis_length]
     return np.array([o,x,y,z])
 
 def drawCoordinateSystem(img, coordinate_system):
