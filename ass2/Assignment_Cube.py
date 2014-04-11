@@ -369,7 +369,7 @@ def homographyTest(img, H):
 
 
 def rotateBox(box, theta_z):
-    #translate_to = [4, 2.5, 0]
+    translate_to = [8, 6, 0]
 
     rotation_matrix = np.array([[cos(theta_z), -sin(theta_z), 0], [sin(theta_z), cos(theta_z), 0], [0, 0, 1]])
     rotated_x = []
@@ -378,9 +378,9 @@ def rotateBox(box, theta_z):
     for i in range(len(box[0])):
         p = np.array([box[0][i], box[1][i], box[2][i]])
         p_rot = dot(rotation_matrix, p)
-        rotated_x.append(p_rot[0])
-        rotated_y.append(p_rot[1])
-        rotated_z.append(p_rot[2])
+        rotated_x.append(p_rot[0] + translate_to[0])
+        rotated_y.append(p_rot[1] + translate_to[1])
+        rotated_z.append(p_rot[2] + translate_to[2])
 
 
     result = np.array([rotated_x, rotated_y, rotated_z])
@@ -417,7 +417,8 @@ chessSquare_size=2
 
 '''-------defining the cube------'''
 
-box = getCubePoints([4, 2.5, 0], 1,chessSquare_size)
+#box = getCubePoints([4, 2.5, 0], 1,chessSquare_size)
+box = getCubePoints([0, 0, 0], 1,chessSquare_size)
 
 
 i = array([ [0,0,0,0],[1,1,1,1] ,[2,2,2,2]  ])  # indices for the first dim
