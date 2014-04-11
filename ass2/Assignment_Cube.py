@@ -53,13 +53,13 @@ def update(img):
 
             H_cs_2 = np.dot(H_1_2, H_cs_1)
 
-            A = np.dot(np.linalg.inv(K), H_cs_2)
+            A = np.dot(np.linalg.inv(K), H_cs_2) # A = K^-1 * H(cs_2)
 
-            R = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T
+            R = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T # R = [r_1, r_1, r_1 x r_2]^T
 
             t = np.array([A[:,2]]).T
 
-            Rt = np.hstack((R, t))
+            Rt = np.hstack((R, t)) # Rt = [R|t]
 
             P2_Method1 = np.dot(K,Rt)
 
