@@ -10,6 +10,7 @@ from scipy import linalg
 import cv2
 import cv2.cv as cv
 from SIGBTools import *
+import math
 
 def DrawLines(img, points):
     for i in range(1, 17):
@@ -77,9 +78,10 @@ def update(img):
             if WireFrame:
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
                 cam2 = Camera(P)
-                X = box.T
+                rotated_box = rotateBox(box, math.pi)
+                X = rotated_box.T
                 ones = np.ones((X.shape[0],1))
-                X =np.column_stack((X,ones)).T
+                X = np.column_stack((X,ones)).T
 
                 projected_box = cam2.project(X)
                 DrawLines(image,projected_box)
@@ -363,6 +365,25 @@ def homographyTest(img, H):
     # Draw
 
     # Profit
+
+
+def rotateBox(box, theta_z):
+    #translate_to = [4, 2.5, 0]
+
+    rotation_matrix = np.array([[cos(theta_z), -sin(theta_z), 0], [sin(theta_z), cos(theta_z), 0], [0, 0, 1]])
+    rotated_x = []
+    rotated_y = []
+    rotated_z = []
+    for i in range(len(box[0])):
+        p = np.array([box[0][i], box[1][i], box[2][i]])
+        p_rot = dot(rotation_matrix, p)
+        rotated_x.append(p_rot[0])
+        rotated_y.append(p_rot[1])
+        rotated_z.append(p_rot[2])
+
+
+    result = np.array([rotated_x, rotated_y, rotated_z])
+    return result
 
 
 
