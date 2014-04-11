@@ -80,21 +80,26 @@ def update(img):
                 cam2 = Camera(P)
                 angle = frameNumber * (math.pi / 50.0)
                 scale = 2 + math.sin(angle)
-                figure = box if frameNumber % 100 < 50 else pyramid
-                
-                rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
-                X = rotated_box.T
-                ones = np.ones((X.shape[0],1))
-                X = np.column_stack((X,ones)).T
-
-                projected_box = cam2.project(X)
-                DrawLines(image,projected_box)
-
+                #figure = box if frameNumber % 100 < 50 else pyramid
+                box1 = rotateFigure(box, 0, 0, -angle, 1, 1, 1)
+                box2 = getPyramidPoints([0, 0, -1], 1,chessSquare_size)
+                box2 = rotateFigure(box2, 0, 0, angle, 1, 1, 1)
+                #rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
+                drawFigure(image, cam2, box1)
+                drawFigure(image, cam2, box2)
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
     global result
     result=copy(image)
+
+def drawFigure(image, camera, figure):
+    X = figure.T
+    ones = np.ones((X.shape[0],1))
+    X = np.column_stack((X,ones)).T
+
+    projected_figure = camera.project(X)
+    DrawLines(image,projected_figure)
 
 def getImageSequence(capture, fastForward):
     '''Load the video sequence (fileName) and proceeds, fastForward number of frames.'''
