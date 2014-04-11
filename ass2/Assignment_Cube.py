@@ -79,7 +79,8 @@ def update(img):
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
                 cam2 = Camera(P)
                 angle = frameNumber * (math.pi / 50.0)
-                rotated_box = rotateBox(box, angle, angle, angle)
+                scale = 2 + math.sin(angle)
+                rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
                 X = rotated_box.T
                 ones = np.ones((X.shape[0],1))
                 X = np.column_stack((X,ones)).T
@@ -368,23 +369,23 @@ def homographyTest(img, H):
     # Profit
 
 
-def rotateBox(box, theta_x, theta_y, theta_z):
+def rotateFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
     translate_to = [8, 6, -1]
 
     rotation_matrix_x = np.array([ [1, 0, 0], [0, cos(theta_x), -sin(theta_x)], [0, sin(theta_x), cos(theta_x)] ])
-    rotation_matrix_y = np.array([ [cos(theta_y), 0, sin(theta_y)], [0, 1, 0], [-sin(theta_y), 0, cos(theta_y)]])
-    rotation_matrix_z = np.array([[cos(theta_z), -sin(theta_z), 0], [sin(theta_z), cos(theta_z), 0], [0, 0, 1]])
+    rotation_matrix_y = np.array([ [cos(theta_y), 0, sin(theta_y)], [0, 1, 0], [-sin(theta_y), 0, cos(theta_y)] ])
+    rotation_matrix_z = np.array([ [cos(theta_z), -sin(theta_z), 0], [sin(theta_z), cos(theta_z), 0], [0, 0, 1] ])
 
     rotated_x = []
     rotated_y = []
     rotated_z = []
     rotation = np.dot(rotation_matrix_y, np.dot(rotation_matrix_y, rotation_matrix_z))
-    for i in range(len(box[0])):
-        p = np.array([box[0][i], box[1][i], box[2][i]])
+    for i in range(len(figure[0])):
+        p = np.array([figure[0][i], figure[1][i], figure[2][i]])
         p_rot = np.dot(rotation, p)
-        rotated_x.append(p_rot[0] + translate_to[0])
-        rotated_y.append(p_rot[1] + translate_to[1])
-        rotated_z.append(p_rot[2] + translate_to[2])
+        rotated_x.append(scale_x * p_rot[0] + translate_to[0])
+        rotated_y.append(scale_y * p_rot[1] + translate_to[1])
+        rotated_z.append(scale_z * p_rot[2] + translate_to[2])
 
 
     result = np.array([rotated_x, rotated_y, rotated_z])
@@ -438,7 +439,6 @@ RightFace = box[i,j]
 i = array([ [0,0,0,0],[1,1,1,1] ,[2,2,2,2]  ])  # indices for the first dim
 j = array([ [5,0,1,6],[5,0,1,6] ,[5,0,1,6]  ])  # indices for the second dim
 LeftFace = box[i,j]
-print LeftFace
 
 i = array([ [0,0,0,0],[1,1,1,1] ,[2,2,2,2]  ])  # indices for the first dim
 j = array([ [5,8,3,0], [5,8,3,0] , [5,8,3,0] ])  # indices for the second dim
