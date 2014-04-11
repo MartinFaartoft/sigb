@@ -367,9 +367,22 @@ def homographyTest(img, H):
 
     # Profit
 
+def parse_teapot():
+    points = []
+    with open("teapot.data", "r") as infile:
+        lines = infile.read().splitlines()
+        for line in lines:
+            line = line.split(",")
+
+            x = float(line[0])
+            y = float(line[1])
+            z = float(line[2])
+            points.append([x, y, z])
+
+    print len(points)
 
 def rotateBox(box, theta_x, theta_y, theta_z):
-    translate_to = [8, 6, -1]
+    translate_to = [8, 6, -10]
 
     rotation_matrix_x = np.array([ [1, 0, 0], [0, cos(theta_x), -sin(theta_x)], [0, sin(theta_x), cos(theta_x)] ])
     rotation_matrix_y = np.array([ [cos(theta_y), 0, sin(theta_y)], [0, 1, 0], [-sin(theta_y), 0, cos(theta_y)]])
@@ -473,4 +486,5 @@ C = Camera(P)
 H_cs_1 = findHomographyFromCSto1()
 
 #homographyTest(H_cs_1)
-run(1,0) #run(1,"Pattern.avi")
+#run(1,0) #run(1,"Pattern.avi")
+parse_teapot()
