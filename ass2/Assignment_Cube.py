@@ -13,7 +13,7 @@ from SIGBTools import *
 import math
 
 def DrawLines(img, points):
-    for i in range(1, 17):
+    for i in range(1, len(points[0])):
          x1 = points[0, i - 1]
          y1 = points[1, i - 1]
          x2 = points[0, i]
@@ -80,7 +80,9 @@ def update(img):
                 cam2 = Camera(P)
                 angle = frameNumber * (math.pi / 50.0)
                 scale = 2 + math.sin(angle)
-                rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
+                figure = box if frameNumber % 100 < 50 else pyramid
+                
+                rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
                 X = rotated_box.T
                 ones = np.ones((X.shape[0],1))
                 X = np.column_stack((X,ones)).T
@@ -392,6 +394,34 @@ def rotateFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
     return result
 
 
+def getPyramidPoints(center, size,chessSquare_size):
+    points = []
+
+    tl = [center[0]-size, center[1]-size, center[2]]
+    bl = [center[0]-size, center[1]+size, center[2]]
+    br = [center[0]+size, center[1]+size, center[2]]
+    tr = [center[0]+size, center[1]-size, center[2]]
+    top = [center[0], center[1], center[2] - size * 2]
+    
+    #bottom
+    points.append(tl)
+    points.append(bl)
+    points.append(br)
+    points.append(tr)
+    points.append(tl)
+    
+    #top
+    points.append(top)
+
+    #diagonals
+    points.append(bl)
+    points.append(br)
+    points.append(top)
+    points.append(tr)
+    points=dot(points,chessSquare_size)
+    return array(points).T
+
+
 
 '''-------------------MAIN BODY--------------------------------------------------------------------'''
 '''--------------------------------------------------------------------------------------------------------------'''
@@ -420,10 +450,10 @@ chessSquare_size=2
 
 
 
-'''-------defining the cube------'''
+'''-------defining the figures------'''
 
-#box = getCubePoints([4, 2.5, 0], 1,chessSquare_size)
 box = getCubePoints([0, 0, 1], 1,chessSquare_size)
+pyramid = getPyramidPoints([0, 0, 1], 1,chessSquare_size)
 
 
 i = array([ [0,0,0,0],[1,1,1,1] ,[2,2,2,2]  ])  # indices for the first dim
