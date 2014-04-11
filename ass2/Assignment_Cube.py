@@ -78,7 +78,8 @@ def update(img):
             if WireFrame:
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
                 cam2 = Camera(P)
-                rotated_box = rotateBox(box, math.pi)
+                angle = frameNumber * (math.pi / 50.0)
+                rotated_box = rotateBox(box, angle)
                 X = rotated_box.T
                 ones = np.ones((X.shape[0],1))
                 X = np.column_stack((X,ones)).T
