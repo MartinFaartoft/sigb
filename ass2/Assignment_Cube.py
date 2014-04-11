@@ -39,9 +39,10 @@ def update(img):
 
         if patternFound == True:
             ''' <006> Here Define the cameraMatrix P=K[R|t] of the current frame'''
-
-            #P = findPFromHomography(corners)
-            P = createPCurrentFromObjectPose(corners)
+            if debug:
+                P = findPFromHomography(corners)
+            else:
+                P = createPCurrentFromObjectPose(corners)
 
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
