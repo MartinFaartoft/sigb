@@ -39,7 +39,8 @@ def update(img):
         if patternFound == True:
             ''' <006> Here Define the cameraMatrix P=K[R|t] of the current frame'''
 
-            P2_Method1 = findPFromHomography(corners)
+            P = findPFromHomography(corners)
+            #P = createPCurrentFromObjectPose(corners)
 
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
@@ -47,7 +48,7 @@ def update(img):
                 cv2.putText(image,str("frame:" + str(frameNumber)), (20,10),cv2.FONT_HERSHEY_PLAIN,1, (255, 255, 255))#Draw the text
 
             ''' <008> Here Draw the world coordinate system in the image'''
-            cam2 = Camera(P2_Method1)
+            cam2 = Camera(P)
             coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
             drawCoordinateSystem(image,transformed_coordinate_system)
@@ -63,8 +64,8 @@ def update(img):
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
-                cam2 = Camera(P2_Method1)
-                X = projectChessBoardPoints(cam2, points_from_chess_board_plane[0])
+                cam2 = Camera(P)
+                X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
 
                 for p in X:
                     C = int(p[0]),int(p[1])
@@ -73,7 +74,7 @@ def update(img):
 
             if WireFrame:
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
-                cam2 = Camera(P2_Method1)
+                cam2 = Camera(P)
                 X = box.T
                 ones = np.ones((X.shape[0],1))
                 X =np.column_stack((X,ones)).T
@@ -86,45 +87,6 @@ def update(img):
     cv2.imshow('Web cam', image)
     global result
     result=copy(image)
-
-
-def findPFromHomography(corners):
-    first_view = cv2.imread("01.png")
-    _, first_all_corners = findChessBoardCorners(first_view)
-    first_corners = findChessboardOuterCorners(first_all_corners)
-
-    this_frame_outer_corners = findChessboardOuterCorners(corners)
-    # for t in this_frame_corners:
-    #     cv2.circle(image, (int(t[0]), int(t[1])), 10, (255,0,0))
-
-    # Find the homography from first_view to this frame
-    H_1_2, _ = cv2.findHomography(first_corners, this_frame_outer_corners)
-    
-    H_cs_2 = np.dot(H_1_2, H_cs_1)
-
-    A = np.dot(np.linalg.inv(K), H_cs_2) # A = K^-1 * H(cs_2)
-
-    R = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T # R = [r_1, r_1, r_1 x r_2]^T
-
-    t = np.array([A[:,2]]).T
-
-    Rt = np.hstack((R, t)) # Rt = [R|t]
-
-    P2_Method1 = np.dot(K,Rt)
-
-    return P2_Method1
-
-def findChessboardOuterCorners(corners):
-    idx = [0,8,45,53]
-    
-    points = []
-
-    for index in idx:
-        points.append([float(corners[index, 0, 0]),float(corners[index, 0, 1])])
-
-    return np.array(points)
-
-
 
 def getImageSequence(capture, fastForward):
     '''Load the video sequence (fileName) and proceeds, fastForward number of frames.'''
@@ -261,7 +223,7 @@ def loadCalibrationData():
     global distortionCoefficient
     distortionCoefficient = np.load('numpyData/distortionCoefficient.npy')
     global points_from_chess_board_plane
-    points_from_chess_board_plane = np.load('numpyData/obj_points.npy')
+    points_from_chess_board_plane = np.load('numpyData/obj_points.npy')[0]
     print points_from_chess_board_plane
     return cameraMatrix,rotatioVectors[0],translationVectors[0]
 
@@ -315,24 +277,54 @@ def drawCoordinateSystem(img, coordinate_system):
     cv2.circle(img, (int(o[0]),int(o[1])), 3, (0, 0, 255), -1) 
     
 
-def createPCurrentFromObjectPose(img):
+def createPCurrentFromObjectPose(corners):
     #get cs object points (points_from_chess_board_plane)
-    findChessboardCorners
     #find chess board corners from current frame
-    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    found, corners = cv2.findChessboardCorners(gray, pattern_size)
-    if not found:
-        return np.array([])
-
+    print "corners:", corners.shape
+    print "points_from_cs:", points_from_chess_board_plane.shape
     found, r_vec, t_vec = cv2.solvePnP(points_from_chess_board_plane, corners, cameraMatrix, distortionCoefficient)
     
     #combine K,rvec and tvec into P
     Rt = np.hstack((R, t))
-    P2 = cameraMatrix * Rt
+    P2 = np.dot(cameraMatrix, Rt)
     
     #project box using new P
 
+def findPFromHomography(corners):
+    first_view = cv2.imread("01.png")
+    _, first_all_corners = findChessBoardCorners(first_view)
+    first_corners = findChessboardOuterCorners(first_all_corners)
 
+    this_frame_outer_corners = findChessboardOuterCorners(corners)
+    # for t in this_frame_corners:
+    #     cv2.circle(image, (int(t[0]), int(t[1])), 10, (255,0,0))
+
+    # Find the homography from first_view to this frame
+    H_1_2, _ = cv2.findHomography(first_corners, this_frame_outer_corners)
+    
+    H_cs_2 = np.dot(H_1_2, H_cs_1)
+
+    A = np.dot(np.linalg.inv(K), H_cs_2) # A = K^-1 * H(cs_2)
+
+    R = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T # R = [r_1, r_1, r_1 x r_2]^T
+
+    t = np.array([A[:,2]]).T
+
+    Rt = np.hstack((R, t)) # Rt = [R|t]
+
+    P2_Method1 = np.dot(K,Rt)
+
+    return P2_Method1
+
+def findChessboardOuterCorners(corners): #TODO remove? since it's kinda dumb to filter out useful points before calculating H
+    idx = [0,8,45,53]
+    
+    points = []
+
+    for index in idx:
+        points.append([float(corners[index, 0, 0]),float(corners[index, 0, 1])])
+
+    return np.array(points)
 
 def findHomographyFromCSto1():
     # Load 01.png
@@ -340,13 +332,13 @@ def findHomographyFromCSto1():
     # Find corresponding points in world coordinate chessboard
     # FindHomography on these H_cs^1
     idx = [0,8,45,53]
-    points_from_first_view_plane = projectChessBoardPoints(C,points_from_chess_board_plane[0])
+    points_from_first_view_plane = projectChessBoardPoints(C,points_from_chess_board_plane)
 
     p1 = [] 
     p2 = []
     for i in idx:
-        x11 = points_from_chess_board_plane[0][i][0]
-        y12 = points_from_chess_board_plane[0][i][1]
+        x11 = points_from_chess_board_plane[i][0]
+        y12 = points_from_chess_board_plane[i][1]
 
         p1.append([float(x11),float(y12)])
         x21 = points_from_first_view_plane[i][0]
@@ -366,7 +358,7 @@ def homographyTest(img, H):
 
     # Load chess world points
     # Project chess world points according to H
-    points_from_chess_board_plane = points_from_chess_board_plane[0]
+    points_from_chess_board_plane = points_from_chess_board_plane
     points_from_chess_board_plane[:,2] = 1.0
 
     for point in points_from_chess_board_plane:
