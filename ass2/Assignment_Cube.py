@@ -268,6 +268,17 @@ def getCoordinateSystemChessPlane(axis_length = 2.0):
     z = [0., 0., -axis_length] #positive z is away from camera, by default
     return np.array([o,x,y,z])
 
+def drawObjectScatter(C,img, points):
+    points = points.T
+    ones = np.ones((points.shape[0],1))
+    points = np.column_stack((points,ones)).T
+    points = C.project(points)
+    points = points.T
+
+    for point in points:
+        cv2.circle(img, (int(point[0]),int(point[1])), 3, (0, 255, 0), -1)
+
+
 def drawCoordinateSystem(img, coordinate_system):
     o = coordinate_system[0]
     x = coordinate_system[1]
