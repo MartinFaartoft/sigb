@@ -22,12 +22,13 @@ def DrawLines(img, points):
 
 def findChessBoardCorners(image):
     pattern_size = (9, 6)
+    flag = cv2.CALIB_CB_FAST_CHECK
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    return cv2.findChessboardCorners(gray, pattern_size)
+    return cv2.findChessboardCorners(gray, pattern_size, flags=flag)
 
 def update(img):
     image=copy(img)
-    
+
     if Undistorting:  #Use previous stored camera matrix and distortion coefficient to undistort the image
         ''' <004> Here Undistort the image'''
         image = cv2.undistort(image, cameraMatrix, distortionCoefficient)
@@ -81,7 +82,7 @@ def update(img):
 
                 projected_box = cam2.project(X)
                 DrawLines(image,projected_box)
-                
+
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
@@ -234,11 +235,11 @@ def calculateP(K,r,t):
 
 def displayNumpyPoints(C):
     points = np.load('numpyData/obj_points.npy')
-    
+
     img = cv2.imread('01.png')
 
     x = projectChessBoardPoints(C,points[0])
-    
+
     for p in x:
         C = int(p[0]),int(p[1])
         cv2.circle(img,C, 2,(255,0,255),4)
@@ -269,12 +270,12 @@ def drawCoordinateSystem(img, coordinate_system):
     cv2.line(img, (int(o[0]),int(o[1])), (int(x[0]),int(x[1])),(255, 0, 0),3)
     cv2.line(img, (int(o[0]),int(o[1])), (int(y[0]),int(y[1])), (255, 0, 0),3)
     cv2.line(img, (int(o[0]),int(o[1])), (int(z[0]),int(z[1])), (255, 0, 0),3)
-    
+
     cv2.circle(img, (int(x[0]),int(x[1])), 3, (0, 255, 0), -1)
     cv2.circle(img, (int(y[0]),int(y[1])), 3, (0, 255, 0), -1)
     cv2.circle(img, (int(z[0]),int(z[1])), 3, (0, 255, 0), -1)
-    cv2.circle(img, (int(o[0]),int(o[1])), 3, (0, 0, 255), -1) 
-    
+    cv2.circle(img, (int(o[0]),int(o[1])), 3, (0, 0, 255), -1)
+
 def createPCurrentFromObjectPose(corners):
     found, r_vec, t_vec = cv2.solvePnP(points_from_chess_board_plane, corners, cameraMatrix, distortionCoefficient)
     return calculateP(cameraMatrix, r_vec, t_vec)
@@ -290,7 +291,7 @@ def findPFromHomography(corners):
 
     # Find the homography from first_view to this frame
     H_1_2, _ = cv2.findHomography(first_corners, this_frame_outer_corners)
-    
+
     H_cs_2 = np.dot(H_1_2, H_cs_1)
 
     A = np.dot(np.linalg.inv(K), H_cs_2) # A = K^-1 * H(cs_2)
@@ -307,7 +308,7 @@ def findPFromHomography(corners):
 
 def findChessboardOuterCorners(corners): #TODO remove? since it's kinda dumb to filter out useful points before calculating H
     idx = [0,8,45,53]
-    
+
     points = []
 
     for index in idx:
@@ -323,7 +324,7 @@ def findHomographyFromCSto1():
     idx = [0,8,45,53]
     points_from_first_view_plane = projectChessBoardPoints(C,points_from_chess_board_plane)
 
-    p1 = [] 
+    p1 = []
     p2 = []
     for i in idx:
         x11 = points_from_chess_board_plane[i][0]
