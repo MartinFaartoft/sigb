@@ -224,7 +224,6 @@ def loadCalibrationData():
     distortionCoefficient = np.load('numpyData/distortionCoefficient.npy')
     global points_from_chess_board_plane
     points_from_chess_board_plane = np.load('numpyData/obj_points.npy')[0]
-    print points_from_chess_board_plane
     return cameraMatrix,rotatioVectors[0],translationVectors[0]
 
 def calculateP(K,r,t):
@@ -258,7 +257,7 @@ def getCoordinateSystemChessPlane(axis_length = 2.0):
     o = [0., 0., 0.]
     x = [axis_length, 0., 0.]
     y = [0., axis_length, 0.]
-    z = [0., 0., -25*axis_length]
+    z = [0., 0., -axis_length] #positive z is away from camera, by default
     return np.array([o,x,y,z])
 
 def drawCoordinateSystem(img, coordinate_system):
@@ -276,18 +275,8 @@ def drawCoordinateSystem(img, coordinate_system):
     cv2.circle(img, (int(z[0]),int(z[1])), 3, (0, 255, 0), -1)
     cv2.circle(img, (int(o[0]),int(o[1])), 3, (0, 0, 255), -1) 
     
-
 def createPCurrentFromObjectPose(corners):
-    #get cs object points (points_from_chess_board_plane)
-    #find chess board corners from current frame
-    print "corners:", corners.shape
-    print "points_from_cs:", points_from_chess_board_plane.shape
     found, r_vec, t_vec = cv2.solvePnP(points_from_chess_board_plane, corners, cameraMatrix, distortionCoefficient)
-    print "r", r_vec.shape
-    print "t", t_vec.shape
-    #combine K,rvec and tvec into P
-    #Rt = np.hstack((r_vec, t_vec))
-    #P2 = np.dot(cameraMatrix, Rt)
     return calculateP(cameraMatrix, r_vec, t_vec)
 
 def findPFromHomography(corners):
@@ -364,8 +353,6 @@ def homographyTest(img, H):
     for point in points_from_chess_board_plane:
         point = np.dot(H, point)
         point = point / point[2]
-        #print "Fejl"
-        #point = point / point[2]
         cv2.circle(img, (int(point[0]), int(point[1])), 10, (255,0,0))
 
     cv2.imshow("LOL", img)
@@ -444,7 +431,6 @@ DownFace = box[i,j]
 #calibrateCamera(5, (9,6), 2.0, 0)
 ''' <001> Here Load the numpy data files saved by the cameraCalibrate2'''
 K,r,t = loadCalibrationData()
-#print cameraMatrix
 ''' <002> Here Define the camera matrix of the first view image (01.png) recorded by the cameraCalibrate2'''
 
 P = calculateP(K,r,t)
