@@ -39,8 +39,8 @@ def update(img):
         if patternFound == True:
             ''' <006> Here Define the cameraMatrix P=K[R|t] of the current frame'''
 
-            P = findPFromHomography(corners)
-            #P = createPCurrentFromObjectPose(corners)
+            #P = findPFromHomography(corners)
+            P = createPCurrentFromObjectPose(corners)
 
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
@@ -283,12 +283,12 @@ def createPCurrentFromObjectPose(corners):
     print "corners:", corners.shape
     print "points_from_cs:", points_from_chess_board_plane.shape
     found, r_vec, t_vec = cv2.solvePnP(points_from_chess_board_plane, corners, cameraMatrix, distortionCoefficient)
-    
+    print "r", r_vec.shape
+    print "t", t_vec.shape
     #combine K,rvec and tvec into P
-    Rt = np.hstack((R, t))
-    P2 = np.dot(cameraMatrix, Rt)
-    
-    #project box using new P
+    #Rt = np.hstack((r_vec, t_vec))
+    #P2 = np.dot(cameraMatrix, Rt)
+    return calculateP(cameraMatrix, r_vec, t_vec)
 
 def findPFromHomography(corners):
     first_view = cv2.imread("01.png")
