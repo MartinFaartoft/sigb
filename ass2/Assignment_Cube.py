@@ -13,7 +13,7 @@ from SIGBTools import *
 import math
 
 def DrawLines(img, points):
-    for i in range(1, 17):
+    for i in range(1, len(points[0])):
          x1 = points[0, i - 1]
          y1 = points[1, i - 1]
          x2 = points[0, i]
@@ -78,20 +78,36 @@ def update(img):
             if WireFrame:
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
                 cam2 = Camera(P)
-                angle = frameNumber * (math.pi / 50.0)
-                scale = 2 + math.sin(angle)
-                teapot = parse_teapot()
+                if (Teapot):
+                    teapot = parse_teapot()
 
-                #rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
+                    #rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
+                    drawObjectScatter(cam2, image, teapot)
+                ## stop
+                else:
+                    #figure = box if frameNumber % 100 < 50 else pyramid
 
-
-                drawObjectScatter(cam2, image, teapot)
-
+                    angle = frameNumber * (math.pi / 50.0)
+                    scale = 2 + math.sin(angle)
+                    box1 = rotateFigure(box, 0, 0, -angle, 1, 1, 1)
+                    box2 = getPyramidPoints([0, 0, -1], 1,chessSquare_size)
+                    box2 = rotateFigure(box2, 0, 0, angle, 1, 1, 1)
+                    #rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
+                    drawFigure(image, cam2, box1)
+                    drawFigure(image, cam2, box2)
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
     global result
     result=copy(image)
+
+def drawFigure(image, camera, figure):
+    X = figure.T
+    ones = np.ones((X.shape[0],1))
+    X = np.column_stack((X,ones)).T
+
+    projected_figure = camera.project(X)
+    DrawLines(image,projected_figure)
 
 def getImageSequence(capture, fastForward):
     '''Load the video sequence (fileName) and proceeds, fastForward number of frames.'''
@@ -207,6 +223,11 @@ def run(speed,video):
                 debug = False;
             else:
                 debug = True;
+            update(OriginalImage)
+
+        if inputKey == ord('l') or inputKey == ord('L'):
+            global Teapot
+            Teapot = not Teapot
             update(OriginalImage)
 
 
@@ -417,6 +438,34 @@ def rotateFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
     return result
 
 
+def getPyramidPoints(center, size,chessSquare_size):
+    points = []
+
+    tl = [center[0]-size, center[1]-size, center[2]]
+    bl = [center[0]-size, center[1]+size, center[2]]
+    br = [center[0]+size, center[1]+size, center[2]]
+    tr = [center[0]+size, center[1]-size, center[2]]
+    top = [center[0], center[1], center[2] - size * 2]
+
+    #bottom
+    points.append(tl)
+    points.append(bl)
+    points.append(br)
+    points.append(tr)
+    points.append(tl)
+
+    #top
+    points.append(top)
+
+    #diagonals
+    points.append(bl)
+    points.append(br)
+    points.append(top)
+    points.append(tr)
+    points=dot(points,chessSquare_size)
+    return array(points).T
+
+
 
 '''-------------------MAIN BODY--------------------------------------------------------------------'''
 '''--------------------------------------------------------------------------------------------------------------'''
@@ -438,6 +487,7 @@ ShowText=True
 TextureMap=True
 ProjectPattern=False
 debug=True
+Teapot = True
 
 tempSpeed=1
 frameNumber=0
@@ -445,10 +495,10 @@ chessSquare_size=2
 
 
 
-'''-------defining the cube------'''
+'''-------defining the figures------'''
 
-#box = getCubePoints([4, 2.5, 0], 1,chessSquare_size)
 box = getCubePoints([0, 0, 1], 1,chessSquare_size)
+pyramid = getPyramidPoints([0, 0, 1], 1,chessSquare_size)
 
 
 i = array([ [0,0,0,0],[1,1,1,1] ,[2,2,2,2]  ])  # indices for the first dim
