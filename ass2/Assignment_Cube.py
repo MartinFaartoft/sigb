@@ -80,13 +80,12 @@ def update(img):
                 cam2 = Camera(P)
                 angle = frameNumber * (math.pi / 50.0)
                 scale = 2 + math.sin(angle)
-                rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
-                X = rotated_box.T
-                ones = np.ones((X.shape[0],1))
-                X = np.column_stack((X,ones)).T
+                teapot = parse_teapot()
 
-                projected_box = cam2.project(X)
-                DrawLines(image,projected_box)
+                #rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
+
+
+                drawObjectScatter(cam2, image, teapot)
 
 
     cv2.namedWindow('Web cam')
@@ -386,12 +385,13 @@ def parse_teapot():
         for line in lines:
             line = line.split(",")
 
-            x = float(line[0])
-            y = float(line[1])
-            z = float(line[2])
+            x = float(line[0]) + 5
+            y = float(line[1]) + 5
+            z = (float(line[2]) * -1) - 5
             points.append([x, y, z])
 
-    print len(points)
+    result =  np.array(points).T
+    return result * 2
 
 def rotateFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
     translate_to = [8, 6, -1]
@@ -498,5 +498,5 @@ C = Camera(P)
 H_cs_1 = findHomographyFromCSto1()
 
 #homographyTest(H_cs_1)
-#run(1,0) #run(1,"Pattern.avi")
-parse_teapot()
+run(1,0) #run(1,"Pattern.avi")
+
