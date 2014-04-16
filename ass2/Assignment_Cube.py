@@ -89,9 +89,9 @@ def update(img):
 
                     angle = frameNumber * (math.pi / 50.0)
                     scale = 2 + math.sin(angle)
-                    box1 = rotateFigure(box, 0, 0, -angle, 1, 1, 1)
+                    box1 = transformFigure(box, 0, 0, -angle, 1, 1, 1)
                     box2 = getPyramidPoints([0, 0, -1], 1,chessSquare_size)
-                    box2 = rotateFigure(box2, 0, 0, angle, 1, 1, 1)
+                    box2 = transformFigure(box2, 0, 0, angle, 1, 1, 1)
                     #rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
                     drawFigure(image, cam2, box1)
                     drawFigure(image, cam2, box2)
@@ -338,63 +338,6 @@ def findPFromHomography(corners_current):
     cam2.P[:,:3] = np.dot(K,A)
     return cam2.P
 
-def findChessboardOuterCorners(corners): #TODO remove? since it's kinda dumb to filter out useful points before calculating H
-    idx = [0,8,45,53]
-
-    points = []
-
-    for index in idx:
-        points.append([float(corners[index, 0, 0]),float(corners[index, 0, 1])])
-
-    return np.array(points)
-
-def findHomographyFromCSto1():
-    # Load 01.png
-    # Find four points in 01.png
-    # Find corresponding points in world coordinate chessboard
-    # FindHomography on these H_cs^1
-    idx = [0,8,45,53]
-    points_from_first_view_plane = projectChessBoardPoints(C,points_from_chess_board_plane)
-
-    p1 = []
-    p2 = []
-    for i in idx:
-        x11 = points_from_chess_board_plane[i][0]
-        y12 = points_from_chess_board_plane[i][1]
-
-        p1.append([float(x11),float(y12)])
-        x21 = points_from_first_view_plane[i][0]
-        y22 = points_from_first_view_plane[i][1]
-        p2.append([float(x21),float(y22)])
-
-    p1 = np.array(p1)
-    p2 = np.array(p2)
-    H_cs_1,_ = cv2.findHomography(p1,p2)
-
-    return H_cs_1
-
-def homographyTest(img, H):
-    # Load first view
-    if img == None:
-        img = cv2.imread("01.png")
-
-    # Load chess world points
-    # Project chess world points according to H
-    points_from_chess_board_plane = points_from_chess_board_plane
-    points_from_chess_board_plane[:,2] = 1.0
-
-    for point in points_from_chess_board_plane:
-        point = np.dot(H, point)
-        point = point / point[2]
-        cv2.circle(img, (int(point[0]), int(point[1])), 10, (255,0,0))
-
-    cv2.imshow("LOL", img)
-    cv2.waitKey(0)
-
-    # Draw
-
-    # Profit
-
 def parse_teapot():
     points = []
     with open("teapot.data", "r") as infile:
@@ -410,7 +353,7 @@ def parse_teapot():
     result =  np.array(points).T
     return result * 2
 
-def rotateFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
+def transformFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
     translate_to = [8, 6, -1]
 
 
@@ -540,8 +483,6 @@ C = Camera(P)
 
 
 ''' <003a> Find homography H_cs^1 '''
-H_cs_1 = findHomographyFromCSto1()
 
-#homographyTest(H_cs_1)
 run(1, 0)
 #run(1,"sequence.mov")

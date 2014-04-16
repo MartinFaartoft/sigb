@@ -173,11 +173,16 @@ The function uses SIGBTools \texttt{getHomographyFromMousepoints} to create the 
 %how to calibrate - how many images - output
 
 \section{Augmentation}
-blah blah in the following we will bla
+In the following, we will experiment with, and discuss, different techniques that can be used for augmenting images. (adding objects to an image that seems to behave as if real, with regards to perspective and position)
 \subsection{Camera Matrix via Homography}
 %mw
-\subsection{Camera Matrix from Object Pose}
+\subsection{P from Object Pose}
 %mf
+The OpenCV function \texttt{solvePnP} can estimate the object "pose" (position and orientation in 3D space). To do this, it needs a set of points in the ChessBoard space $(x, y, z)$, the set of corresponding points in the image where we want to determine the pose $(x, y)$, and finally the camera matrix and distortion coefficients found via calibration. The result from \texttt{solvePnP}, is a rotation vector - $r_{vec}$, and a translation vector $t_{vec}$. The rotation vector can be converted to a rotation matrix, using the \texttt{Rodrigues} function. 
+
+Given the rotation matrix, $R$ the translation vector, $t$ and the camera matrix, $K$ we can determine P as: $P=K[R|t]$. This gives us a camera that allows us to project directly from the 3-dimensional ChessBoard space (not just plane), to any image where a chessboard pattern can be detected. Figure \ref{fig:cube_from_pose} shows an image augmented with a cube in 3 dimensions, using this technique.
+\todo{indsæt figur}
+The \texttt{solvePnP} technique appears to be extremely robust, and produces accurate results in all of our experiments.
 
 \subsection{Comparison}
 %mw
@@ -188,9 +193,23 @@ blah blah in the following we will bla
 %mw
 %pyramid, teapot, point-cloud rendering
 %talk about wireframing
-\subsection{Rotation, Scaling and Transformation}
+\subsection{Rotation, Scaling and Translation}
 %mf
 %potential todo: rewrite code so all 3 things happen in one matrix multiplication
+Now that we can accurately project arbitrary points from the ChessBoard space onto any image where a chessboard can be found, we can easily transform the objects in ChessBoard coordinates, before projecting.
+
+Our method \texttt{transformFigure} accepts as input: a set of points to be transformed, the amount to rotate around the 3 axes, the amount to scale each of the 3 axes by, and a translation vector, and gives as output the transformed points. (Rotation is achieved by using the 3-dimensional basic rotations, scaling by scalar multiplying and translation by addition).
+
+To achieve animation, we can use the current framenumber as input to \texttt{transformFigure}, as follows.
+
+\begin{lstlisting}
+angle = frameNumber * (math.pi / 50.0)
+scale = 2 + math.sin(angle)
+\end{lstlisting}
+
+The result of this, is that each frame will rotate the object by $\theta = \pi / 50$ radians, describing a full revolution every 100 frames. The scale of the object will vary smoothly between a factor 1 and a factor 3.
+
+A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.avi' \todo{lav den video og gem den ;o)}
 
 \section{Conclusion}
 %alle
