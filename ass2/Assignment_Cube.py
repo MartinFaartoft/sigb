@@ -421,14 +421,13 @@ def rotateFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
     rotated_x = []
     rotated_y = []
     rotated_z = []
-    rotation = np.dot(rotation_matrix_y, np.dot(rotation_matrix_y, rotation_matrix_z))
+    rotation = np.dot(rotation_matrix_x, np.dot(rotation_matrix_y, rotation_matrix_z))
     for i in range(len(figure[0])):
         p = np.array([figure[0][i], figure[1][i], figure[2][i]])
         p_rot = np.dot(rotation, p)
         rotated_x.append(scale_x * p_rot[0] + translate_to[0])
         rotated_y.append(scale_y * p_rot[1] + translate_to[1])
         rotated_z.append(scale_z * p_rot[2] + translate_to[2])
-
 
     result = np.array([rotated_x, rotated_y, rotated_z])
     return result
