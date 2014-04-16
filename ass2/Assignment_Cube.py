@@ -23,7 +23,7 @@ def DrawLines(img, points):
 
 def findChessBoardCorners(image):
     pattern_size = (9, 6)
-    flag = cv2.CALIB_CB_FAST_CHECK
+    flag = cv2.CALIB_CB_FAST_CHECK + cv2.cv.CV_CALIB_CB_NORMALIZE_IMAGE
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
     return cv2.findChessboardCorners(gray, pattern_size, flags=flag)
 
@@ -548,5 +548,4 @@ C = Camera(P)
 H_cs_1 = findHomographyFromCSto1()
 
 #homographyTest(H_cs_1)
-run(1,0) #run(1,"Pattern.avi")
-
+run(1,"sequence.mov")
