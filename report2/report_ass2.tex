@@ -81,7 +81,7 @@ LOLZ
 In this section, we will take a video of a person walking around the ITU atrium, and map his movement onto an overview map of the ITU building. This effectively eliminates the perspective, and allows for easy measurement of speed, acceleration and heading.
 
 \subsection{Theory}
-Both The ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
+Both the ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
 \begin{center}
 $H = 
 \begin{matrix}
@@ -164,7 +164,34 @@ The function uses SIGBTools \texttt{getHomographyFromMousepoints} to create the 
 \label{fig:floor_fail}
 \end{figure}
 
+\section{Cameras and Calibration}
+%mabg
+%introduce camera matrix
+%intrinsic/extrinsic parameters
+%how to calibrate - how many images - output
 
+\section{Augmentation}
+blah blah in the following we will bla
+\subsection{Camera Matrix via Homography}
+%mw
+\subsection{Camera Matrix from Object Pose}
+%mf
+
+\subsection{Comparison}
+%mw
+%something about how homography vs object pose performs
+%object pose appears to give more consistent results, also at extreme angles. blahhhhhhhh
+
+\subsection{Alternative Objects}
+%mw
+%pyramid, teapot, point-cloud rendering
+%talk about wireframing
+\subsection{Rotation, Scaling and Transformation}
+%mf
+%potential todo: rewrite code so all 3 things happen in one matrix multiplication
+
+\section{Conclusion}
+%alle
 
 \newpage
 \section*{Appendix}
