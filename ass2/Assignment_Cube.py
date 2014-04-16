@@ -98,8 +98,10 @@ def update(img):
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
+    videoWriter.write(image)
     global result
     result=copy(image)
+
 
 def drawFigure(image, camera, figure):
     X = figure.T
@@ -141,8 +143,15 @@ def run(speed,video):
     #--------------------------------video
     capture = cv2.VideoCapture(video)
 
+    resultFile = "recording.avi"
+
+
 
     image, isSequenceOK = getImageSequence(capture,speed)
+
+    imSize = np.shape(image)
+    global videoWriter
+    videoWriter = cv2.VideoWriter(resultFile, cv.CV_FOURCC('D','I','V','3'), 30.0,(imSize[1],imSize[0]),True) #Make a video writer
 
     if(isSequenceOK):
         update(image)
