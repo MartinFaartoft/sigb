@@ -325,31 +325,18 @@ def createPCurrentFromObjectPose(corners):
     found, r_vec, t_vec = cv2.solvePnP(points_from_chess_board_plane, corners, cameraMatrix, distortionCoefficient)
     return calculateP(cameraMatrix, r_vec, t_vec)
 
-def findPFromHomography(corners):
-    first_view = cv2.imread("01.png")
-    _, first_all_corners = findChessBoardCorners(first_view)
-    first_corners = findChessboardOuterCorners(first_all_corners)
+def findPFromHomography(corners_current):
+    cam1 = C
+    
+    img = cv2.imread("01.png")
+    _, corners_1 = findChessBoardCorners(img)
+    H,_ = cv2.findHomography(corners_1, corners_current)
 
-    this_frame_outer_corners = findChessboardOuterCorners(corners)
-    # for t in this_frame_corners:
-    #     cv2.circle(image, (int(t[0]), int(t[1])), 10, (255,0,0))
-
-    # Find the homography from first_view to this frame
-    H_1_2, _ = cv2.findHomography(first_corners, this_frame_outer_corners)
-
-    H_cs_2 = np.dot(H_1_2, H_cs_1)
-
-    A = np.dot(np.linalg.inv(K), H_cs_2) # A = K^-1 * H(cs_2)
-
-    R = np.array([A[:,0],A[:,1],np.cross(A[:,0],A[:,1])]).T # R = [r_1, r_1, r_1 x r_2]^T
-
-    t = np.array([A[:,2]]).T
-
-    Rt = np.hstack((R, t)) # Rt = [R|t]
-
-    P2_Method1 = np.dot(K,Rt)
-
-    return P2_Method1
+    cam2 = Camera(np.dot(H,cam1.P))
+    A = np.dot(linalg.inv(K),cam2.P[:,:3])
+    A = np.array([A[:,0],A[:,1], np.cross(A[:,0],A[:,1])]).T
+    cam2.P[:,:3] = np.dot(K,A)
+    return cam2.P
 
 def findChessboardOuterCorners(corners): #TODO remove? since it's kinda dumb to filter out useful points before calculating H
     idx = [0,8,45,53]
@@ -557,4 +544,5 @@ C = Camera(P)
 H_cs_1 = findHomographyFromCSto1()
 
 #homographyTest(H_cs_1)
-run(1,"sequence.mov")
+run(1, 0)
+#run(1,"sequence.mov")
