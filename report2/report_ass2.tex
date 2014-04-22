@@ -84,11 +84,11 @@ In this section, we will take a video of a person walking around the ITU atrium,
 Both the ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
 \begin{center}
 $H = 
-\begin{matrix}
+\begin{bmatrix}
  h_{1,1} & h_{1,2} & h_{1,3} \\
  h_{2,1} & h_{2,2} & h_{2,3} \\
  h_{3,1} & h_{3,2} & h_{3,3}
-\end{matrix}
+\end{bmatrix}
 $
 \end{center}
 
@@ -96,39 +96,41 @@ When the correct homography is found, points $(x,y)$ in the original plane, can 
 
 \begin{center}
 $
-\begin{matrix}
+\begin{bmatrix}
 x' \\
 y' \\
 1
-\end{matrix}
-= H * 
-\begin{matrix}
+\end{bmatrix}
+= H
+\begin{bmatrix}
 x \\
 y \\
 1
-\end{matrix}
+\end{bmatrix}
 $
 \end{center}
 
 The homography has 8 degrees of freedom ($h_{3,3}$ is always 1), meaning that we need 8 to solve 8 equations with 8 unknows, to form H. This is done by choosing at least 4 points in one of the planes, and the 4 points that corresponds to those, in the other plane. These points allows opencv to calculate the homography. We experimented with using just 4 points, but got really inconsistent results, so we ended up using 6 sets of reference points for the homography calculation.
 
 \subsection{Experiment}
-Using the calculated homography, we can map coordinates from the video sequence 'sunclipds.avi' to the corresponding coordinates on the overview map 'ITUMap.bmp'. Figure \ref{fig:persontracking} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
+Using the calculated homography, we can map coordinates from the video sequence 'sunclipds.avi' to the corresponding coordinates on the overview map 'ITUMap.bmp'. Figure \ref{fig:persontracking1} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
 
 \begin{figure}[H]
 \centering
 \begin{subfigure}{.4\textwidth}
   \centering
   \includegraphics[width=0.8\linewidth]{groundfloorboxes}
-  \label{fig:persontracking}
+  \caption{}
+  \label{fig:persontracking1}
 \end{subfigure}
 \begin{subfigure}{1\textwidth}
   \centering
   \includegraphics[width=0.8\linewidth]{maplocation}
+  \caption{}
   \label{fig:persontracking2}
 \end{subfigure}
 \caption{The green dot on the map, corresponds to the position of the green box in the video frame.}
-\label{fig:floor}
+\label{fig:persontracking}
 \end{figure}
 
 
@@ -176,6 +178,31 @@ The function uses SIGBTools \texttt{getHomographyFromMousepoints} to create the 
 In the following, we will experiment with, and discuss, different techniques that can be used for augmenting images. (adding objects to an image that seems to behave as if real, with regards to perspective and position)
 \subsection{Camera Matrix via Homography}
 %mw
+After calibrating the camera, the following data is available. The calibration matrix $K$\todo{AH! er K = calibration eller camera matrix vs P = camera eller projection matrix ??}, lists of rotation and translation vectors, one for each sample done in the calibration, the first frame of the samples and a set of points corresponding to the corners of the chess board in world coordinates.\\
+
+The world coordinate system is defined according to the chessboard, meaning that the origin of the coordinate system is defined as the inner corner of one of the corner tiles of the chess board and that the chess board spans the $xy$-plane of the coordinate system. In other words all points that are on the same plane as the chess board in world coordinates are located in the $xy$-plane of the world coordinate system, meaning that for all of these points $z=0$.\\
+
+Adding to this, that a frame in a video sequence is a 2D representation, meaning a plane, of the real world. This means that if we can find set corresponding points on the chess board and on the current frame, we can create a homography, which can be used to map any 2D structure on the the chess board to the current frame.\\
+
+Because the transformation is from one plane to another the projection matrix $P_1$, from  the first sample in the calibration, which is known due to the calibration data, the two projection matrices can be related $P_2 = H P_1$ where $H = K[r_1,r_2,t]$, from this it is possible to calculate the third rotation vector $r_3 = r_1 \wedge r_2$ in the the rotation matrix $R$, meaning we can recalculate $P_2$, so that $z$ values in world coordinates can be mapped as well. By using $P_2$, which is calculated for each frame in a sequence, we can now map any point in world coordinates to that given frame. Figure \ref{fig:cube_from_homography} shows an image augmented with a cube in 3 dimensions, using this technique.\\
+
+\todo{Figur}
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.8\linewidth]{cube_from_homography}
+\caption{Augmented cube using homography to find the current $P$}
+\label{fig:cube_from_homography}
+\end{figure}
+
+As figure \ref{fig:cube_from_homography} shows, the technique works, but at extreme angles the mapping of the $z$-coordinates fails, figure \ref{fig:cube_from_homography} shows this.\\
+
+\todo{Figur}
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.8\linewidth]{cube_from_homography_fail}
+\caption{Homography technique failing}
+\label{fig:cube_from_homography_fail}
+\end{figure}
 \subsection{P from Object Pose}
 %mf
 The OpenCV function \texttt{solvePnP} can estimate the object "pose" (position and orientation in 3D space). To do this, it needs a set of points in the ChessBoard space $(x, y, z)$, the set of corresponding points in the image where we want to determine the pose $(x, y)$, and finally the camera matrix and distortion coefficients found via calibration. The result from \texttt{solvePnP}, is a rotation vector - $r_{vec}$, and a translation vector $t_{vec}$. The rotation vector can be converted to a rotation matrix, using the \texttt{Rodrigues} function. 
@@ -185,12 +212,15 @@ Given the rotation matrix, $R$ the translation vector, $t$ and the camera matrix
 The \texttt{solvePnP} technique appears to be extremely robust, and produces accurate results in all of our experiments.
 
 \subsection{Comparison}
+As mentioned in the previous sections, using homographies to calculate $P$, appear to be working in most cases, but at extreme angles the $z$-dimension if the object is distorted, whereas the object pose, appears robust in all our tests, the conclusion is therefore that the object pose technique is best.
 %mw
 %something about how homography vs object pose performs
 %object pose appears to give more consistent results, also at extreme angles. blahhhhhhhh
 
 \subsection{Alternative Objects}
 %mw
+The main challenge is calculating $P$ for the current frame, when this is achieved, it is possible to map any point in world coordinates to the current frame. We have implemented a function called \texttt{getPyramidPoints()}, which defines a pyramid, that can be drawn similarly to the cube. More generally, we have implemented \texttt{drawObjectScatter}, which takes a list of points in world coordinates, a point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object.
+\todo{toggle buttons?}
 %pyramid, teapot, point-cloud rendering
 %talk about wireframing
 \subsection{Rotation, Scaling and Translation}
