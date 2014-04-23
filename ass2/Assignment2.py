@@ -1,5 +1,6 @@
 #from scipy import ndimage
 import cv2
+import cv
 import numpy as np
 from pylab import *
 from matplotlib import *
@@ -97,13 +98,16 @@ def showImageandPlot(N):
 blue = 255, 0, 0
 green = 0, 255, 0
 
-def displayTrace(squareInVideo):
+def displayTrace(squareInVideo, writer=None):
     ituMap = cv2.imread('Images/ITUMap.bmp')
+    #print ituMap.shape
     p1, p2 = squareInVideo
     p1_map = multiplyPointByHomography(p1, H)
     p2_map = multiplyPointByHomography(p2, H)
     cv2.rectangle(ituMap, p1_map, p2_map, green)
     cv2.imshow("Tracking", ituMap)
+    writer.write(ituMap)
+    return ituMap
 
 
 def multiplyPointByHomography(point, homography):
@@ -282,9 +286,16 @@ def showFloorTrackingData():
     #Load videodata
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
-
-    #load Tracking data
     running, imgOrig = cap.read()
+    imSize = np.shape(imgOrig)
+    print imSize
+
+    resultFile = "a.avi"
+    resultFile_2 = "b.avi"
+    videoWriter = cv2.VideoWriter(resultFile, cv.CV_FOURCC('D','I','V','3'), 30.0,(imSize[1],imSize[0]),True) #Make a video writer
+    videoWriter_2 = cv2.VideoWriter(resultFile_2, cv.CV_FOURCC('D','I','V','3'), 30.0,(800,348),True) #Make a video writer
+    #load Tracking data
+
     dataFile = np.loadtxt('GroundFloorData/trackingdata.dat')
     m,n = dataFile.shape
 
@@ -294,11 +305,15 @@ def showFloorTrackingData():
         if(running):
             boxes= frameTrackingData2BoxData(dataFile[k,:])
             boxColors = [(255,0,0),(0,255,0),(0,0,255)]
-            for k in range(0,3):
-                aBox = boxes[k]
-                cv2.rectangle(imgOrig, aBox[0], aBox[1], boxColors[k])
+            for kx in range(0,3):
+                aBox = boxes[kx]
+                cv2.rectangle(imgOrig, aBox[0], aBox[1], boxColors[kx])
             cv2.imshow("boxes",imgOrig);
-            displayTrace(boxes[1])
+            videoWriter.write(imgOrig)
+            disp_img = displayTrace(boxes[1], videoWriter_2)
+            print k
+            if k == 1:
+                cv2.imwrite("displayTrace.png",disp_img)
             cv2.waitKey(1)
 
 def angle_cos(p0, p1, p2):
@@ -397,9 +412,9 @@ def getMousePointsForImageWithParameter(image, points=1):
     return clickPoints
 
 #createHomography()
-#showFloorTrackingData()
+showFloorTrackingData()
 #simpleTextureMap()
-textureMapGroundFloor()
+#textureMapGroundFloor()
 #realisticTexturemap(H, 0.2)
 #texturemapGridSequence()
 #textureOnGrid()

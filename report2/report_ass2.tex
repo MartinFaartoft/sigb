@@ -61,6 +61,7 @@
 
 \bibliographystyle{plain}
 \begin{document}
+
 \date{April 23rd 2014\\ IT University of Copenhagen}
 \title{Homographies, Textures, Projections and Augmentations\\SIGB Spring 2014}
 
@@ -137,6 +138,8 @@ Using the calculated homography, we can map coordinates from the video sequence 
 
 
 It is important to note, that this approach only holds for movement within a plane, so when the subject in the video starts moving up the stairs, he leaves the plane that is the floor of the atrium, and the overview map coordinates stops being accurate. In the actual sequence, this is hard to detect, because the stairs have a very small slope.
+
+A video of the views in Figure \ref{fig:persontracking} (a) and (b) called \texttt{displaytrace.mp4} can be found on the enclosed DVD
 
 \section{Linear texture mapping}
 \label{sec:linear}
@@ -230,7 +233,17 @@ As mentioned in the previous sections, using homographies to calculate $P$, appe
 
 \subsection{Alternative Objects}
 %mw
-The main challenge is calculating $P$ for the current frame, when this is achieved, it is possible to map any point in world coordinates to the current frame. We have implemented a function called \texttt{getPyramidPoints()}, which defines a pyramid, that can be drawn similarly to the cube. More generally, we have implemented \texttt{drawObjectScatter}, which takes a list of points in world coordinates, a point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object.
+The main challenge is calculating $P$ for the current frame, when this is achieved, it is possible to map any point in world coordinates to the current frame. We have implemented a function called \texttt{getPyramidPoints()}, which defines a pyramid, that can be drawn similarly to the cube. More generally, we have implemented \texttt{drawObjectScatter}, which takes a list of points in world coordinates.
+
+Using this function we are able to draw a point cloud of the Utah teapot as shown in figure \ref{fig:teapot}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\linewidth]{teapot}
+\caption{Augmenting the chessboard with the Utah teapot point cloud}
+\label{fig:teapot}
+\end{figure}
+
+A point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object.
 \todo{toggle buttons?}
 %pyramid, teapot, point-cloud rendering
 %talk about wireframing
@@ -250,7 +263,7 @@ scale = 2 + math.sin(angle)
 
 The result of this, is that each frame will rotate the object by $\theta = \pi / 50$ radians, describing a full revolution every 100 frames. The scale of the object will vary smoothly between a factor 1 and a factor 3.
 
-A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.avi' \todo{lav den video og gem den ;o)}
+A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.mp4' \todo{lav den video og gem den ;o)}
 
 \section{Conclusion}
 In this report we successfully found a homography from one plane to another, that allowed us to display tracking data from one plane, in the other.
