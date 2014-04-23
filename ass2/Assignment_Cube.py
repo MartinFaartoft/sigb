@@ -334,12 +334,14 @@ def findPFromHomography(corners_current):
 
     cam2 = Camera(np.dot(H,cam1.P))
     A = np.dot(linalg.inv(K),cam2.P[:,:3])
+    
+    #normalize rotation vectors!
     r1 = A[:,0];
     r2 = A[:,1]
-    r3 = np.cross(A[:,0],A[:,1])
     r1_n = r1/np.linalg.norm(r1)
     r2_n = r2/np.linalg.norm(r2)
-    r3_n = r3/np.linalg.norm(r3)
+    r3_n = np.cross(r1_n,r2_n)
+
     A = np.array([r1_n,r2_n,r3_n]).T
     cam2.P[:,:3] = np.dot(K,A)
     return cam2.P
