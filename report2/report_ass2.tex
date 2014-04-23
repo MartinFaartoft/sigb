@@ -84,7 +84,7 @@ In this report we will experiment with homographies, texture mapping, projection
 In this section, we will take a video of a person walking around the ITU atrium, and map his movement onto an overview map of the ITU building. This effectively eliminates the perspective, and allows for easy measurement of speed, acceleration and heading.
 
 \subsection{Theory}
-Both the ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
+Both the ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3 \times 3$ matrix that is capable of describing the transformation between any two planes.
 \begin{center}
 $H =
 \begin{bmatrix}
@@ -269,7 +269,7 @@ scale = 2 + math.sin(angle)
 
 The result of this, is that each frame will rotate the object by $\theta = \pi / 50$ radians, describing a full revolution every 100 frames. The scale of the object will vary smoothly between a factor 1 and a factor 3.
 
-A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.mp4'
+A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called \texttt{projected\_objects.mp4}
 
 \section{Conclusion}
 In this report we successfully found a homography from one plane to another, that allowed us to display tracking data from one plane, in the other.
