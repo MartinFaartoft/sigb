@@ -76,14 +76,14 @@
 \newpage
 
 \section{Introduction}
-LOLZ
+\todo{LOLZ}
 \section{Person Location on Map}
 In this section, we will take a video of a person walking around the ITU atrium, and map his movement onto an overview map of the ITU building. This effectively eliminates the perspective, and allows for easy measurement of speed, acceleration and heading.
 
 \subsection{Theory}
 Both the ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
 \begin{center}
-$H = 
+$H =
 \begin{bmatrix}
  h_{1,1} & h_{1,2} & h_{1,3} \\
  h_{2,1} & h_{2,2} & h_{2,3} \\
@@ -166,13 +166,17 @@ The function uses SIGBTools \texttt{getHomographyFromMousepoints} to create the 
 \label{fig:floor_fail}
 \end{figure}
 
-\todo{MABG: pkt 10, 11, 12(?) og 14 fra del 1}
 
 \section{Cameras and Calibration}
-%mabg
-%introduce camera matrix
-%intrinsic/extrinsic parameters
-%how to calibrate - how many images - output
+The camera matrix consists of two main parts, the intrinsic and the extrinsic parameters.
+
+The extrinsic paramters describe the rotation and translation matrices needed to transform the objects in the world from world coordinates to the camera coordinates.
+
+The intrinsic parameters describe the focal length, principal point, and format of the projection plane.
+
+To find the calibration matrix, we capture a frame with a camera pointing at a chessboard figure, with a fixed square size of 2 centimeters.
+
+The OpenCV function \texttt{calibrateCamera} can infer the focal length, the distortion coefficients, the translation and rotation matrix from the position of the chessboard squares.
 
 \section{Augmentation}
 In the following, we will experiment with, and discuss, different techniques that can be used for augmenting images. (adding objects to an image that seems to behave as if real, with regards to perspective and position)
@@ -205,7 +209,7 @@ As figure \ref{fig:cube_from_homography} shows, the technique works, but at extr
 \end{figure}
 \subsection{P from Object Pose}
 %mf
-The OpenCV function \texttt{solvePnP} can estimate the object "pose" (position and orientation in 3D space). To do this, it needs a set of points in the ChessBoard space $(x, y, z)$, the set of corresponding points in the image where we want to determine the pose $(x, y)$, and finally the camera matrix and distortion coefficients found via calibration. The result from \texttt{solvePnP}, is a rotation vector - $r_{vec}$, and a translation vector $t_{vec}$. The rotation vector can be converted to a rotation matrix, using the \texttt{Rodrigues} function. 
+The OpenCV function \texttt{solvePnP} can estimate the object "pose" (position and orientation in 3D space). To do this, it needs a set of points in the ChessBoard space $(x, y, z)$, the set of corresponding points in the image where we want to determine the pose $(x, y)$, and finally the camera matrix and distortion coefficients found via calibration. The result from \texttt{solvePnP}, is a rotation vector - $r_{vec}$, and a translation vector $t_{vec}$. The rotation vector can be converted to a rotation matrix, using the \texttt{Rodrigues} function.
 
 Given the rotation matrix, $R$ the translation vector, $t$ and the camera matrix, $K$ we can determine P as: $P=K[R|t]$. This gives us a camera that allows us to project directly from the 3-dimensional ChessBoard space (not just plane), to any image where a chessboard pattern can be detected. Figure \ref{fig:cube_from_pose} shows an image augmented with a cube in 3 dimensions, using this technique.
 \todo{indsæt figur}
