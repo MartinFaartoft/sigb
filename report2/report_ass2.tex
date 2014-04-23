@@ -199,6 +199,7 @@ Adding to this, that a frame in a video sequence is a 2D representation, meaning
 Because the transformation is from one plane to another the projection matrix $P_1$, from  the first sample in the calibration, which is known due to the calibration data, the two projection matrices can be related $P_2 = H P_1$ where $H = K[r_1,r_2,t]$, from this it is possible to calculate the third rotation vector $r_3 = r_1 \times r_2$ in the the rotation matrix $R$, meaning we can recalculate $P_2$, so that $z$ values in world coordinates can be mapped as well. By using $P_2$, which is calculated for each frame in a sequence, we can now map any point in world coordinates to that given frame. Figure \ref{fig:cube_from_homography} shows an image augmented with a cube in 3 dimensions, using this technique.
 
 
+
 \begin{figure}[H]
 \begin{centering}
 \includegraphics[width=0.8\linewidth]{cube_from_homography}
