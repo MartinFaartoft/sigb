@@ -208,7 +208,7 @@ Because the transformation is from one plane to another the projection matrix $P
 \end{centering}
 \end{figure}
 
-As figure \ref{fig:cube_from_homography} shows, the technique works, but at extreme angles the mapping of the $z$-coordinates fails, figure \ref{fig:cube_from_homography} shows this.\\
+As Figure \ref{fig:cube_from_homography} shows, the technique works, but at extreme angles the mapping of the $z$-coordinates fails, Figure \ref{fig:cube_from_homography} shows this.\\
 
 
 \begin{figure}[H]
@@ -241,7 +241,7 @@ As mentioned in the previous sections, using homographies to calculate $P$, appe
 %mw
 The main challenge is calculating $P$ for the current frame, when this is achieved, it is possible to map any point in world coordinates to the current frame. We have implemented a function called \texttt{getPyramidPoints()}, which defines a pyramid, that can be drawn similarly to the cube. More generally, we have implemented \texttt{drawObjectScatter}, which takes a list of points in world coordinates.
 
-Using this function we are able to draw a point cloud of the Utah teapot as shown in figure \ref{fig:teapot}
+Using this function we are able to draw a point cloud of the Utah teapot as shown in Figure \ref{fig:teapot}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\linewidth]{teapot}
@@ -249,7 +249,7 @@ Using this function we are able to draw a point cloud of the Utah teapot as show
 \label{fig:teapot}
 \end{figure}
 
-A point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object. Pressing the “L”-button toggles the teapot. 
+A point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object. Pressing the “L”-button toggles the teapot.
 
 %pyramid, teapot, point-cloud rendering
 %talk about wireframing
