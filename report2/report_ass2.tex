@@ -61,8 +61,8 @@
 
 \bibliographystyle{plain}
 \begin{document}
-\date{March 26th 2014\\ IT University of Copenhagen}
-\title{Homography and stuff\\SIGB Spring 2014}
+\date{April 23th 2014\\ IT University of Copenhagen}
+\title{Homographies and Augmentation\\SIGB Spring 2014}
 
 \author{Marcus Gregersen\\
 \texttt{mabg@itu.dk}
@@ -191,7 +191,7 @@ The OpenCV function \texttt{calibrateCamera} can infer the focal length, the dis
 
 \subsection{Camera Matrix via Homography}
 %mw
-After calibrating the camera, the following data is available. The calibration matrix $K$\todo{AH! er K = calibration eller camera matrix vs P = camera eller projection matrix ??}, lists of rotation and translation vectors, one for each sample done in the calibration, the first frame of the samples and a set of points corresponding to the corners of the chess board in world coordinates.\\
+After calibrating the camera, the following data is available. The camera matrix $K$, lists of rotation and translation vectors, one for each sample done in the calibration, the first frame of the samples and a set of points corresponding to the corners of the chess board in world coordinates.\\
 
 The world coordinate system is defined according to the chessboard, meaning that the origin of the coordinate system is defined as the inner corner of one of the corner tiles of the chess board and that the chess board spans the $xy$-plane of the coordinate system. In other words all points that are on the same plane as the chess board in world coordinates are located in the $xy$-plane of the world coordinate system, meaning that for all of these points $z=0$.\\
 
@@ -232,7 +232,17 @@ As mentioned in the previous sections, using homographies to calculate $P$, appe
 
 \subsection{Alternative Objects}
 %mw
-The main challenge is calculating $P$ for the current frame, when this is achieved, it is possible to map any point in world coordinates to the current frame. We have implemented a function called \texttt{getPyramidPoints()}, which defines a pyramid, that can be drawn similarly to the cube. More generally, we have implemented \texttt{drawObjectScatter}, which takes a list of points in world coordinates, a point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object.
+The main challenge is calculating $P$ for the current frame, when this is achieved, it is possible to map any point in world coordinates to the current frame. We have implemented a function called \texttt{getPyramidPoints()}, which defines a pyramid, that can be drawn similarly to the cube. More generally, we have implemented \texttt{drawObjectScatter}, which takes a list of points in world coordinates.
+
+Using this function we are able to draw a point cloud of the Utah teapot as shown in figure \ref{fig:teapot}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\linewidth]{teapot}
+\caption{Augmenting the chessboard with the Utah teapot point cloud}
+\label{fig:teapot}
+\end{figure}
+
+A point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object.
 \todo{toggle buttons?}
 %pyramid, teapot, point-cloud rendering
 %talk about wireframing
