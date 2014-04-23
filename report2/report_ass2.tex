@@ -116,7 +116,7 @@ $
 The homography has 8 degrees of freedom ($h_{3,3}$ is always 1), meaning that we need 8 to solve 8 equations with 8 unknows, to form H. This is done by choosing at least 4 points in one of the planes, and the 4 points that corresponds to those, in the other plane. These points allows opencv to calculate the homography. We experimented with using just 4 points, but got really inconsistent results, so we ended up using 6 sets of reference points for the homography calculation.
 
 \subsection{Experiment}
-Using the calculated homography, we can map coordinates from the video sequence 'sunclipds.avi' to the corresponding coordinates on the overview map 'ITUMap.bmp'. Figure \ref{fig:persontracking1} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
+Using the calculated homography, we can map coordinates from the video sequence \texttt{sunclipds.avi} to the corresponding coordinates on the overview map \texttt{ITUMap.bmp}. Figure \ref{fig:persontracking1} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
 
 \begin{figure}[H]
 \centering
