@@ -141,6 +141,8 @@ Using the calculated homography, we can map coordinates from the video sequence 
 
 It is important to note, that this approach only holds for movement within a plane, so when the subject in the video starts moving up the stairs, he leaves the plane that is the floor of the atrium, and the overview map coordinates stops being accurate. In the actual sequence, this is hard to detect, because the stairs have a very small slope.
 
+A video of the views in Figure \ref{fig:persontracking} (a) and (b) called \texttt{displaytrace.mp4} can be found on the enclosed DVD
+
 \section{Linear texture mapping}
 \label{sec:linear}
 \subsection*{Texture mapping on static object}
@@ -262,7 +264,7 @@ scale = 2 + math.sin(angle)
 
 The result of this, is that each frame will rotate the object by $\theta = \pi / 50$ radians, describing a full revolution every 100 frames. The scale of the object will vary smoothly between a factor 1 and a factor 3.
 
-A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.avi' \todo{lav den video og gem den ;o)}
+A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.mp4' \todo{lav den video og gem den ;o)}
 
 \section{Conclusion}
 
