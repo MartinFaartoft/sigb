@@ -63,7 +63,7 @@
 \begin{document}
 
 \date{April 23rd 2014\\ IT University of Copenhagen}
-\title{Homographies, Textures, Projections and Augmentations\\SIGB Spring 2014}
+\title{Homographies, Textures, Projection and Augmentation\\SIGB Spring 2014}
 
 \author{Marcus Gregersen\\
 \texttt{mabg@itu.dk}
@@ -84,7 +84,7 @@ In this report we will experiment with homographies, texture mapping, projection
 In this section, we will take a video of a person walking around the ITU atrium, and map his movement onto an overview map of the ITU building. This effectively eliminates the perspective, and allows for easy measurement of speed, acceleration and heading.
 
 \subsection{Theory}
-Both the ground floor of the ITU, and the overview map, can be described as planes in 2 dimensions. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3*3$ matrix that is capable of describing the transformation between any two planes.
+Both the ground floor of the ITU, and the overview map, can be described as a plane. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3 \times 3$ matrix that is capable of describing the transformation between any two planes.
 \begin{center}
 $H =
 \begin{bmatrix}
@@ -100,9 +100,9 @@ When the correct homography is found, points $(x,y)$ in the original plane, can 
 \begin{center}
 $
 \begin{bmatrix}
-x' \\
-y' \\
-1
+w\cdot x' \\
+w\cdot y' \\
+w
 \end{bmatrix}
 = H
 \begin{bmatrix}
@@ -113,10 +113,10 @@ y \\
 $
 \end{center}
 
-The homography has 8 degrees of freedom ($h_{3,3}$ is always 1), meaning that we need 8 to solve 8 equations with 8 unknows, to form H. This is done by choosing at least 4 points in one of the planes, and the 4 points that corresponds to those, in the other plane. These points allows opencv to calculate the homography. We experimented with using just 4 points, but got really inconsistent results, so we ended up using 6 sets of reference points for the homography calculation.
+The homography has 8 degrees of freedom ($h_{3,3}$ is always 1), meaning that we need to solve 8 equations with 8 unknows, to form H. This is done by choosing at least 4 points in one of the planes, and the 4 points that corresponds to those, in the other plane. These points allows opencv to calculate the homography. We experimented with using just 4 points, but got really inconsistent results, so we ended up using 6 pairs of reference points for the homography calculation.
 
 \subsection{Experiment}
-Using the calculated homography, we can map coordinates from the video sequence 'sunclipds.avi' to the corresponding coordinates on the overview map 'ITUMap.bmp'. Figure \ref{fig:persontracking1} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
+Using the calculated homography, we can map coordinates from the video sequence \texttt{sunclipds.avi} to the corresponding coordinates on the overview map \texttt{ITUMap.bmp}. Figure \ref{fig:persontracking1} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
 
 \begin{figure}[H]
 \centering
@@ -144,7 +144,7 @@ A video of the views in Figure \ref{fig:persontracking} (a) and (b) called \text
 \section{Linear texture mapping}
 \label{sec:linear}
 \subsection*{Texture mapping on static object}
-The function \texttt{textmapGroundFloor} takes a texture an maps it to each frame of the sequence 'sunclipds.avi'. A homography is created using the four corners of the the texture, and four points in the sequence selected by clicking on the first frame. The result is a texture placed 'statically' in the sequence. Figure \ref{fig:floor} show two different frames from the sequence.
+The function \texttt{textmapGroundFloor} takes a texture an maps it to each frame of the sequence \texttt{sunclipds.avi}. A homography is created using the four corners of the the texture, and four points in the sequence selected by clicking on the first frame. The result is a texture placed 'statically' in the sequence. Figure \ref{fig:floor} show two different frames from the sequence.
 
 \begin{figure}[H]
 \centering
@@ -172,16 +172,15 @@ The function uses SIGBTools \texttt{getHomographyFromMousepoints} to create the 
 \label{fig:floor_fail}
 \end{figure}
 
-
-
+This approach does not try to make it seem like the person walking, is walking on top of the texture. This effect could be achieved by calculating an average intensity of the texture mapped area over the entire sequence (effectively removing all moving objects), and then only texture map a pixel, if its intensity is close to the average.
 
 \section{Augmentation}
 \label{sec:aug}
-In the following, we will experiment with, and discuss, different techniques that can be used for augmenting images. (adding objects to an image that seems to behave as if real, with regards to perspective and position)
+In the following, we will experiment with, and discuss, different techniques that can be used for augmenting images. (adding objects to an image that seems to behave as if real, with regards to perspective and position).
 \subsection{Cameras and Calibration}
 The camera matrix consists of two main parts, the intrinsic and the extrinsic parameters.
 
-The extrinsic paramters describe the rotation and translation matrices needed to transform the objects in the world from world coordinates to the camera coordinates.
+The extrinsic parameters describe the rotation and translation needed to transform objects from world coordinates to camera coordinates.
 
 The intrinsic parameters describe the focal length, principal point, and format of the projection plane.
 
@@ -191,7 +190,7 @@ The OpenCV function \texttt{calibrateCamera} can infer the focal length, the dis
 
 \subsection{Camera Matrix via Homography}
 %mw
-After calibrating the camera, the following data is available. The camera matrix $K$, lists of rotation and translation vectors, one for each sample done in the calibration, the first frame of the samples and a set of points corresponding to the corners of the chess board in world coordinates.
+After calibrating the camera, the following data is available. The camera matrix $K$, rotation and translation vectors, one for each sample done in the calibration, the first frame of the samples and a set of points corresponding to the corners of the chess board in world coordinates.
 
 The world coordinate system is defined according to the chessboard, meaning that the origin of the coordinate system is defined as the inner corner of one of the corner tiles of the chess board and that the chess board spans the $xy$-plane of the coordinate system. In other words all points that are on the same plane as the chess board in world coordinates are located in the $xy$-plane of the world coordinate system, meaning that for all of these points $z=0$.
 
@@ -208,7 +207,7 @@ Because the transformation is from one plane to another the projection matrix $P
 \end{centering}
 \end{figure}
 
-As figure \ref{fig:cube_from_homography} shows, the technique works, but at extreme angles the mapping of the $z$-coordinates fails, figure \ref{fig:cube_from_homography} shows this.\\
+As Figure \ref{fig:cube_from_homography} shows, the technique works, but at extreme angles the mapping of the $z$-coordinates fails, Figure \ref{fig:cube_from_homography} shows this.\\
 
 
 \begin{figure}[H]
@@ -232,7 +231,7 @@ Given the rotation matrix, $R$ the translation vector, $t$ and the camera matrix
 The \texttt{solvePnP} technique appears to be extremely robust, and produces accurate results in all of our experiments.
 
 \subsection{Comparison}
-As mentioned in the previous sections, using homographies to calculate $P$, appear to be working in most cases, but at extreme angles the $z$-dimension if the object is distorted, whereas the object pose, appears robust in all our tests, the conclusion is therefore that the object pose technique is best.
+As mentioned in the previous sections, using homographies to calculate $P$, appear to be working in most cases, but at extreme angles the $z$-dimension in the object is distorted, whereas the object pose, appears robust in all our tests, the conclusion is therefore that the object pose technique is best.
 %mw
 %something about how homography vs object pose performs
 %object pose appears to give more consistent results, also at extreme angles. blahhhhhhhh
@@ -241,7 +240,7 @@ As mentioned in the previous sections, using homographies to calculate $P$, appe
 %mw
 The main challenge is calculating $P$ for the current frame, when this is achieved, it is possible to map any point in world coordinates to the current frame. We have implemented a function called \texttt{getPyramidPoints()}, which defines a pyramid, that can be drawn similarly to the cube. More generally, we have implemented \texttt{drawObjectScatter}, which takes a list of points in world coordinates.
 
-Using this function we are able to draw a point cloud of the Utah teapot as shown in figure \ref{fig:teapot}
+Using this function we are able to draw a point cloud of the Utah teapot as shown in Figure \ref{fig:teapot}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\linewidth]{teapot}
@@ -249,7 +248,7 @@ Using this function we are able to draw a point cloud of the Utah teapot as show
 \label{fig:teapot}
 \end{figure}
 
-A point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object. Pressing the “L”-button toggles the teapot. 
+A point for further improvement, would be to add the possibility of drawing lines between corresponding points, thus being able to create a wireframe for any object. Pressing the “L”-button toggles the teapot.
 
 %pyramid, teapot, point-cloud rendering
 %talk about wireframing
@@ -269,7 +268,7 @@ scale = 2 + math.sin(angle)
 
 The result of this, is that each frame will rotate the object by $\theta = \pi / 50$ radians, describing a full revolution every 100 frames. The scale of the object will vary smoothly between a factor 1 and a factor 3.
 
-A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.mp4'
+A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called \texttt{projected\_objects.mp4}
 
 \section{Conclusion}
 In this report we successfully found a homography from one plane to another, that allowed us to display tracking data from one plane, in the other.
