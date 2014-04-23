@@ -252,6 +252,20 @@ The result of this, is that each frame will rotate the object by $\theta = \pi /
 A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.avi' \todo{lav den video og gem den ;o)}
 
 \section{Conclusion}
+In this report we successfully found a homography from one plane to another, that allowed us to display tracking data from one plane, in the other.
+\begin{itemize}
+\item
+We used the found homography to map textures onto planes in a realistic fashion, using transparency to heighten the illusion.
+\item
+We successfully calibrated a camera, and used this calibration (along with homographies or object poses) to perform real-time augmentation of a video-stream.
+\item
+We expanded the augmentation from a static image of a box, to include animations (rotation, scaling and translation) and multiple simultaneous, independent objects.
+\item
+We added a new object shape (a pyramid), and implemented point-cloud rendering - exemplified by a teapot.
+\item
+We compared two different methods for determining the projection matrix $P$, and found the one based on object pose to be superior in both precision and robustness.
+\end{itemize}
+We are especially proud of our work on animations, but would have liked to extend our point-cloud rendering to draw polygons, instead of just points.
 
 \newpage
 \section*{Appendix}
