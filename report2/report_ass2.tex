@@ -76,8 +76,13 @@
 \newpage
 
 \section{Introduction}
-\todo{LOLZ}
+This report is divided into two parts. In the first part we describe various applications of homographies. In Section \ref{sec:person} we map the position of a persons position in some plane onto an overview map.
+In Section \ref{sec:linear} we apply linear texture mapping onto the ground plane in the atrium of ITU.
+
+Lastly in Section \ref{sec:aug} we do augmentation of images i.e projecting 3D objects onto a 2D plane.
+
 \section{Person Location on Map}
+\label{sec:person}
 In this section, we will take a video of a person walking around the ITU atrium, and map his movement onto an overview map of the ITU building. This effectively eliminates the perspective, and allows for easy measurement of speed, acceleration and heading.
 
 \subsection{Theory}
@@ -137,6 +142,7 @@ Using the calculated homography, we can map coordinates from the video sequence 
 It is important to note, that this approach only holds for movement within a plane, so when the subject in the video starts moving up the stairs, he leaves the plane that is the floor of the atrium, and the overview map coordinates stops being accurate. In the actual sequence, this is hard to detect, because the stairs have a very small slope.
 
 \section{Linear texture mapping}
+\label{sec:linear}
 \subsection*{Texture mapping on static object}
 The function \texttt{textmapGroundFloor} takes a texture an maps it to each frame of the sequence 'sunclipds.avi'. A homography is created using the four corners of the the texture, and four points in the sequence selected by clicking on the first frame. The result is a texture placed 'statically' in the sequence. Figure \ref{fig:floor} show two different frames from the sequence.
 
@@ -167,7 +173,12 @@ The function uses SIGBTools \texttt{getHomographyFromMousepoints} to create the 
 \end{figure}
 
 
-\section{Cameras and Calibration}
+
+
+\section{Augmentation}
+\label{sec:aug}
+In the following, we will experiment with, and discuss, different techniques that can be used for augmenting images. (adding objects to an image that seems to behave as if real, with regards to perspective and position)
+\subsection{Cameras and Calibration}
 The camera matrix consists of two main parts, the intrinsic and the extrinsic parameters.
 
 The extrinsic paramters describe the rotation and translation matrices needed to transform the objects in the world from world coordinates to the camera coordinates.
@@ -178,8 +189,6 @@ To find the calibration matrix, we capture a frame with a camera pointing at a c
 
 The OpenCV function \texttt{calibrateCamera} can infer the focal length, the distortion coefficients, the translation and rotation matrix from the position of the chessboard squares.
 
-\section{Augmentation}
-In the following, we will experiment with, and discuss, different techniques that can be used for augmenting images. (adding objects to an image that seems to behave as if real, with regards to perspective and position)
 \subsection{Camera Matrix via Homography}
 %mw
 After calibrating the camera, the following data is available. The calibration matrix $K$\todo{AH! er K = calibration eller camera matrix vs P = camera eller projection matrix ??}, lists of rotation and translation vectors, one for each sample done in the calibration, the first frame of the samples and a set of points corresponding to the corners of the chess board in world coordinates.\\
@@ -246,12 +255,13 @@ The result of this, is that each frame will rotate the object by $\theta = \pi /
 A recorded sequence, showcasing animations, transformations and alternative objects, can be found on the enclosed DVD in a file called 'animated\_alternative\_objects.avi' \todo{lav den video og gem den ;o)}
 
 \section{Conclusion}
-%alle
 
 \newpage
 \section*{Appendix}
-\subsection{Assignment2.py}
-%\lstinputlisting[language=Python]{../ass2/Assignment2.py}
+\subsection*{Assignment2.py}
+\lstinputlisting[language=Python]{../ass2/Assignment2.py}
+\subsection*{Assignment\_Cube.py}
+\lstinputlisting[language=Python]{../ass2/Assignment_Cube.py}
 
 
 \end{document}
