@@ -54,11 +54,17 @@ def update(img):
             cam2 = Camera(P)
             coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
-            drawCoordinateSystem(image,transformed_coordinate_system)
+            #drawCoordinateSystem(image,transformed_coordinate_system)
 
             if TextureMap:
 
                 ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
+                currentCam = Camera(P)
+                image=textureFace(image,TopFace,currentCam,"Images/Top.jpg")
+                image=textureFace(image,LeftFace,currentCam,"Images/Left.jpg")
+                image=textureFace(image,RightFace,currentCam,"Images/Right.jpg")
+                image=textureFace(image,UpFace,currentCam,"Images/Up.jpg")
+                image=textureFace(image,DownFace,currentCam,"Images/Down.jpg")
 
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
 
@@ -67,17 +73,17 @@ def update(img):
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
-                cam2 = Camera(P)
+                """cam2 = Camera(P)
                 X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
 
                 for p in X:
                     C = int(p[0]),int(p[1])
                     cv2.circle(image,C, 2,(255,0,255),4)
-
+                    """
 
             if WireFrame:
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
-                cam2 = Camera(P)
+                """cam2 = Camera(P)
                 if (Teapot):
                     teapot = parse_teapot()
 
@@ -94,7 +100,7 @@ def update(img):
                     box2 = transformFigure(box2, 0, 0, angle, 1, 1, 1)
                     #rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
                     drawFigure(image, cam2, box1)
-                    drawFigure(image, cam2, box2)
+                    drawFigure(image, cam2, box2)"""
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
@@ -381,6 +387,38 @@ def transformFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z
     result = np.array([rotated_x, rotated_y, rotated_z])
     return result
 
+def textureFace(image,face,currentCam,texturePath):
+    texture = cv2.imread(texturePath)
+    m,n,d = texture.shape
+    face_corners = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
+    face[0,:] = face[0,:]
+    face[1,:] = face[1,:]
+    face[2,:] = face[2,:]
+
+    X = face.T
+    ones = np.ones((X.shape[0],1))
+    X = np.column_stack((X,ones)).T
+    projected_face = currentCam.project(X).T
+    projected_face = projected_face[:,:-1]
+
+    I = copy(image) 
+    
+    H,_ = cv2.findHomography(face_corners, projected_face)
+
+    h,w,d = image.shape
+    warped_texture = cv2.warpPerspective(texture, H,(w, h))
+    image = cv2.addWeighted(image, 1, warped_texture, 0.5, 0)
+    #image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    #(thresh, sub) = cv2.threshold(image, 40, 255, cv2.THRESH_BINARY)
+    #sub=cv2.cvtColor(sub, cv2.COLOR_GRAY2RGB)
+    #I1=cv2.bitwise_and(I, sub)
+
+    #Imixed=cv2.bitwise_or(image, I1)
+    #for point in projected_face:
+     #   pass
+        #cv2.circle(image, (int(point[0]),int(point[1])), 3, (0, 255, 0), -1)
+
+    return image
 
 def getPyramidPoints(center, size,chessSquare_size):
     points = []
@@ -424,13 +462,13 @@ global calibrationPoints
 global calibrationCamera
 global chessSquare_size
 
-ProcessFrame=False
+ProcessFrame=True
 Undistorting=False
-WireFrame=False
+WireFrame=True
 ShowText=True
 TextureMap=True
-ProjectPattern=False
-debug=True
+ProjectPattern=True
+debug=False
 Teapot = True
 
 tempSpeed=1
@@ -490,5 +528,5 @@ C = Camera(P)
 
 ''' <003a> Find homography H_cs^1 '''
 
-run(1, 0)
-#run(1,"sequence.mov")
+#run(1, 0)
+run(1,"sequence.mov")
