@@ -58,19 +58,29 @@ def update(img):
 
             if TextureMap:
 
-                ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
-                currentCam = Camera(P)
-                image=textureFace(image,LeftFace,currentCam,"Images/Left.jpg")
-                image=textureFace(image,RightFace,currentCam,"Images/Right.jpg")
-                image=textureFace(image,UpFace,currentCam,"Images/Up.jpg")
-                image=textureFace(image,DownFace,currentCam,"Images/Down.jpg")
-                image=textureFace(image,TopFace,currentCam,"Images/Top.jpg")
-
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
                 draw_face_normals(image, cam2, face_normals)
 
+
                 ''' <013> Here Remove the hidden faces'''
+
+                idx = back_face_culling(face_normals, cam2)
+                faces_to_be_drawn = np.array(Faces)[idx]
+                textures_to_be_drawn = np.array(FaceTextures)[idx]
+
+                ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
+
+                for i in range(len(faces_to_be_drawn)):
+                    face = faces_to_be_drawn[i]
+                    texture = textures_to_be_drawn[i]
+                    image = textureFace(image,face, cam2, texture)
+
+
+
+
+
+
 
 
             if ProjectPattern:
@@ -81,7 +91,7 @@ def update(img):
                 for p in X:
                     C = int(p[0]),int(p[1])
                     cv2.circle(image,C, 2,(255,0,255),4)
-                    
+
 
             if WireFrame:
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
@@ -335,14 +345,14 @@ def createPCurrentFromObjectPose(corners):
 
 def findPFromHomography(corners_current):
     cam1 = C
-    
+
     img = cv2.imread("01.png")
     _, corners_1 = findChessBoardCorners(img)
     H,_ = cv2.findHomography(corners_1, corners_current)
 
     cam2 = Camera(np.dot(H,cam1.P))
     A = np.dot(linalg.inv(K),cam2.P[:,:3])
-    
+
     r1 = A[:,0]
     r2 = A[:,1]
     r3 = np.cross(r1,r2)
@@ -389,6 +399,26 @@ def transformFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z
     result = np.array([rotated_x, rotated_y, rotated_z])
     return result
 
+def back_face_culling(face_normals, camera):
+    #center = camera.c
+    box_center  = [8, 6, -1]
+    camera_center = camera.center()
+    camera_x = camera_center[0,0]
+    camera_y = camera_center[1,0]
+    camera_z = camera_center[2,0]
+
+    camera_center = np.array([camera_x, camera_y, camera_z])
+
+    view_vector = box_center - camera_center
+    view_vector = view_vector / np.linalg.norm(view_vector)
+
+    angles = [np.dot(view_vector, face) for face in face_normals]
+    angles = np.array(angles)
+
+    idx = angles <= 0
+    #print angles
+    return idx
+
 def textureFace(image,face,currentCam,texturePath):
     translate_to = [8, 6, -1]
     f = copy(face)
@@ -396,7 +426,7 @@ def textureFace(image,face,currentCam,texturePath):
     m,n,d = texture.shape
     mask = zeros((m,n)) + 255
     face_corners = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
-    
+
     f[0,:] = f[0,:] + translate_to[0]
     f[1,:] = f[1,:] + translate_to[1]
     f[2,:] = f[2,:] + translate_to[2]
@@ -407,8 +437,8 @@ def textureFace(image,face,currentCam,texturePath):
     projected_face = currentCam.project(X).T
     projected_face = projected_face[:,:-1]
 
-    I = copy(image) 
-    
+    I = copy(image)
+
     H,_ = cv2.findHomography(face_corners, projected_face)
 
     h,w,d = image.shape
@@ -525,6 +555,8 @@ j = array([ [1,2,7,6], [1,2,7,6], [1,2,7,6] ])  # indices for the second dim
 DownFace = box[i,j]
 
 Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
+FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg', 'Images/Top.jpg']
+
 
 '''----------------------------------------'''
 '''----------------------------------------'''
@@ -546,5 +578,5 @@ C = Camera(P)
 
 ''' <003a> Find homography H_cs^1 '''
 
-#run(1, 0)
-run(1,"sequence.mov")
+run(1, 0)
+#run(1,"sequence.mov")
