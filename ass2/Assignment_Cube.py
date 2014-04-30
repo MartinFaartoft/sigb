@@ -85,6 +85,7 @@ def update(img):
                     face = faces_to_be_drawn[i]
                     texture = textures_to_be_drawn[i]
                     image = textureFace(image,face, cam2, texture)
+                    image = ShadeFace(image, TopFace, TopFaceCornerNormals, cam2)
 
 
 
@@ -504,6 +505,10 @@ def ShadeFace(image,points,faceCorner_Normals, camera):
     image=cv2.merge((r,g,b))
     image=cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     return image
+
+def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
+    pass
+
 
 def calculate_face_normals():
     return np.array([GetFaceNormal(face) for face in Faces])
