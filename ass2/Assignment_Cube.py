@@ -78,14 +78,15 @@ def update(img):
                 idx = back_face_culling(face_normals, cam2)
                 faces_to_be_drawn = np.array(Faces)[idx]
                 textures_to_be_drawn = np.array(FaceTextures)[idx]
-
+                face_corner_normals = np.array(CornerNormals)[idx]
                 ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
 
                 for i in range(len(faces_to_be_drawn)):
                     face = faces_to_be_drawn[i]
                     texture = textures_to_be_drawn[i]
+                    corner_normals = face_corner_normals[i]
                     image = textureFace(image,face, cam2, texture)
-                    image = ShadeFace(image, TopFace, TopFaceCornerNormals, cam2)
+                    image = ShadeFace(image, face, corner_normals, cam2)
 
 
 
@@ -626,7 +627,9 @@ DownFace = box[i,j]
 Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
 FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg', 'Images/Top.jpg']
 
-TopFaceCornerNormals,RightFaceCornerNormals,LeftFaceCornerNormals,UpFaceCornerNormals,DownFaceCornerNormals = CalculateFaceCornerNormals(RightFace, LeftFace, UpFace, DownFace, TopFace)
+t, r, l, u, d = CalculateFaceCornerNormals(TopFace, RightFace, LeftFace, UpFace, DownFace)
+CornerNormals = [r, l, u, d, t]
+
 #calibrateCamera(5, (9,6), 2.0, 0)
 ''' <001> Here Load the numpy data files saved by the cameraCalibrate2'''
 K,r,t = loadCalibrationData()
