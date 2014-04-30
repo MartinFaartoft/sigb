@@ -60,13 +60,15 @@ def update(img):
 
                 ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
                 currentCam = Camera(P)
-                image=textureFace(image,TopFace,currentCam,"Images/Top.jpg")
                 image=textureFace(image,LeftFace,currentCam,"Images/Left.jpg")
                 image=textureFace(image,RightFace,currentCam,"Images/Right.jpg")
                 image=textureFace(image,UpFace,currentCam,"Images/Up.jpg")
                 image=textureFace(image,DownFace,currentCam,"Images/Down.jpg")
+                image=textureFace(image,TopFace,currentCam,"Images/Top.jpg")
 
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
+                face_normals = calculate_face_normals()
+                draw_face_normals(image, cam2, face_normals)
 
                 ''' <013> Here Remove the hidden faces'''
 
@@ -417,6 +419,25 @@ def textureFace(image,face,currentCam,texturePath):
 
     return image
 
+def calculate_face_normals():
+    return np.array([GetFaceNormal(face) for face in Faces])
+    #top_normal = GetFaceNormal(TopFace)
+
+    #print "top", top_normal
+    #return np.array([top_normal])
+
+def draw_face_normals(image, camera, normals):
+    cube_center = [8, 6, -1]
+    size = 2
+    #find pairs of points (cube_center -> cube_center + normal)
+    #project and draw
+    for normal in normals:
+        p1 = cube_center + normal * size
+        p2 = p1 + normal * 4
+        #print p1, p2
+        fig = np.array([p1, p2])
+        drawFigure(image, camera, fig.T)
+
 def getPyramidPoints(center, size,chessSquare_size):
     points = []
 
@@ -503,7 +524,7 @@ i = array([ [0,0,0,0],[1,1,1,1] ,[2,2,2,2]  ])  # indices for the first dim
 j = array([ [1,2,7,6], [1,2,7,6], [1,2,7,6] ])  # indices for the second dim
 DownFace = box[i,j]
 
-
+Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
 
 '''----------------------------------------'''
 '''----------------------------------------'''
