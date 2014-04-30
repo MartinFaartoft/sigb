@@ -54,7 +54,7 @@ def update(img):
             cam2 = Camera(P)
             coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
-            #drawCoordinateSystem(image,transformed_coordinate_system)
+            drawCoordinateSystem(image,transformed_coordinate_system)
 
             if TextureMap:
 
@@ -73,17 +73,17 @@ def update(img):
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
-                """cam2 = Camera(P)
+                cam2 = Camera(P)
                 X = projectChessBoardPoints(cam2, points_from_chess_board_plane)
 
                 for p in X:
                     C = int(p[0]),int(p[1])
                     cv2.circle(image,C, 2,(255,0,255),4)
-                    """
+                    
 
             if WireFrame:
                 ''' <009> Here Project the box into the current camera image and draw the box edges'''
-                """cam2 = Camera(P)
+                cam2 = Camera(P)
                 if (Teapot):
                     teapot = parse_teapot()
 
@@ -100,7 +100,7 @@ def update(img):
                     box2 = transformFigure(box2, 0, 0, angle, 1, 1, 1)
                     #rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
                     drawFigure(image, cam2, box1)
-                    drawFigure(image, cam2, box2)"""
+                    drawFigure(image, cam2, box2)
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
@@ -388,14 +388,18 @@ def transformFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z
     return result
 
 def textureFace(image,face,currentCam,texturePath):
+    translate_to = [8, 6, -1]
+    f = copy(face)
     texture = cv2.imread(texturePath)
     m,n,d = texture.shape
+    mask = zeros((m,n)) + 255
     face_corners = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
-    face[0,:] = face[0,:]
-    face[1,:] = face[1,:]
-    face[2,:] = face[2,:]
+    
+    f[0,:] = f[0,:] + translate_to[0]
+    f[1,:] = f[1,:] + translate_to[1]
+    f[2,:] = f[2,:] + translate_to[2]
 
-    X = face.T
+    X = f.T
     ones = np.ones((X.shape[0],1))
     X = np.column_stack((X,ones)).T
     projected_face = currentCam.project(X).T
@@ -407,16 +411,9 @@ def textureFace(image,face,currentCam,texturePath):
 
     h,w,d = image.shape
     warped_texture = cv2.warpPerspective(texture, H,(w, h))
-    image = cv2.addWeighted(image, 1, warped_texture, 0.5, 0)
-    #image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    #(thresh, sub) = cv2.threshold(image, 40, 255, cv2.THRESH_BINARY)
-    #sub=cv2.cvtColor(sub, cv2.COLOR_GRAY2RGB)
-    #I1=cv2.bitwise_and(I, sub)
-
-    #Imixed=cv2.bitwise_or(image, I1)
-    #for point in projected_face:
-     #   pass
-        #cv2.circle(image, (int(point[0]),int(point[1])), 3, (0, 255, 0), -1)
+    warped_mask = cv2.warpPerspective(mask, H,(w, h))
+    idx = warped_mask != 0
+    image[idx] = warped_texture[idx]
 
     return image
 
@@ -464,10 +461,10 @@ global chessSquare_size
 
 ProcessFrame=True
 Undistorting=False
-WireFrame=True
+WireFrame=False
 ShowText=True
 TextureMap=True
-ProjectPattern=True
+ProjectPattern=False
 debug=False
 Teapot = True
 
