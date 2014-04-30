@@ -63,6 +63,8 @@ def update(img):
                 draw_face_normals(image, cam2, face_normals)
 
 
+
+
                 ''' <013> Here Remove the hidden faces'''
 
                 idx = back_face_culling(face_normals, cam2)
@@ -600,8 +602,6 @@ i = array([ [0,0,0,0],[1,1,1,1] ,[2,2,2,2]  ])  # indices for the first dim
 j = array([ [1,2,7,6], [1,2,7,6], [1,2,7,6] ])  # indices for the second dim
 DownFace = box[i,j]
 
-Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
-FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg', 'Images/Top.jpg']
 
 
 '''----------------------------------------'''
@@ -610,6 +610,10 @@ FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/
 
 
 ''' <000> Here Call the calibrateCamera from the SIGBTools to calibrate the camera and saving the data'''
+Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
+FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg', 'Images/Top.jpg']
+
+TopFaceCornerNormals,RightFaceCornerNormals,LeftFaceCornerNormals,UpFaceCornerNormals,DownFaceCornerNormals = CalculateFaceCornerNormals(RightFace, LeftFace, UpFace, DownFace, TopFace)
 #calibrateCamera(5, (9,6), 2.0, 0)
 ''' <001> Here Load the numpy data files saved by the cameraCalibrate2'''
 K,r,t = loadCalibrationData()
