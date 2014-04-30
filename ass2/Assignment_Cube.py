@@ -45,10 +45,18 @@ def update(img):
             else:
                 P = createPCurrentFromObjectPose(corners)
 
+            cam2 = Camera(P)
+
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
 
                 cv2.putText(image,str("frame:" + str(frameNumber)), (20,10),cv2.FONT_HERSHEY_PLAIN,1, (255, 255, 255))#Draw the text
+
+                center = cam2.center()
+
+                distance = np.linalg.norm(center)
+                cv2.putText(image,str("distance: %02d" % distance), (20,30),cv2.FONT_HERSHEY_PLAIN,1, (255, 255, 255))#Draw the text
+
 
             ''' <008> Here Draw the world coordinate system in the image'''
             cam2 = Camera(P)
