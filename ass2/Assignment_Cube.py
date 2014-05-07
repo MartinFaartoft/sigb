@@ -467,11 +467,8 @@ def ShadeFace(image,points,faceCorner_Normals, camera):
     videoHeight, videoWidth, vd = array(image).shape
     #................................
     points_Proj=camera.project(toHomogenious(points))
-    points_Proj1 = np.array([[int(points_Proj[0,0]),int(points_Proj[1,0])],[int(
-    points_Proj[0,1]),int(points_Proj[1,1])],[int(points_Proj[0,2]),int(points_Proj
-    [1,2])],[int(points_Proj[0,3]),int(points_Proj[1,3])]])
-    quare = np.array([[0, 0], [shadeRes-1, 0], [shadeRes-1, shadeRes-1], [0, shadeRes-
-    1]])
+    points_Proj1 = np.array([[int(points_Proj[0,0]),int(points_Proj[1,0])],[int(points_Proj[0,1]),int(points_Proj[1,1])],[int(points_Proj[0,2]),int(points_Proj[1,2])],[int(points_Proj[0,3]),int(points_Proj[1,3])]])
+    square = np.array([[0, 0], [shadeRes-1, 0], [shadeRes-1, shadeRes-1], [0, shadeRes-1]])
     #................................
     H = estimateHomography(square, points_Proj1)
     #................................
@@ -644,5 +641,5 @@ C = Camera(P)
 
 ''' <003a> Find homography H_cs^1 '''
 
-run(1, 0)
-#run(1,"sequence.mov")
+#run(1, 0)
+run(1,"sequence.mov")
