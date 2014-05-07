@@ -80,13 +80,18 @@ def update(img):
                 textures_to_be_drawn = np.array(FaceTextures)[idx]
                 face_corner_normals = np.array(CornerNormals)[idx]
                 ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
-
                 for i in range(len(faces_to_be_drawn)):
                     face = faces_to_be_drawn[i]
+                    translate_to = [8, 6, -1]
+                    f = copy(face)
+                    f[0,:] = f[0,:] + translate_to[0]
+                    f[1,:] = f[1,:] + translate_to[1]
+                    f[2,:] = f[2,:] + translate_to[2]
+
                     texture = textures_to_be_drawn[i]
                     corner_normals = face_corner_normals[i]
-                    image = textureFace(image,face, cam2, texture)
-                    image = ShadeFace(image, face, corner_normals, cam2)
+                    image = textureFace(image, f, cam2, texture)
+                    image = ShadeFace(image, f, corner_normals, cam2)
 
 
 
@@ -432,18 +437,18 @@ def back_face_culling(face_normals, camera):
     return idx
 
 def textureFace(image,face,currentCam,texturePath):
-    translate_to = [8, 6, -1]
-    f = copy(face)
+    #translate_to = [8, 6, -1]
+    #f = copy(face)
     texture = cv2.imread(texturePath)
     m,n,d = texture.shape
     mask = zeros((m,n)) + 255
     face_corners = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
 
-    f[0,:] = f[0,:] + translate_to[0]
-    f[1,:] = f[1,:] + translate_to[1]
-    f[2,:] = f[2,:] + translate_to[2]
+    #f[0,:] = f[0,:] + translate_to[0]
+    #f[1,:] = f[1,:] + translate_to[1]
+    #f[2,:] = f[2,:] + translate_to[2]
 
-    X = f.T
+    X = face.T
     ones = np.ones((X.shape[0],1))
     X = np.column_stack((X,ones)).T
     projected_face = currentCam.project(X).T
@@ -461,7 +466,7 @@ def textureFace(image,face,currentCam,texturePath):
 
     return image
 
-def ShadeFace(image,points,faceCorner_Normals, camera):
+def ShadeFace(image, points, faceCorner_Normals, camera):
     global shadeRes
     shadeRes=10
     videoHeight, videoWidth, vd = array(image).shape
@@ -472,7 +477,7 @@ def ShadeFace(image,points,faceCorner_Normals, camera):
     #................................
     H = estimateHomography(square, points_Proj1)
     #................................
-    Mr0,Mg0,Mb0=CalculateShadeMatrix(image,shadeRes,points,faceCorner_Normals, camera)
+    Mr0,Mg0,Mb0=CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera)
     # HINT
     # type(Mr0): <type 'numpy.ndarray'>
     # Mr0.shape: (shadeRes, shadeRes)
@@ -493,20 +498,42 @@ def ShadeFace(image,points,faceCorner_Normals, camera):
     points_Proj2.append([int(points_Proj[0,3]),int(points_Proj[1,3])])
     cv2.fillConvexPoly(whiteMask,array(points_Proj2),(255,255,255))
     #................................
-    r[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),r[nonzero(whiteMask>0)]*Mr[
-    nonzero(whiteMask>0)])
-    g[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),g[nonzero(whiteMask>0)]*Mg[
-    nonzero(whiteMask>0)])
-    b[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),b[nonzero(whiteMask>0)]*Mb[
-    nonzero(whiteMask>0)])
+    r[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),r[nonzero(whiteMask>0)]*Mr[nonzero(whiteMask>0)])
+    g[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),g[nonzero(whiteMask>0)]*Mg[nonzero(whiteMask>0)])
+    b[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),b[nonzero(whiteMask>0)]*Mb[nonzero(whiteMask>0)])
     #................................
     image=cv2.merge((r,g,b))
     image=cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     return image
 
 def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
-    pass
+    #given:
+    #Ambient light IA=[IaR,IaG,IaB]
+    IA = np.matrix([5.0, 5.0, 5.0]).T
+    #Point light IA=[IpR,IpG,IpB]
+    IP = np.matrix([5.0, 5.0, 5.0]).T
+    #Light Source Attenuation
+    fatt = 1
+    #Material properties: e.g., Ka=[kaR; kaG; kaB]
+    ka=np.matrix([0.2, 0.2, 0.2]).T
+    kd= np.matrix([0.3, 0.3, 0.3]).T
+    ks=np.matrix([0.7, 0.7, 0.7]).T
+    alpha = 100
 
+    #ambient: I_ambient(x) = I_a * k_a(x)
+    r = np.zeros((shadeRes, shadeRes))
+    g = np.zeros((shadeRes, shadeRes))
+    b = np.zeros((shadeRes, shadeRes))
+
+    r_ambient = r + IA[0] * ka[0]
+    g_ambient = g + IA[1] * ka[1]
+    b_ambient = b + IA[2] * ka[2]
+    
+
+    r_final = r_ambient #+ r_specular + r_diffused
+    g_final = g_ambient
+    b_final = b_ambient
+    return (r_final, g_final, b_final)
 
 def calculate_face_normals():
     return np.array([GetFaceNormal(face) for face in Faces])
