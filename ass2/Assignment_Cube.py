@@ -65,16 +65,11 @@ def update(img):
             drawCoordinateSystem(image,transformed_coordinate_system)
 
             if TextureMap:
-
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
                 draw_face_normals(image, cam2, face_normals)
 
-
-
-
                 ''' <013> Here Remove the hidden faces'''
-
                 idx = back_face_culling(face_normals, cam2)
                 faces_to_be_drawn = np.array(Faces)[idx]
                 textures_to_be_drawn = np.array(FaceTextures)[idx]
@@ -92,13 +87,6 @@ def update(img):
                     corner_normals = face_corner_normals[i]
                     image = textureFace(image, f, cam2, texture)
                     image = ShadeFace(image, f, corner_normals, cam2)
-
-
-
-
-
-
-
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
@@ -529,7 +517,6 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     g_ambient = g + IA[1] * ka[1]
     b_ambient = b + IA[2] * ka[2]
     
-
     r_final = r_ambient #+ r_specular + r_diffused
     g_final = g_ambient
     b_final = b_ambient
