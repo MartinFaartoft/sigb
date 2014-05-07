@@ -497,6 +497,13 @@ def ShadeFace(image, points, faceCorner_Normals, camera):
 def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     #given:
     #Ambient light IA=[IaR,IaG,IaB]
+
+    cc = camera.center()
+
+    light_source = np.array([cc[0,0], cc[1,0], cc[2,0]])
+
+
+
     IA = np.matrix([5.0, 5.0, 5.0]).T
     #Point light IA=[IpR,IpG,IpB]
     IP = np.matrix([5.0, 5.0, 5.0]).T
@@ -513,14 +520,52 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     g = np.zeros((shadeRes, shadeRes))
     b = np.zeros((shadeRes, shadeRes))
 
+    #Ambient
     r_ambient = r + IA[0] * ka[0]
     g_ambient = g + IA[1] * ka[1]
     b_ambient = b + IA[2] * ka[2]
-    
-    r_final = r_ambient #+ r_specular + r_diffused
-    g_final = g_ambient
-    b_final = b_ambient
+
+    #Diffuse
+
+    point = points.T[0]
+
+    #point = points[0,0]
+    point_normal = np.mean(faceCorner_Normals, axis=1)
+
+    point_normal = point_normal / np.linalg.norm(point_normal)
+
+    i_diffuse = diffuse(point, point_normal, light_source) * kd[0]
+
+
+
+    r_final = r_ambient + i_diffuse #+ r_specular + r_diffused
+    g_final = g_ambient + i_diffuse
+    b_final = b_ambient + i_diffuse
+
     return (r_final, g_final, b_final)
+
+
+def diffuse(point, point_normal, light_source):
+    # Regn vector ud fra Light source til point
+
+    light_vector = light_source - point
+
+    # Calculate distance from point to light
+    r = np.linalg.norm(light_vector)
+
+    # Normaliser vector
+    light_direction = light_vector / r
+
+    #a,b,c = (0.1,0.1,0.1)
+
+    #i_l = 1 / float(a * r ** 2 + b * r + c)
+    i_l = 1
+
+
+    i_diffuse = i_l * max(np.dot(light_direction, point_normal) , 0)
+
+
+    return i_diffuse
 
 def calculate_face_normals():
     return np.array([GetFaceNormal(face) for face in Faces])
