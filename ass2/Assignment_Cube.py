@@ -499,7 +499,7 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     #Ambient light IA=[IaR,IaG,IaB]
 
     cc = camera.center()
-
+    camera_position = np.array([cc[0,0], cc[1,0], cc[2,0]])
     light_source = np.array([cc[0,0], cc[1,0], cc[2,0]])
 
 
@@ -536,11 +536,11 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     i_diffuse = diffuse(point, point_normal, light_source) * kd[0]
 
+    i_spectral = speculate(point, point_normal, light_source, camera_position, alpha)
 
-
-    r_final = r_ambient + i_diffuse #+ r_specular + r_diffused
-    g_final = g_ambient + i_diffuse
-    b_final = b_ambient + i_diffuse
+    r_final = r_ambient + i_diffuse + i_spectral #+ r_specular + r_diffused
+    g_final = g_ambient + i_diffuse + i_spectral
+    b_final = b_ambient + i_diffuse + i_spectral
 
     return (r_final, g_final, b_final)
 
@@ -566,6 +566,23 @@ def diffuse(point, point_normal, light_source):
 
 
     return i_diffuse
+
+def speculate(point, point_normal, light_source, camera_position,alpha):
+    #find l
+    incident_vector = point - light_source
+    incident_vector = incident_vector/np.linalg.norm(incident_vector)
+    #find r
+    reflection_vector = 2*np.dot(point_normal,incident_vector)*point_normal - incident_vector
+    reflection_vector = reflection_vector/np.linalg.norm(reflection_vector)
+
+    view_vector = camera_position - point
+    view_vector = view_vector/np.linalg.norm(view_vector)
+
+    i_s = 1
+
+    i_spectral = i_s*np.dot(view_vector,reflection_vector)**alpha
+
+    return i_spectral
 
 def calculate_face_normals():
     return np.array([GetFaceNormal(face) for face in Faces])
