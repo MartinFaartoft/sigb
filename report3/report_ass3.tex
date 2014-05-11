@@ -103,11 +103,12 @@ The idea behind back-face culling, is to calculate the dot-product between the c
 Because the cube is convex, back-face culling is sufficient to ensure the scene will be rendered correctly, assuming that the cube is the only object in the scene.
 
 \section{Illumination}
-The first step in realistic shading, is to calculate the intensity of the light going towards the camera, from each point on each object in the scene. 
+The first step in realistic shading, is to calculate the intensity of the light going towards the camera, from each point on each object in the scene.\\
 
-%todo global illumination model (ray-tracing): slow but realistic
-%Phong: local illumination model: fast and "good enough" for most uses, but does not correctly model inter-object reflections (mirror facing mirror)
-We use the Phong illumination model for this, it calculates the illumnation as:
+The most realistic illumination is achieved by using a global illumination model, such as \emph{ray tracing}, that calculates the path of a number of light rays as they bounce around in the scene. Unfortunately, ray tracing is is really performance intensitive, so most 3D shaders apply a local illumination model instead. Local illumination cuts corners by approximating the illumination, disregarding reflection between objects in the scene (hence \emph{local}).\\
+
+We use the Phong illumination model in the following, it is a local illumination model, that calculates the illumnation of each point as:
+\todo{mention strength falloff somewhere, if we use it}
 \[I_{Phong} = I_{ambient} + I_{diffuse} + I_{specular}\]
 In the following we will describe how to calculate each component of the Phong illumination model.
 \subsection{Ambient Reflection}
@@ -115,22 +116,38 @@ Ambient reflection is used when we want all parts of the scene to be illuminated
 \[I_{ambient}(x) = I_a \cdot k_a(x)\]
 Where $x$ is the point calculating the intensity for $I_a$ is the intensity of the ambient light in the scene, and $k_a(x)$ is the material properties in $x$.
 
-\subsection{Diffuse Shading / Lambertian Reflection}
-
+\subsection{Diffuse Shading / Lambertian Reflectance}
+Lambertian reflectance models matte surfaces, that scatter incoming light in all directions.
+The Lambertian is calculated as
+\[I_{diffuse}(x)=I_l(x) \cdot k_d(x) \cdot max(n(x) \cdot l(x), 0)\]
+Where $I_l(x)$ is the intensity of incoming diffused light in the point $x$, $k_d(x)$ is the material properties of the surface in $x$, $n(x)$ is the normal in $x$, and $l(x)$ is the direction of the incoming light in $x$.
 \subsection{Specular Reflection}
+Specular reflection models the light reflected by glossy surfaces. It falls of when the angle between the reflection $r$ and the view vector $v$ increases.
 
+The reflection vector can be found as:
+\[r=2 \cdot (n \cdot i \cdot n - i\]
+Where $n$ is the normal of the surface the light is being reflected in, and $i$ is the direction of the incoming light.\\
+
+The reflection vector can then be used to calculate the specular reflection.
+\[I_{glossy}(x)=I_s(x) \cdot k_s(x) \cdot (r \cdot v)^\alpha\]
+Where $I_s(x)$ is the intensity of the incoming specular light in the point $x$, $k_s(x)$ is the material properties in $x$, $v$ is the view vector, and $\alpha$ is the reflectance constant of the material (higher values means more reflectance).
 \section{Shading}
-
+After calculating the illumination, what remains is to calculate the shading in each point of the scene.
 \subsection{Flat Shading}
+Flat shading is simply calculating a single shading value for each polygon. Flat shading gives unrealistic results, but is extremely quick to calculate. Figure TODO shows an example of a scene with flat shading, and \emph{flat\_shading.avi} on the DVD shows a sequence with flat shading. 
+
 \subsection{Phong Shading}
+To improve on flat shading, Phong shading calculates multiple shading values for each polygon, resulting in a more realistic shading of the scene.\\
 
+Phong shading works as follows: the normals for each corner point in the polygon is calculated, and then for each point in the polygon, the normal for that point is interpolated from the corner points. The shading is then calculated for each point, using the interpolated normal.\\
+
+As shown in Figure\todo{figure here}, Phong shading achieves a much more realistic shading. \emph{phong\_shading.avi} on the DVD shows a sequence shaded by our implementation of Phong shading.
 \section{Conclusion}
-
+In this report, we have documented our implementation of illumination and shading, and given example frames and sequences.\todo{har vi gjort mere?}
 \newpage
 \section*{Appendix}
 \url{https://github.com/MartinFaartoft/sigb}
 \subsection*{Assignment\_Cube.py}
 \lstinputlisting[language=Python]{../ass2/Assignment_Cube.py}
-
 
 \end{document}
