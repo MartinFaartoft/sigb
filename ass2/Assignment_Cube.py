@@ -536,7 +536,8 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     i_diffuse = diffuse(point, point_normal, light_source) * kd[0]
 
-    i_spectral = speculate(point, point_normal, light_source, camera_position, alpha)
+    i_spectral = speculate(point, point_normal, light_source, camera_position, alpha) * ks[0]
+    #i_spectral = 0
 
     r_final = r_ambient + i_diffuse + i_spectral #+ r_specular + r_diffused
     g_final = g_ambient + i_diffuse + i_spectral
@@ -572,8 +573,7 @@ def speculate(point, point_normal, light_source, camera_position,alpha):
     incident_vector = point - light_source
     incident_vector = incident_vector/np.linalg.norm(incident_vector)
     #find r
-    reflection_vector = 2*np.dot(point_normal,incident_vector)*point_normal - incident_vector
-    reflection_vector = reflection_vector/np.linalg.norm(reflection_vector)
+    reflection_vector = incident_vector - 2*np.dot(point_normal,incident_vector)*point_normal
 
     view_vector = camera_position - point
     view_vector = view_vector/np.linalg.norm(view_vector)
