@@ -76,20 +76,6 @@
 \setcounter{page}{1}
 \newpage
 
-\section{Introduction}
-
-\section{Back Face Culling}
-
-\section{Lighting}
-\subsection{Ambient Lighting}
-\subsection{Diffuse Lighting}
-\subsection{Specular Lighting}
-
-\section{Shading}
-
-\subsection{Flat Shading}
-\subsection{Phong Shading}
-
 % \begin{figure}[H]
 % \centering
 % \begin{subfigure}{.4\textwidth}
@@ -105,6 +91,38 @@
 % \caption{Linear texture mapping to sequence}
 % \label{fig:floor}
 % \end{figure}
+
+\section{Introduction}
+In this report, we will implement and document a simple shader, able to render a textured cube, and shade it realistically.
+
+\section{Back-Face Culling}
+When we render the cube, at most 3 of the faces will be visible to camera, regardless of the positions of cube and camera. Attempting to render all 6 will waste a lot of performance, and furthermore require us to render the faces in the correct order, to get the correct perspective.\todo{eksempelbillede uden culling}
+
+The idea behind back-face culling, is to calculate the dot-product between the camera view vector, and each of the face normals. If the result is negative, the face should be drawn - otherwise it faces away from the camera, and should be discarded.
+\[cos(\theta) = V_{view} \cdot \hat{F}\]
+Because the cube is convex, back-face culling is sufficient to ensure the scene will be rendered correctly, assuming that the cube is the only object in the scene.
+
+\section{Illumination}
+The first step in realistic shading, is to calculate the intensity of the light going towards the camera, from each point on each object in the scene. 
+
+%todo global illumination model (ray-tracing): slow but realistic
+%Phong: local illumination model: fast and "good enough" for most uses, but does not correctly model inter-object reflections (mirror facing mirror)
+We use the Phong illumination model for this, it calculates the illumnation as:
+\[I_{Phong} = I_{ambient} + I_{diffuse} + I_{specular}\]
+In the following we will describe how to calculate each component of the Phong illumination model.
+\subsection{Ambient Reflection}
+Ambient reflection is used when we want all parts of the scene to be illuminated. Without ambient reflection, any point not hit by light from a light source will simply be black.
+\[I_{ambient}(x) = I_a \cdot k_a(x)\]
+Where $x$ is the point calculating the intensity for $I_a$ is the intensity of the ambient light in the scene, and $k_a(x)$ is the material properties in $x$.
+
+\subsection{Diffuse Shading / Lambertian Reflection}
+
+\subsection{Specular Reflection}
+
+\section{Shading}
+
+\subsection{Flat Shading}
+\subsection{Phong Shading}
 
 \section{Conclusion}
 
