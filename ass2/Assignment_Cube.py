@@ -79,7 +79,7 @@ def update(img):
             if TextureMap:
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
-                draw_face_normals(image, cam2, face_normals)
+                draw_face_normals(image, cam2, FaceCenterPoints, face_normals) #hack: draw before texturing to show parts of obscured normals
                 
                 ''' <013> Here Remove the hidden faces'''
                 idx = back_face_culling(face_normals, cam2)
@@ -88,17 +88,14 @@ def update(img):
                 face_corner_normals = np.array(CornerNormals)[idx]
                 ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
                 for i in range(len(faces_to_be_drawn)):
-                    face = faces_to_be_drawn[i]
-                    translate_to = [8, 6, -1]
-                    f = copy(face)
-                    f[0,:] = f[0,:] + translate_to[0]
-                    f[1,:] = f[1,:] + translate_to[1]
-                    f[2,:] = f[2,:] + translate_to[2]
-
+                    f = copy(faces_to_be_drawn[i])
                     texture = textures_to_be_drawn[i]
                     corner_normals = face_corner_normals[i]
                     image = textureFace(image, f, cam2, texture)
                     image = ShadeFace(image, f, corner_normals, cam2)
+
+                draw_face_normals(image, cam2, FaceCenterPoints[idx], face_normals[idx])
+                
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
@@ -115,21 +112,9 @@ def update(img):
                 cam2 = Camera(P)
                 if (Teapot):
                     teapot = parse_teapot()
-
-                    #rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
                     drawObjectScatter(cam2, image, teapot)
-                ## stop
-                else:
-                    #figure = box if frameNumber % 100 < 50 else pyramid
-
-                    angle = frameNumber * (math.pi / 50.0)
-                    scale = 2 + math.sin(angle)
-                    box1 = transformFigure(box, 0, 0, -angle, 1, 1, 1)
-                    box2 = getPyramidPoints([0, 0, -1], 1,chessSquare_size)
-                    box2 = transformFigure(box2, 0, 0, angle, 1, 1, 1)
-                    #rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
-                    drawFigure(image, cam2, box1)
-                    drawFigure(image, cam2, box2)
+                else:                    
+                    drawFigure(image, cam2, box)
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
@@ -394,30 +379,7 @@ def parse_teapot():
     result =  np.array(points).T
     return result * 2
 
-def transformFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
-    translate_to = [8, 6, -1]
-
-
-    rotation_matrix_x = np.array([ [1, 0, 0], [0, cos(theta_x), -sin(theta_x)], [0, sin(theta_x), cos(theta_x)] ])
-    rotation_matrix_y = np.array([ [cos(theta_y), 0, sin(theta_y)], [0, 1, 0], [-sin(theta_y), 0, cos(theta_y)] ])
-    rotation_matrix_z = np.array([ [cos(theta_z), -sin(theta_z), 0], [sin(theta_z), cos(theta_z), 0], [0, 0, 1] ])
-
-    rotated_x = []
-    rotated_y = []
-    rotated_z = []
-    rotation = np.dot(rotation_matrix_x, np.dot(rotation_matrix_y, rotation_matrix_z))
-    for i in range(len(figure[0])):
-        p = np.array([figure[0][i], figure[1][i], figure[2][i]])
-        p_rot = np.dot(rotation, p)
-        rotated_x.append(scale_x * p_rot[0] + translate_to[0])
-        rotated_y.append(scale_y * p_rot[1] + translate_to[1])
-        rotated_z.append(scale_z * p_rot[2] + translate_to[2])
-
-    result = np.array([rotated_x, rotated_y, rotated_z])
-    return result
-
 def back_face_culling(face_normals, camera):
-    box_center  = [8, 6, -1]
     view_vector = box_center - camera.center()
     view_vector = view_vector / np.linalg.norm(view_vector)
 
@@ -429,16 +391,10 @@ def back_face_culling(face_normals, camera):
     return idx
 
 def textureFace(image,face,currentCam,texturePath):
-    #translate_to = [8, 6, -1]
-    #f = copy(face)
     texture = cv2.imread(texturePath)
     m,n,d = texture.shape
     mask = zeros((m,n)) + 255
     face_corners = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
-
-    #f[0,:] = f[0,:] + translate_to[0]
-    #f[1,:] = f[1,:] + translate_to[1]
-    #f[2,:] = f[2,:] + translate_to[2]
 
     X = face.T
     ones = np.ones((X.shape[0],1))
@@ -505,7 +461,7 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     cc = camera.center()
     camera_position = np.array([cc[0], cc[1], cc[2]])
-    light_source = np.array([cc[0], cc[1], cc[2]]) #np.array([5,5,20])#
+    light_source = np.array([30,30,-30])#np.array([cc[0], cc[1], cc[2]])
 
     IA = np.matrix([5.0, 5.0, 5.0]).T
     #Point light IA=[IpR,IpG,IpB]
@@ -607,17 +563,25 @@ def calculate_face_normals():
     #print "top", top_normal
     #return np.array([top_normal])
 
-def draw_face_normals(image, camera, normals):
-    cube_center = [8, 6, -1]
-    size = 2
+def draw_face_normals(image, camera, face_centers, normals):
     #find pairs of points (cube_center -> cube_center + normal)
     #project and draw
-    for normal in normals:
-        p1 = cube_center + normal * size
-        p2 = p1 + normal * 4
-        #print p1, p2
+
+    for i in range(len(normals)):
+        p1 = np.array(face_centers[i])
+        p2 = p1 + normals[i]
         fig = np.array([p1, p2])
         drawFigure(image, camera, fig.T)
+
+def CalculateFaceCenterPoints(faces):
+    result = []
+    for face in faces:
+        print "face", face
+        center = np.mean(face, axis=1)
+        print "center", center
+        result.append(center)
+    print "centers", result
+    return np.array(result)
 
 def getPyramidPoints(center, size,chessSquare_size):
     points = []
@@ -677,8 +641,8 @@ chessSquare_size=2
 
 
 '''-------defining the figures------'''
-
-box = getCubePoints([0, 0, 1], 1,chessSquare_size)
+box_center = [4, 2.5, 0]
+box = getCubePoints(box_center, 1, chessSquare_size)
 pyramid = getPyramidPoints([0, 0, 1], 1,chessSquare_size)
 
 
@@ -714,6 +678,7 @@ DownFace = box[i,j]
 
 ''' <000> Here Call the calibrateCamera from the SIGBTools to calibrate the camera and saving the data'''
 Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
+FaceCenterPoints = CalculateFaceCenterPoints(Faces)
 FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg', 'Images/Top.jpg']
 
 t, r, l, u, d = CalculateFaceCornerNormals(TopFace, RightFace, LeftFace, UpFace, DownFace)
