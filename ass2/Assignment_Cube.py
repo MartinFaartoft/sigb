@@ -465,14 +465,14 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     IA = np.matrix([5.0, 5.0, 5.0]).T
     #Point light IA=[IpR,IpG,IpB]
-    IP = np.matrix([5.0, 5.0, 5.0]).T
+    IP = np.array([5.0, 5.0, 5.0]).T
     #Light Source Attenuation
     fatt = 1
     #Material properties: e.g., Ka=[kaR; kaG; kaB]
-    ka=np.matrix([0.2, 0.2, 0.2]).T
-    kd= np.array([0.3, 0.3, 0.3]).T
-    ks=np.matrix([0.7, 0.7, 0.7]).T
-    alpha = 100
+    ka = np.matrix([0.2, 0.2, 0.2]).T
+    kd = np.array([0.3, 0.3, 0.3]).T
+    ks = np.array([0.7, 0.7, 0.7]).T
+    alpha = 50
 
     #ambient: I_ambient(x) = I_a * k_a(x)
     r = np.zeros((shadeRes, shadeRes))
@@ -489,17 +489,22 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     normal_matrix = interpolated_matrix(shadeRes, faceCorner_Normals, True)
     point_matrix = interpolated_matrix(shadeRes, points, False)
 
-    i_diffuse = diffuse(point_matrix, normal_matrix, light_source) #* kd[0]
-    r_diffuse = kd[0] * i_diffuse
-    g_diffuse = kd[1] * i_diffuse
-    b_diffuse = kd[2] * i_diffuse
+    i_diffuse = diffuse(point_matrix, normal_matrix, light_source)
+    r_diffuse = i_diffuse * IP[0] * kd[0]
+    g_diffuse = i_diffuse * IP[1] * kd[1]
+    b_diffuse = i_diffuse * IP[2] * kd[2]
 
-    i_spectral = speculate(point_matrix, normal_matrix, light_source, camera_position, alpha) * 0.7
-    #i_spectral = 0
+    i_specular = speculate(point_matrix, normal_matrix, light_source, camera_position, alpha)
+    r_specular = i_specular * IP[0] * ks[0]
+    g_specular = i_specular * IP[1] * ks[1]
+    b_specular = i_specular * IP[2] * ks[2]
 
-    r_final = r_ambient + r_diffuse + i_spectral #+ r_specular + r_diffused
-    g_final = g_ambient + g_diffuse + i_spectral
-    b_final = b_ambient + b_diffuse + i_spectral
+
+    #i_specular = 0
+
+    r_final = r_ambient + r_diffuse + r_specular #+ r_specular + r_diffused
+    g_final = g_ambient + g_diffuse + g_specular
+    b_final = b_ambient + b_diffuse + b_specular
 
     return (r_final.T, g_final.T, b_final.T)
 
@@ -548,12 +553,11 @@ def speculate(point_matrix, normal_matrix, light_source, camera_position, alpha)
             reflection_vector = incident_vector - 2*np.dot(point_normal,incident_vector)*point_normal
 
             view_vector = camera_position - point
-            view_vector = view_vector/np.linalg.norm(view_vector)
-
-            i_s = 1
-
-            i_spectral = i_s*np.dot(view_vector,reflection_vector)**alpha
-            i_specular_res[i,j] = i_spectral
+            view_vector = view_vector / np.linalg.norm(view_vector)
+            angle = np.dot(view_vector, reflection_vector)
+            angle = max(angle, 0)
+            i_specular = angle ** alpha
+            i_specular_res[i, j] = i_specular
 
     return i_specular_res
 
