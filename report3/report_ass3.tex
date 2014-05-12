@@ -145,7 +145,7 @@ Phong shading works as follows: the normals for each corner point in the polygon
 As part of the assignment, we were given a function that applies a shadematrix to an image. The function is called \texttt{shadeFace}, and in the following we will outline how it works.
 
 \begin{itemize}
-\item Create a square of size $\emph{shadeRes} \cdot \emph{shadeRes}$, where \emph{shadeRes} is resolution of the shading to be applied to the face that is currently being shaded. A higher value of \emph{shadeRes} results in a smoother shading, at the cost of increased computation time. \emph{shadeRes} should be chosen to be smaller than or equal to the length of the face being shaded, since it will simply be downsampled if too big.
+\item Create a square of size $\emph{shadeRes} \cdot \emph{shadeRes}$, where \emph{shadeRes} is the resolution of the shading to be applied to the face that is currently being shaded. A higher value of \emph{shadeRes} results in a smoother shading, at the cost of increased computation time. \emph{shadeRes} should be chosen to be smaller than or equal to the size of the face being shaded, since it will simply be downsampled otherwise.
 
 \item Project the corner points in the face, using the camera in the scene.
 
