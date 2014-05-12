@@ -118,9 +118,16 @@ def update(img):
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
+    cv2.setMouseCallback("Web cam", onmouse)
     videoWriter.write(image)
     global result
     result=copy(image)
+
+def onmouse(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        global_light_source[0] = x
+        global_light_source[1] = y
+        print "SEt THAT SHIZZZZZZZZZZZZZZZZZZZZ", x,y
 
 
 def drawFigure(image, camera, figure):
@@ -461,8 +468,8 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     cc = camera.center()
     camera_position = np.array([cc[0], cc[1], cc[2]])
-    light_source = camera_position
-
+    #light_source = camera_position
+    light_source = global_light_source
     IA = np.matrix([5.0, 5.0, 5.0]).T
     #Point light IA=[IpR,IpG,IpB]
     IP = np.array([5.0, 5.0, 5.0]).T
@@ -646,6 +653,9 @@ global homographyPoints
 global calibrationPoints
 global calibrationCamera
 global chessSquare_size
+
+
+global_light_source = np.array([10.0, 10.0, -10.0])
 
 ProcessFrame=True
 Undistorting=False
