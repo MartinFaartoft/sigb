@@ -80,7 +80,7 @@ def update(img):
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
                 draw_face_normals(image, cam2, FaceCenterPoints, face_normals) #hack: draw before texturing to show parts of obscured normals
-                
+
                 ''' <013> Here Remove the hidden faces'''
                 idx = back_face_culling(face_normals, cam2)
                 faces_to_be_drawn = np.array(Faces)[idx]
@@ -95,7 +95,7 @@ def update(img):
                     image = ShadeFace(image, f, corner_normals, cam2)
 
                 draw_face_normals(image, cam2, FaceCenterPoints[idx], face_normals[idx])
-                
+
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
@@ -113,7 +113,7 @@ def update(img):
                 if (Teapot):
                     teapot = parse_teapot()
                     drawObjectScatter(cam2, image, teapot)
-                else:                    
+                else:
                     drawFigure(image, cam2, box)
 
     cv2.namedWindow('Web cam')
@@ -461,7 +461,7 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     cc = camera.center()
     camera_position = np.array([cc[0], cc[1], cc[2]])
-    light_source = np.array([30,30,-30])#np.array([cc[0], cc[1], cc[2]])
+    light_source = camera_position
 
     IA = np.matrix([5.0, 5.0, 5.0]).T
     #Point light IA=[IpR,IpG,IpB]
