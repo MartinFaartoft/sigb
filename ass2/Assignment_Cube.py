@@ -14,11 +14,17 @@ import math
 
 def DrawLines(img, points):
     for i in range(1, len(points[0])):
-         x1 = points[0, i - 1]
-         y1 = points[1, i - 1]
-         x2 = points[0, i]
-         y2 = points[1, i]
-         cv2.line(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0),5)
+        x1 = points[0, i - 1]
+        y1 = points[1, i - 1]
+        x2 = points[0, i]
+        y2 = points[1, i]
+        try:
+            #print "line from", int(x1), int(y1), "to", int(x2), int(y2)
+            cv2.line(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0),5)
+        except:
+            pass
+            #print "saved your ass"
+            #catch errything
     return img
 
 def findChessBoardCorners(image):
@@ -63,12 +69,18 @@ def update(img):
             coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
             drawCoordinateSystem(image,transformed_coordinate_system)
+            #c = cam2.center()
+            #points = np.array([[0.,0.,0.], [c[0], c[1], c[2]]])
+            #projected_points = projectChessBoardPoints(cam2, points)
+            #print "calling drawlines"
+            #DrawLines(image, projected_points.T)
+            #print "done drawing"
 
             if TextureMap:
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
                 draw_face_normals(image, cam2, face_normals)
-
+                
                 ''' <013> Here Remove the hidden faces'''
                 idx = back_face_culling(face_normals, cam2)
                 faces_to_be_drawn = np.array(Faces)[idx]
@@ -405,16 +417,8 @@ def transformFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z
     return result
 
 def back_face_culling(face_normals, camera):
-    #center = camera.c
     box_center  = [8, 6, -1]
-    camera_center = camera.center()
-    camera_x = camera_center[0,0]
-    camera_y = camera_center[1,0]
-    camera_z = camera_center[2,0]
-
-    camera_center = np.array([camera_x, camera_y, camera_z])
-
-    view_vector = box_center - camera_center
+    view_vector = box_center - camera.center()
     view_vector = view_vector / np.linalg.norm(view_vector)
 
     angles = [np.dot(view_vector, face) for face in face_normals]
@@ -492,6 +496,7 @@ def ShadeFace(image, points, faceCorner_Normals, camera):
     #................................
     image=cv2.merge((r,g,b))
     image=cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
     return image
 
 def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
@@ -499,10 +504,8 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     #Ambient light IA=[IaR,IaG,IaB]
 
     cc = camera.center()
-    camera_position = np.array([cc[0,0], cc[1,0], cc[2,0]])
-    light_source = np.array([cc[0,0], cc[1,0], cc[2,0]])
-
-
+    camera_position = np.array([cc[0], cc[1], cc[2]])
+    light_source = np.array([cc[0], cc[1], cc[2]]) #np.array([5,5,20])#
 
     IA = np.matrix([5.0, 5.0, 5.0]).T
     #Point light IA=[IpR,IpG,IpB]
@@ -558,6 +561,7 @@ def interpolated_matrix(shadeRes, corners, normalize):
     return normal_matrix
 
 def diffuse(point_matrix, normal_matrix, light_source):
+    #print "light src", light_source
     x, y, _ = normal_matrix.shape
     i_diffuse_res = np.empty((x,y))
     for i in range(x):
@@ -573,8 +577,8 @@ def diffuse(point_matrix, normal_matrix, light_source):
             #a,b,c = (0.1,0.1,0.1)
             #i_l = 1 / float(a * r ** 2 + b * r + c)
             i_l = 1
-            print "=========================================="
-            print light_direction, point_normal, point
+            #print "=========================================="
+            #print light_direction, point_normal, point
             i_diffuse = i_l * max(np.dot(light_direction, point_normal) , 0)
             i_diffuse_res[i,j] = i_diffuse
 
