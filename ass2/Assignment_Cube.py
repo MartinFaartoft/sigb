@@ -499,16 +499,16 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
 
     i_diffuse = diffuse(point_matrix, normal_matrix, light_source) #* kd[0]
-    r_diffuse = kd[0] * i_diffuse 
-    g_diffuse = kd[1] * i_diffuse 
-    b_diffuse = kd[2] * i_diffuse 
+    r_diffuse = kd[0] * i_diffuse
+    g_diffuse = kd[1] * i_diffuse
+    b_diffuse = kd[2] * i_diffuse
 
-    #i_spectral = speculate(point, point_normal, light_source, camera_position, alpha) * ks[0]
+    i_spectral = speculate(point_matrix, normal_matrix, light_source, camera_position, alpha) * 0.7
     #i_spectral = 0
 
-    r_final = r_ambient + r_diffuse #+ i_spectral #+ r_specular + r_diffused
-    g_final = g_ambient + g_diffuse #+ i_spectral
-    b_final = b_ambient + b_diffuse #+ i_spectral
+    r_final = r_ambient + r_diffuse + i_spectral #+ r_specular + r_diffused
+    g_final = g_ambient + g_diffuse + i_spectral
+    b_final = b_ambient + b_diffuse + i_spectral
 
     return (r_final.T, g_final.T, b_final.T)
 
@@ -543,21 +543,28 @@ def diffuse(point_matrix, normal_matrix, light_source):
 
     return i_diffuse_res
 
-def speculate(point, point_normal, light_source, camera_position,alpha):
+def speculate(point_matrix, normal_matrix, light_source, camera_position, alpha):
     #find l
-    incident_vector = point - light_source
-    incident_vector = incident_vector/np.linalg.norm(incident_vector)
-    #find r
-    reflection_vector = incident_vector - 2*np.dot(point_normal,incident_vector)*point_normal
+    x, y, _ = point_matrix.shape
+    i_specular_res = np.empty((x,y))
+    for i in range(x):
+        for j in range(y):
+            point = point_matrix[i,j]
+            point_normal = normal_matrix[i,j]
+            incident_vector = point - light_source
+            incident_vector = incident_vector/np.linalg.norm(incident_vector)
+            #find r
+            reflection_vector = incident_vector - 2*np.dot(point_normal,incident_vector)*point_normal
 
-    view_vector = camera_position - point
-    view_vector = view_vector/np.linalg.norm(view_vector)
+            view_vector = camera_position - point
+            view_vector = view_vector/np.linalg.norm(view_vector)
 
-    i_s = 1
+            i_s = 1
 
-    i_spectral = i_s*np.dot(view_vector,reflection_vector)**alpha
+            i_spectral = i_s*np.dot(view_vector,reflection_vector)**alpha
+            i_specular_res[i,j] = i_spectral
 
-    return i_spectral
+    return i_specular_res
 
 def calculate_distances(points, light_source):
     x, y, _ = points.shape
