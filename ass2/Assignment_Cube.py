@@ -479,6 +479,7 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     g = np.zeros((shadeRes, shadeRes))
     b = np.zeros((shadeRes, shadeRes))
 
+
     #Ambient
     r_ambient = r + IA[0] * ka[0]
     g_ambient = g + IA[1] * ka[1]
@@ -488,6 +489,14 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     #Interpolate normals
     normal_matrix = interpolated_matrix(shadeRes, faceCorner_Normals, True)
     point_matrix = interpolated_matrix(shadeRes, points, False)
+
+    d = calculate_distances(point_matrix, light_source)
+    #print "min", d.min(), "max", d.max()
+    #d = 1 / d ** 2
+    #d = d - d.min()
+    #d = d / d.max()
+    #return (d.T, d.T, d.T)
+
 
     i_diffuse = diffuse(point_matrix, normal_matrix, light_source) #* kd[0]
     r_diffuse = kd[0] * i_diffuse 
@@ -549,6 +558,16 @@ def speculate(point, point_normal, light_source, camera_position,alpha):
     i_spectral = i_s*np.dot(view_vector,reflection_vector)**alpha
 
     return i_spectral
+
+def calculate_distances(points, light_source):
+    x, y, _ = points.shape
+    distances = np.empty((x,y))
+    for i in range(x):
+        for j in range(y):
+            p = points[i,j]
+            distances[i,j] = np.linalg.norm(light_source - p)
+    return distances
+
 
 def calculate_face_normals():
     return np.array([GetFaceNormal(face) for face in Faces])
@@ -689,5 +708,5 @@ C = Camera(P)
 
 ''' <003a> Find homography H_cs^1 '''
 
-#run(1, 0)
-run(1,"sequence.mov")
+run(1, 0)
+#run(1,"sequence.mov")
