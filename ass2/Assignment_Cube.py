@@ -529,8 +529,8 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     #point = points[0,0]
     # Interpolate normals
-    normal_matrix = interpolated_matrix(shadeRes, faceCorner_Normals)
-    point_matrix = interpolated_matrix(shadeRes, points)
+    normal_matrix = interpolated_matrix(shadeRes, faceCorner_Normals, True)
+    point_matrix = interpolated_matrix(shadeRes, points, False)
 
     # BilinearInterpo(size=shadeRes, i, j, points, Normalize):
     # diffuse()
@@ -549,11 +549,11 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     return (r_final, g_final, b_final)
 
-def interpolated_matrix(shadeRes, corners):
+def interpolated_matrix(shadeRes, corners, normalize):
     normal_matrix = np.empty((shadeRes, shadeRes, 3))
     for i in range(shadeRes):
         for j in range(shadeRes):
-            normal_matrix[i,j] = BilinearInterpo(size=shadeRes, i=i, j=j, points=corners, Normalize=True)
+            normal_matrix[i,j] = BilinearInterpo(size=shadeRes, i=i, j=j, points=corners, Normalize=normalize)
 
     return normal_matrix
 
@@ -563,7 +563,7 @@ def diffuse(point_matrix, normal_matrix, light_source):
     for i in range(x):
         for j in range(y):
             point = point_matrix[i,j]
-            light_vector = light_source - point
+            light_vector = point - light_source
             point_normal = point_matrix[i,j]
 
             # Calculate distance from point to light
