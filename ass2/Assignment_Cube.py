@@ -527,46 +527,58 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
 
     #Diffuse
 
-    point = points.T[0]
-
     #point = points[0,0]
-    point_normal = np.mean(faceCorner_Normals, axis=1)
+    # Interpolate normals
+    normal_matrix = interpolated_matrix(shadeRes, faceCorner_Normals)
+    point_matrix = interpolated_matrix(shadeRes, points)
 
-    point_normal = point_normal / np.linalg.norm(point_normal)
+    # BilinearInterpo(size=shadeRes, i, j, points, Normalize):
+    # diffuse()
+    r_diffuse = np.zeros((shadeRes, shadeRes))
+    g_diffuse = np.zeros((shadeRes, shadeRes))
+    b_diffuse = np.zeros((shadeRes, shadeRes))
 
-    i_diffuse = diffuse(point, point_normal, light_source) * kd[0]
+    i_diffuse = diffuse(point_matrix, normal_matrix, light_source) #* kd[0]
 
-    i_spectral = speculate(point, point_normal, light_source, camera_position, alpha) * ks[0]
+    #i_spectral = speculate(point, point_normal, light_source, camera_position, alpha) * ks[0]
     #i_spectral = 0
 
-    r_final = r_ambient + i_diffuse + i_spectral #+ r_specular + r_diffused
-    g_final = g_ambient + i_diffuse + i_spectral
-    b_final = b_ambient + i_diffuse + i_spectral
+    r_final = r_ambient + i_diffuse #+ i_spectral #+ r_specular + r_diffused
+    g_final = g_ambient + i_diffuse #+ i_spectral
+    b_final = b_ambient + i_diffuse #+ i_spectral
 
     return (r_final, g_final, b_final)
 
+def interpolated_matrix(shadeRes, corners):
+    normal_matrix = np.empty((shadeRes, shadeRes, 3))
+    for i in range(shadeRes):
+        for j in range(shadeRes):
+            normal_matrix[i,j] = BilinearInterpo(size=shadeRes, i=i, j=j, points=corners, Normalize=True)
 
-def diffuse(point, point_normal, light_source):
-    # Regn vector ud fra Light source til point
+    return normal_matrix
 
-    light_vector = light_source - point
+def diffuse(point_matrix, normal_matrix, light_source):
+    x, y, _ = normal_matrix.shape
+    i_diffuse_res = np.empty((x,y))
+    for i in range(x):
+        for j in range(y):
+            point = point_matrix[i,j]
+            light_vector = light_source - point
+            point_normal = point_matrix[i,j]
 
-    # Calculate distance from point to light
-    r = np.linalg.norm(light_vector)
+            # Calculate distance from point to light
+            r = np.linalg.norm(light_vector)
+            # Normaliser vector
+            light_direction = light_vector / r
+            #a,b,c = (0.1,0.1,0.1)
+            #i_l = 1 / float(a * r ** 2 + b * r + c)
+            i_l = 1
+            print "=========================================="
+            print light_direction, point_normal, point
+            i_diffuse = i_l * max(np.dot(light_direction, point_normal) , 0)
+            i_diffuse_res[i,j] = i_diffuse
 
-    # Normaliser vector
-    light_direction = light_vector / r
-
-    #a,b,c = (0.1,0.1,0.1)
-
-    #i_l = 1 / float(a * r ** 2 + b * r + c)
-    i_l = 1
-
-
-    i_diffuse = i_l * max(np.dot(light_direction, point_normal) , 0)
-
-
-    return i_diffuse
+    return i_diffuse_res
 
 def speculate(point, point_normal, light_source, camera_position,alpha):
     #find l
@@ -717,5 +729,5 @@ C = Camera(P)
 
 ''' <003a> Find homography H_cs^1 '''
 
-#run(1, 0)
-run(1,"sequence.mov")
+run(1, 0)
+#run(1,"sequence.mov")
