@@ -80,7 +80,7 @@ def update(img):
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
                 draw_face_normals(image, cam2, FaceCenterPoints, face_normals) #hack: draw before texturing to show parts of obscured normals
-                
+
                 ''' <013> Here Remove the hidden faces'''
                 idx = back_face_culling(face_normals, cam2)
                 faces_to_be_drawn = np.array(Faces)[idx]
@@ -95,7 +95,7 @@ def update(img):
                     image = ShadeFace(image, f, corner_normals, cam2)
 
                 draw_face_normals(image, cam2, FaceCenterPoints[idx], face_normals[idx])
-                
+
 
             if ProjectPattern:
                 ''' <007> Here Test the camera matrix of the current view by projecting the pattern points'''
@@ -113,7 +113,7 @@ def update(img):
                 if (Teapot):
                     teapot = parse_teapot()
                     drawObjectScatter(cam2, image, teapot)
-                else:                    
+                else:
                     drawFigure(image, cam2, box)
 
     cv2.namedWindow('Web cam')
@@ -387,8 +387,6 @@ def back_face_culling(face_normals, camera):
     angles = np.array(angles)
 
     idx = angles <= 0
-    #print angles
-    return idx
 
 def textureFace(image,face,currentCam,texturePath):
     texture = cv2.imread(texturePath)
@@ -517,7 +515,6 @@ def interpolated_matrix(shadeRes, corners, normalize):
     return normal_matrix
 
 def diffuse(point_matrix, normal_matrix, light_source):
-    #print "light src", light_source
     x, y, _ = normal_matrix.shape
     i_diffuse_res = np.empty((x,y))
     for i in range(x):
@@ -533,8 +530,6 @@ def diffuse(point_matrix, normal_matrix, light_source):
             #a,b,c = (0.1,0.1,0.1)
             #i_l = 1 / float(a * r ** 2 + b * r + c)
             i_l = 1
-            #print "=========================================="
-            #print light_direction, point_normal, point
             i_diffuse = i_l * max(np.dot(light_direction, point_normal) , 0)
             i_diffuse_res[i,j] = i_diffuse
 
@@ -558,10 +553,6 @@ def speculate(point, point_normal, light_source, camera_position,alpha):
 
 def calculate_face_normals():
     return np.array([GetFaceNormal(face) for face in Faces])
-    #top_normal = GetFaceNormal(TopFace)
-
-    #print "top", top_normal
-    #return np.array([top_normal])
 
 def draw_face_normals(image, camera, face_centers, normals):
     #find pairs of points (cube_center -> cube_center + normal)
@@ -576,11 +567,8 @@ def draw_face_normals(image, camera, face_centers, normals):
 def CalculateFaceCenterPoints(faces):
     result = []
     for face in faces:
-        print "face", face
         center = np.mean(face, axis=1)
-        print "center", center
         result.append(center)
-    print "centers", result
     return np.array(result)
 
 def getPyramidPoints(center, size,chessSquare_size):
