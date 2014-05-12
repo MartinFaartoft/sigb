@@ -576,11 +576,8 @@ def draw_face_normals(image, camera, face_centers, normals):
 def CalculateFaceCenterPoints(faces):
     result = []
     for face in faces:
-        print "face", face
         center = np.mean(face, axis=1)
-        print "center", center
         result.append(center)
-    print "centers", result
     return np.array(result)
 
 def getPyramidPoints(center, size,chessSquare_size):
