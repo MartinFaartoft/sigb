@@ -141,6 +141,27 @@ To improve on flat shading, Phong shading calculates multiple shading values for
 
 Phong shading works as follows: the normals for each corner point in the polygon is calculated, and then for each point in the polygon, the normal for that point is interpolated from the corner points. The shading is then calculated for each point, using the interpolated normal.\\
 
+\subsection{Explanation of the ShadeFace Function}
+As part of the assignment, we were given a function that applies a shadematrix to an image. The function is called \texttt{shadeFace}, and in the following we will outline how it works.
+
+\begin{itemize}
+\item Create a square of size $\emph{shadeRes} \cdot \emph{shadeRes}$, where \emph{shadeRes} is resolution of the shading to be applied to the face that is currently being shaded. A higher value of \emph{shadeRes} results in a smoother shading, at the cost of increased computation time. \emph{shadeRes} should be chosen to be smaller than or equal to the length of the face being shaded, since it will simply be downsampled if too big.
+
+\item Project the corner points in the face, using the camera in the scene.
+
+\item Estimate a homography from the shade square, to the projected face.
+
+\item Calculate the shading matrix for each of the three channels R, G and B.\todo{show example of shading matrix}
+
+\item Warp and interpolate the shading for each channel, using the estimated homography, so the shading fits the face being shaded.
+
+\item Create a whitemask image, that is white in the pixels corresponding to the face being shaded, and black everywhere else.\todo{show whitemask image}
+
+\item Apply the shading, by multiplying each color channel with the corresponding shading channel, and ensure each pixel lies in the interval $[0;255]$.
+
+\item Finally merge the three channels back into a single image, and return it.
+\end{itemize}
+
 As shown in Figure\todo{figure here}, Phong shading achieves a much more realistic shading. \emph{phong\_shading.avi} on the DVD shows a sequence shaded by our implementation of Phong shading.
 \section{Conclusion}
 In this report, we have documented our implementation of illumination and shading, and given example frames and sequences.\todo{har vi gjort mere?}
