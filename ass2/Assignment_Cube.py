@@ -14,17 +14,11 @@ import math
 
 def DrawLines(img, points):
     for i in range(1, len(points[0])):
-        x1 = points[0, i - 1]
-        y1 = points[1, i - 1]
-        x2 = points[0, i]
-        y2 = points[1, i]
-        try:
-            #print "line from", int(x1), int(y1), "to", int(x2), int(y2)
-            cv2.line(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0),5)
-        except:
-            pass
-            #print "saved your ass"
-            #catch errything
+         x1 = points[0, i - 1]
+         y1 = points[1, i - 1]
+         x2 = points[0, i]
+         y2 = points[1, i]
+         cv2.line(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0),5)
     return img
 
 def findChessBoardCorners(image):
@@ -51,50 +45,24 @@ def update(img):
             else:
                 P = createPCurrentFromObjectPose(corners)
 
-            cam2 = Camera(P)
-
             if ShowText:
                 ''' <011> Here show the distance between the camera origin and the world origin in the image'''
 
                 cv2.putText(image,str("frame:" + str(frameNumber)), (20,10),cv2.FONT_HERSHEY_PLAIN,1, (255, 255, 255))#Draw the text
-
-                center = cam2.center()
-
-                distance = np.linalg.norm(center)
-                cv2.putText(image,str("distance: %02d" % distance), (20,30),cv2.FONT_HERSHEY_PLAIN,1, (255, 255, 255))#Draw the text
-
 
             ''' <008> Here Draw the world coordinate system in the image'''
             cam2 = Camera(P)
             coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
             drawCoordinateSystem(image,transformed_coordinate_system)
-            #c = cam2.center()
-            #points = np.array([[0.,0.,0.], [c[0], c[1], c[2]]])
-            #projected_points = projectChessBoardPoints(cam2, points)
-            #print "calling drawlines"
-            #DrawLines(image, projected_points.T)
-            #print "done drawing"
 
             if TextureMap:
+
+                ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
+
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
-                face_normals = calculate_face_normals()
-                draw_face_normals(image, cam2, FaceCenterPoints, face_normals) #hack: draw before texturing to show parts of obscured normals
 
                 ''' <013> Here Remove the hidden faces'''
-                idx = back_face_culling(face_normals, cam2)
-                faces_to_be_drawn = np.array(Faces)[idx]
-                textures_to_be_drawn = np.array(FaceTextures)[idx]
-                face_corner_normals = np.array(CornerNormals)[idx]
-                ''' <010> Here Do he texture mapping and draw the texture on the faces of the cube'''
-                for i in range(len(faces_to_be_drawn)):
-                    f = copy(faces_to_be_drawn[i])
-                    texture = textures_to_be_drawn[i]
-                    corner_normals = face_corner_normals[i]
-                    image = textureFace(image, f, cam2, texture)
-                    image = ShadeFace(image, f, corner_normals, cam2)
-
-                draw_face_normals(image, cam2, FaceCenterPoints[idx], face_normals[idx])
 
 
             if ProjectPattern:
@@ -112,22 +80,27 @@ def update(img):
                 cam2 = Camera(P)
                 if (Teapot):
                     teapot = parse_teapot()
+
+                    #rotated_box = rotateFigure(box, 0, 0, angle, scale, scale, scale)
                     drawObjectScatter(cam2, image, teapot)
+                ## stop
                 else:
-                    drawFigure(image, cam2, box)
+                    #figure = box if frameNumber % 100 < 50 else pyramid
+
+                    angle = frameNumber * (math.pi / 50.0)
+                    scale = 2 + math.sin(angle)
+                    box1 = transformFigure(box, 0, 0, -angle, 1, 1, 1)
+                    box2 = getPyramidPoints([0, 0, -1], 1,chessSquare_size)
+                    box2 = transformFigure(box2, 0, 0, angle, 1, 1, 1)
+                    #rotated_box = rotateFigure(figure, 0, 0, angle, scale, scale, scale)
+                    drawFigure(image, cam2, box1)
+                    drawFigure(image, cam2, box2)
 
     cv2.namedWindow('Web cam')
     cv2.imshow('Web cam', image)
-    cv2.setMouseCallback("Web cam", onmouse)
     videoWriter.write(image)
     global result
     result=copy(image)
-
-def onmouse(event, x, y, flags, param):
-    if event == cv2.EVENT_LBUTTONDOWN:
-        global_light_source[0] = x
-        global_light_source[1] = y
-        print "SEt THAT SHIZZZZZZZZZZZZZZZZZZZZ", x,y
 
 
 def drawFigure(image, camera, figure):
@@ -354,14 +327,14 @@ def createPCurrentFromObjectPose(corners):
 
 def findPFromHomography(corners_current):
     cam1 = C
-
+    
     img = cv2.imread("01.png")
     _, corners_1 = findChessBoardCorners(img)
     H,_ = cv2.findHomography(corners_1, corners_current)
 
     cam2 = Camera(np.dot(H,cam1.P))
     A = np.dot(linalg.inv(K),cam2.P[:,:3])
-
+    
     r1 = A[:,0]
     r2 = A[:,1]
     r3 = np.cross(r1,r2)
@@ -386,231 +359,28 @@ def parse_teapot():
     result =  np.array(points).T
     return result * 2
 
-def back_face_culling(face_normals, camera):
-    view_vector = box_center - camera.center()
-    view_vector = view_vector / np.linalg.norm(view_vector)
-
-    angles = [np.dot(view_vector, face) for face in face_normals]
-    angles = np.array(angles)
-
-    idx = angles <= 0
-    #print angles
-    return idx
-
-def textureFace(image,face,currentCam,texturePath):
-    texture = cv2.imread(texturePath)
-    m,n,d = texture.shape
-    mask = zeros((m,n)) + 255
-    face_corners = np.array([[0.,0.],[float(n),0.],[float(n),float(m)],[0.,float(m)]])
-
-    X = face.T
-    ones = np.ones((X.shape[0],1))
-    X = np.column_stack((X,ones)).T
-    projected_face = currentCam.project(X).T
-    projected_face = projected_face[:,:-1]
-
-    I = copy(image)
-
-    H,_ = cv2.findHomography(face_corners, projected_face)
-
-    h,w,d = image.shape
-    warped_texture = cv2.warpPerspective(texture, H,(w, h))
-    warped_mask = cv2.warpPerspective(mask, H,(w, h))
-    idx = warped_mask != 0
-    image[idx] = warped_texture[idx]
-
-    return image
-
-def ShadeFace(image, points, faceCorner_Normals, camera):
-    global shadeRes
-    shadeRes=10
-    videoHeight, videoWidth, vd = array(image).shape
-    #................................
-    points_Proj=camera.project(toHomogenious(points))
-    points_Proj1 = np.array([[int(points_Proj[0,0]),int(points_Proj[1,0])],[int(points_Proj[0,1]),int(points_Proj[1,1])],[int(points_Proj[0,2]),int(points_Proj[1,2])],[int(points_Proj[0,3]),int(points_Proj[1,3])]])
-    square = np.array([[0, 0], [shadeRes-1, 0], [shadeRes-1, shadeRes-1], [0, shadeRes-1]])
-    #................................
-    H = estimateHomography(square, points_Proj1)
-    #................................
-    Mr0,Mg0,Mb0=CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera)
-    # HINT
-    # type(Mr0): <type 'numpy.ndarray'>
-    # Mr0.shape: (shadeRes, shadeRes)
-    #................................
-    Mr = cv2.warpPerspective(Mr0, H, (videoWidth, videoHeight),flags=cv2.INTER_LINEAR)
-    Mg = cv2.warpPerspective(Mg0, H, (videoWidth, videoHeight),flags=cv2.INTER_LINEAR)
-    Mb = cv2.warpPerspective(Mb0, H, (videoWidth, videoHeight),flags=cv2.INTER_LINEAR)
-    #................................
-    image=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    [r,g,b]=cv2.split(image)
-    #................................
-    whiteMask = np.copy(r)
-    whiteMask[:,:]=[0]
-    points_Proj2=[]
-    points_Proj2.append([int(points_Proj[0,0]),int(points_Proj[1,0])])
-    points_Proj2.append([int(points_Proj[0,1]),int(points_Proj[1,1])])
-    points_Proj2.append([int(points_Proj[0,2]),int(points_Proj[1,2])])
-    points_Proj2.append([int(points_Proj[0,3]),int(points_Proj[1,3])])
-    cv2.fillConvexPoly(whiteMask,array(points_Proj2),(255,255,255))
-    #................................
-    r[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),r[nonzero(whiteMask>0)]*Mr[nonzero(whiteMask>0)])
-    g[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),g[nonzero(whiteMask>0)]*Mg[nonzero(whiteMask>0)])
-    b[nonzero(whiteMask>0)]=map(lambda x: max(min(x,255),0),b[nonzero(whiteMask>0)]*Mb[nonzero(whiteMask>0)])
-    #................................
-    image=cv2.merge((r,g,b))
-    image=cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-    return image
-
-def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
-    #given:
-    #Ambient light IA=[IaR,IaG,IaB]
-
-    cc = camera.center()
-    camera_position = np.array([cc[0], cc[1], cc[2]])
-    #light_source = camera_position
-    light_source = global_light_source
-    IA = np.matrix([5.0, 5.0, 5.0]).T
-    #Point light IA=[IpR,IpG,IpB]
-    IP = np.array([5.0, 5.0, 5.0]).T
-    #Light Source Attenuation
-    fatt = 1
-    #Material properties: e.g., Ka=[kaR; kaG; kaB]
-    ka = np.matrix([0.2, 0.2, 0.2]).T
-    kd = np.array([0.3, 0.3, 0.3]).T
-    ks = np.array([0.7, 0.7, 0.7]).T
-    alpha = 50
-
-    #ambient: I_ambient(x) = I_a * k_a(x)
-    r = np.zeros((shadeRes, shadeRes))
-    g = np.zeros((shadeRes, shadeRes))
-    b = np.zeros((shadeRes, shadeRes))
+def transformFigure(figure, theta_x, theta_y, theta_z, scale_x, scale_y, scale_z):
+    translate_to = [8, 6, -1]
 
 
-    #Ambient
-    r_ambient = r + IA[0] * ka[0]
-    g_ambient = g + IA[1] * ka[1]
-    b_ambient = b + IA[2] * ka[2]
+    rotation_matrix_x = np.array([ [1, 0, 0], [0, cos(theta_x), -sin(theta_x)], [0, sin(theta_x), cos(theta_x)] ])
+    rotation_matrix_y = np.array([ [cos(theta_y), 0, sin(theta_y)], [0, 1, 0], [-sin(theta_y), 0, cos(theta_y)] ])
+    rotation_matrix_z = np.array([ [cos(theta_z), -sin(theta_z), 0], [sin(theta_z), cos(theta_z), 0], [0, 0, 1] ])
 
-    #Diffuse
-    #Interpolate normals
-    normal_matrix = interpolated_matrix(shadeRes, faceCorner_Normals, True)
-    point_matrix = interpolated_matrix(shadeRes, points, False)
+    rotated_x = []
+    rotated_y = []
+    rotated_z = []
+    rotation = np.dot(rotation_matrix_x, np.dot(rotation_matrix_y, rotation_matrix_z))
+    for i in range(len(figure[0])):
+        p = np.array([figure[0][i], figure[1][i], figure[2][i]])
+        p_rot = np.dot(rotation, p)
+        rotated_x.append(scale_x * p_rot[0] + translate_to[0])
+        rotated_y.append(scale_y * p_rot[1] + translate_to[1])
+        rotated_z.append(scale_z * p_rot[2] + translate_to[2])
 
-    i_diffuse = diffuse(point_matrix, normal_matrix, light_source)
-    r_diffuse = i_diffuse * IP[0] * kd[0]
-    g_diffuse = i_diffuse * IP[1] * kd[1]
-    b_diffuse = i_diffuse * IP[2] * kd[2]
+    result = np.array([rotated_x, rotated_y, rotated_z])
+    return result
 
-    d = calculate_distances(point_matrix, light_source)
-    #print "min", d.min(), "max", d.max()
-    #d = 1 / d ** 2
-    #d = d - d.min()
-    #d = d / d.max()
-    #return (d.T, d.T, d.T)
-
-
-
-    i_specular = speculate(point_matrix, normal_matrix, light_source, camera_position, alpha)
-    r_specular = i_specular * IP[0] * ks[0]
-    g_specular = i_specular * IP[1] * ks[1]
-    b_specular = i_specular * IP[2] * ks[2]
-
-
-    #i_specular = 0
-
-    r_final = r_ambient + r_diffuse + r_specular #+ r_specular + r_diffused
-    g_final = g_ambient + g_diffuse + g_specular
-    b_final = b_ambient + b_diffuse + b_specular
-
-    return (r_final.T, g_final.T, b_final.T)
-
-def interpolated_matrix(shadeRes, corners, normalize):
-    normal_matrix = np.empty((shadeRes, shadeRes, 3))
-    for i in range(shadeRes):
-        for j in range(shadeRes):
-            normal_matrix[i,j] = BilinearInterpo(size=shadeRes, i=i, j=j, points=corners, Normalize=normalize)
-
-    return normal_matrix
-
-def diffuse(point_matrix, normal_matrix, light_source):
-    #print "light src", light_source
-    x, y, _ = point_matrix.shape
-    i_diffuse_res = np.empty((x,y))
-    for i in range(x):
-        for j in range(y):
-            point = point_matrix[i,j]
-            light_vector = light_source - point
-            point_normal = normal_matrix[i,j]
-
-            # Calculate distance from point to light
-            r = np.linalg.norm(light_vector)
-            # Normaliser vector
-            light_direction = light_vector / r
-
-            #a,b,c = (0.1,0.1,0.1)
-            #i_l = 1 / float(a * r ** 2 + b * r + c)
-            i_l = 1
-            i_diffuse = i_l * max(np.dot(light_direction, point_normal) , 0)
-            i_diffuse_res[i,j] = i_diffuse
-
-    return i_diffuse_res
-
-def speculate(point_matrix, normal_matrix, light_source, camera_position, alpha):
-    #find l
-    x, y, _ = point_matrix.shape
-    i_specular_res = np.empty((x,y))
-    for i in range(x):
-        for j in range(y):
-            point = point_matrix[i,j]
-            point_normal = normal_matrix[i,j]
-            incident_vector = point - light_source
-            incident_vector = incident_vector/np.linalg.norm(incident_vector)
-            #find r
-            reflection_vector = incident_vector - 2*np.dot(point_normal,incident_vector)*point_normal
-
-            view_vector = camera_position - point
-            view_vector = view_vector / np.linalg.norm(view_vector)
-            angle = np.dot(view_vector, reflection_vector)
-            angle = max(angle, 0)
-            i_specular = angle ** alpha
-            i_specular_res[i, j] = i_specular
-
-    return i_specular_res
-
-def calculate_distances(points, light_source):
-    x, y, _ = points.shape
-    distances = np.empty((x,y))
-    for i in range(x):
-        for j in range(y):
-            p = points[i,j]
-            distances[i,j] = np.linalg.norm(light_source - p)
-    return distances
-
-
-def calculate_face_normals():
-    return np.array([GetFaceNormal(face) for face in Faces])
-    #top_normal = GetFaceNormal(TopFace)
-
-    #print "top", top_normal
-    #return np.array([top_normal])
-
-def draw_face_normals(image, camera, face_centers, normals):
-    #find pairs of points (cube_center -> cube_center + normal)
-    #project and draw
-
-    for i in range(len(normals)):
-        p1 = np.array(face_centers[i])
-        p2 = p1 + normals[i]
-        fig = np.array([p1, p2])
-        drawFigure(image, camera, fig.T)
-
-def CalculateFaceCenterPoints(faces):
-    result = []
-    for face in faces:
-        center = np.mean(face, axis=1)
-        result.append(center)
-    return np.array(result)
 
 def getPyramidPoints(center, size,chessSquare_size):
     points = []
@@ -654,16 +424,13 @@ global calibrationPoints
 global calibrationCamera
 global chessSquare_size
 
-
-global_light_source = np.array([10.0, 10.0, -10.0])
-
-ProcessFrame=True
+ProcessFrame=False
 Undistorting=False
 WireFrame=False
 ShowText=True
 TextureMap=True
 ProjectPattern=False
-debug=False
+debug=True
 Teapot = True
 
 tempSpeed=1
@@ -673,8 +440,8 @@ chessSquare_size=2
 
 
 '''-------defining the figures------'''
-box_center = [4, 2.5, 0]
-box = getCubePoints(box_center, 1, chessSquare_size)
+
+box = getCubePoints([0, 0, 1], 1,chessSquare_size)
 pyramid = getPyramidPoints([0, 0, 1], 1,chessSquare_size)
 
 
@@ -709,19 +476,12 @@ DownFace = box[i,j]
 
 
 ''' <000> Here Call the calibrateCamera from the SIGBTools to calibrate the camera and saving the data'''
-Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
-FaceCenterPoints = CalculateFaceCenterPoints(Faces)
-FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg', 'Images/Top.jpg']
-
-t, r, l, u, d = CalculateFaceCornerNormals(TopFace, RightFace, LeftFace, UpFace, DownFace)
-CornerNormals = [r, l, u, d, t]
-
 #calibrateCamera(5, (9,6), 2.0, 0)
 ''' <001> Here Load the numpy data files saved by the cameraCalibrate2'''
 K,r,t = loadCalibrationData()
 ''' <002> Here Define the camera matrix of the first view image (01.png) recorded by the cameraCalibrate2'''
 
-P = calculateP(K, r, t)
+P = calculateP(K,r,t)
 C = Camera(P)
 
 ''' <003> Here Load the first view image (01.png) and find the chess pattern and store the 4 corners of the pattern needed for homography estimation'''

@@ -751,7 +751,7 @@ class Camera:
         
     def factor(self):
         """    Factorize the camera matrix into K,R,t as P = K[R|t]. """
-        #self.P=matrix(self.P)
+        self.P=matrix(self.P)
         
         # factor first 3*3 part
         K,R = rq(self.P[:,:3])
