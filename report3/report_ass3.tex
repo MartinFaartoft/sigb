@@ -25,7 +25,6 @@
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
 \usepackage{fixltx2e}    % use for textsubscript
 \usepackage[linesnumbered,boxed,ruled]{algorithm2e}
-% \newcommand{\BigO}[1]{\ensuremath{\operatorname{O}\left(#1\right)}}
 \newcommand{\BigO}[1]{\ensuremath{\mathop{}\mathopen{}\mathcal{O}\mathopen{}\left(#1\right)}}
 \graphicspath{ {./images/} }
 \definecolor{mygreen}{rgb}{0,0.6,0}
@@ -141,7 +140,7 @@ Where $I_s(x)$ is the intensity of the incoming specular light in the point $x$,
 \section{Shading}
 After calculating the illumination, what remains is to calculate the shading in each point of the scene.
 \subsection{Flat Shading}
-Flat shading is simply calculating a single shading value for each polygon. Flat shading gives unrealistic results, but is extremely quick to calculate. Figure TODO shows an example of a scene with flat shading, and \emph{flat\_shading.avi} on the DVD shows a sequence with flat shading. 
+Flat shading is simply calculating a single shading value for each polygon. Flat shading gives unrealistic results, but is extremely quick to calculate. Figure TODO shows an example of a scene with flat shading, and \emph{flat\_shading.avi} in the attached .zip file shows a sequence with flat shading. 
 
 \subsection{Phong Shading}
 To improve on flat shading, Phong shading calculates multiple shading values for each polygon, resulting in a more realistic shading of the scene.\\
@@ -178,15 +177,14 @@ As part of the assignment, we were given a function that applies a shadematrix t
   \label{fig:whitemask}
 \end{figure}
 
-
 \item Apply the shading, by multiplying each color channel with the corresponding shading channel, and ensure each pixel lies in the interval $[0;255]$.
 
 \item Finally merge the three channels back into a single image, and return it.
 \end{itemize}
 
-\todo{In your report describe the algorithm used above, and describe the alternative methods that can be used instead, and their differences}
+The \texttt{ShadeFace} algorithm only works for shading rectangular faces, it could be improved by working on triangles instead. This improvement would allow \texttt{ShadeFace} to handle any polygon, since a polygon can be split into triangles, using 'polygon triangulation'. The calculations of the shade matrix would not need to be changed dramatically because of this. It could work on triangles with no changes to the basic idea (bilinear interpolation inside a convex face).
 
-As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realistic shading. \emph{phong\_shading.avi} on the DVD shows a sequence shaded by our implementation of Phong shading.
+As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realistic shading. \emph{phong\_shading.avi} in the attached .zip file shows a sequence shaded by our implementation of Phong shading.
 
 \begin{figure}[H]
   \centering
@@ -195,6 +193,8 @@ As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realis
   \label{fig:full_shading}
 \end{figure}
 
+\subsection{Moving the Light Source}
+We have implemented a way to move the light source around in the scene, the \emph{moving\_light.avi} shows a sequence where the light describes a circle above and around the center of the cube. The camera can also be moved by clicking the mouse, but this is not shown in the sequence.
 
 \section{Conclusion}
 In this report, we have documented our implementation of illumination and shading, and given example frames and sequences. The solution works as expected, but only in a very specific setting. A point of further improvement would be to offer a more generic solutions. Firstly the order of which the faces are drawn is essential for the cube to be drawn correctly, the top face must be drawn last, at the moment the ordering of the faces are hard coded, which is fine for the cube, but any other figure could possibly fail. A solution would be to implement the painters algorithm, ensuring that the back most polygon is drawn first and the outmost polygon drawn last. Secondly it is only possible to calculate the shading of a square polygon in the function \texttt{CalculateShadeMatrix}, which means that if we wanted to shade another type of geometrical figure it must be constructed of squares, or the code should be refactored to handle all kinds of polygons, the last is of course preferable.
