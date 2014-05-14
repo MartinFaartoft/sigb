@@ -121,6 +121,16 @@ In the following we will describe how to calculate each component of the Phong i
 Ambient reflection is used when we want all parts of the scene to be illuminated. Without ambient reflection, any point not hit by light from a light source will simply be black.
 \[I_{ambient}(x) = I_a \cdot k_a(x)\]
 Where $x$ is the point calculating the intensity for $I_a$ is the intensity of the ambient light in the scene, and $k_a(x)$ is the material properties in $x$.
+Figure \ref{fig:ambient} shows a frame rendered with only ambient reflection.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{only_ambient}
+  \caption{Cube with only ambient reflection}
+  \label{fig:ambient}
+\end{figure}
+
+
 \emph{ambient.mp4} on the attached .zip file, shows a rendering using only ambient lighting.
 
 \subsection{Diffuse Shading / Lambertian Reflectance}
@@ -128,7 +138,18 @@ Lambertian reflectance models matte surfaces, that scatter incoming light in all
 The Lambertian is calculated as
 \[I_{diffuse}(x)=I_l(x) \cdot k_d(x) \cdot max(n(x) \cdot l(x), 0)\]
 Where $I_l(x)$ is the intensity of incoming diffused light in the point $x$, $k_d(x)$ is the material properties of the surface in $x$, $n(x)$ is the normal in $x$, and $l(x)$ is the direction of the incoming light in $x$.
+Figure \ref{fig:diffuse} shows a frame rendered with only diffuse shading.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{only_diffuse}
+  \caption{Cube with only diffuse shading}
+  \label{fig:diffuse}
+\end{figure}
+
 \emph{diffuse.mp4} on the attached .zip file, shows a rendering using only diffuse lighting.
+
+
 \subsection{Specular Reflection}
 Specular reflection models the light reflected by glossy surfaces. It falls of when the angle between the reflection $r$ and the view vector $v$ increases.
 
@@ -139,6 +160,17 @@ Where $n$ is the normal of the surface the light is being reflected in, and $i$ 
 The reflection vector can then be used to calculate the specular reflection.
 \[I_{glossy}(x)=I_s(x) \cdot k_s(x) \cdot (r \cdot v)^\alpha\]
 Where $I_s(x)$ is the intensity of the incoming specular light in the point $x$, $k_s(x)$ is the material properties in $x$, $v$ is the view vector, and $\alpha$ is the reflectance constant of the material (higher values means more reflectance).
+Figure \ref{fig:specular} shows a frame rendered with only specular reflection.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{specular}
+  \caption{Cube with only specular reflection}
+  \label{fig:specular}
+\end{figure}
+
+
+
 \emph{specular.mp4} on the attached .zip file, shows a rendering using only specular lighting.
 
 \section{Shading}
