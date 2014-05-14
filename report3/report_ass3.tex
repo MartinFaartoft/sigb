@@ -96,7 +96,15 @@
 In this report, we will implement and document a simple shader, able to render a textured cube, and shade it realistically.
 
 \section{Back-Face Culling}
-When we render the cube, at most 3 of the faces will be visible to camera, regardless of the positions of cube and camera. Attempting to render all 6 will waste a lot of performance, and furthermore require us to render the faces in the correct order, to get the correct perspective.\todo{eksempelbillede uden culling}
+When we render the cube, at most 3 of the faces will be visible to camera, regardless of the positions of cube and camera. Attempting to render all 6 will waste a lot of performance, and furthermore require us to render the faces in the correct order, to get the correct perspective. Figure \ref{fig:no_culling} shows a rendered frame where back-face culling has been disabled.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{no_culling}
+  \caption{Back-face culling disabled}
+  \label{fig:no_culling}
+\end{figure}
+
 
 The idea behind back-face culling, is to calculate the dot-product between the camera view vector, and each of the face normals. If the result is negative, the face should be drawn - otherwise it faces away from the camera, and should be discarded.
 \[cos(\theta) = V_{view} \cdot \hat{F}\]
@@ -108,9 +116,8 @@ The first step in realistic shading, is to calculate the intensity of the light 
 The most realistic illumination is achieved by using a global illumination model, such as \emph{ray tracing}, that calculates the path of a number of light rays as they bounce around in the scene. Unfortunately, ray tracing is is really performance intensitive, so most 3D shaders apply a local illumination model instead. Local illumination cuts corners by approximating the illumination, disregarding reflection between objects in the scene (hence \emph{local}).\\
 
 We use the Phong illumination model in the following, it is a local illumination model, that calculates the illumnation of each point as:
-\todo{mention strength falloff somewhere, if we use it}
 \[I_{Phong} = I_{ambient} + I_{diffuse} + I_{specular}\]
-In the following we will describe how to calculate each component of the Phong illumination model.
+In the following we will describe how to calculate each component of the Phong illumination model. Note that we do not model the falloff in intensity, as the distance to the light source increases.
 \subsection{Ambient Reflection}
 Ambient reflection is used when we want all parts of the scene to be illuminated. Without ambient reflection, any point not hit by light from a light source will simply be black.
 \[I_{ambient}(x) = I_a \cdot k_a(x)\]
@@ -151,11 +158,26 @@ As part of the assignment, we were given a function that applies a shadematrix t
 
 \item Estimate a homography from the shade square, to the projected face.
 
-\item Calculate the shading matrix for each of the three channels R, G and B.\todo{show example of shading matrix}
+\item Calculate the shading matrix for each of the three channels R, G and B. Figure \ref{fig:shade_matrix} shows an example of a shade matrix.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{shade_explained}
+  \caption{10x10 Shade Matrix taken from our implementation}
+  \label{fig:shade_matrix}
+\end{figure}
 
 \item Warp and interpolate the shading for each channel, using the estimated homography, so the shading fits the face being shaded.
 
-\item Create a whitemask image, that is white in the pixels corresponding to the face being shaded, and black everywhere else.\todo{show whitemask image}
+\item Create a whitemask image, that is white in the pixels corresponding to the face being shaded, and black everywhere else. Figure \ref{fig:whitemask} shows a cropped whitemask image for one of the 3 faces being rendered.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{whitemask}
+  \caption{Whitemask (cropped)}
+  \label{fig:whitemask}
+\end{figure}
+
 
 \item Apply the shading, by multiplying each color channel with the corresponding shading channel, and ensure each pixel lies in the interval $[0;255]$.
 
@@ -164,7 +186,16 @@ As part of the assignment, we were given a function that applies a shadematrix t
 
 \todo{In your report describe the algorithm used above, and describe the alternative methods that can be used instead, and their differences}
 
-As shown in Figure\todo{figure here}, Phong shading achieves a much more realistic shading. \emph{phong\_shading.avi} on the DVD shows a sequence shaded by our implementation of Phong shading.
+As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realistic shading. \emph{phong\_shading.avi} on the DVD shows a sequence shaded by our implementation of Phong shading.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{full_shading}
+  \caption{Phong Shading}
+  \label{fig:full_shading}
+\end{figure}
+
+
 \section{Conclusion}
 In this report, we have documented our implementation of illumination and shading, and given example frames and sequences.\todo{har vi gjort mere?}
 \newpage
