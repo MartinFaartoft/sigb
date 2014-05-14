@@ -19,12 +19,9 @@ def DrawLines(img, points):
         x2 = points[0, i]
         y2 = points[1, i]
         try:
-            #print "line from", int(x1), int(y1), "to", int(x2), int(y2)
             cv2.line(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0),5)
         except:
             pass
-            #print "saved your ass"
-            #catch errything
     return img
 
 def findChessBoardCorners(image):
@@ -69,13 +66,7 @@ def update(img):
             coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
             drawCoordinateSystem(image,transformed_coordinate_system)
-            #c = cam2.center()
-            #points = np.array([[0.,0.,0.], [c[0], c[1], c[2]]])
-            #projected_points = projectChessBoardPoints(cam2, points)
-            #print "calling drawlines"
-            #DrawLines(image, projected_points.T)
-            #print "done drawing"
-
+            
             if TextureMap:
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
@@ -127,7 +118,7 @@ def onmouse(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         global_light_source[0] = x
         global_light_source[1] = y
-        print "SEt THAT SHIZZZZZZZZZZZZZZZZZZZZ", x,y
+        print "Moved Light to ", x,y
 
 
 def drawFigure(image, camera, figure):
@@ -253,13 +244,13 @@ def run(speed,video):
                 ProjectPattern = True;
             update(OriginalImage)
 
-        if inputKey == ord('x') or inputKey == ord('X'):
-            global debug
-            if debug:
-                debug = False;
-            else:
-                debug = True;
-            update(OriginalImage)
+        # if inputKey == ord('x') or inputKey == ord('X'):
+        #     global debug
+        #     if debug:
+        #         debug = False;
+        #     else:
+        #         debug = True;
+        #     update(OriginalImage)
 
         if inputKey == ord('l') or inputKey == ord('L'):
             global Teapot
@@ -270,6 +261,21 @@ def run(speed,video):
         if inputKey == ord('s') or inputKey == ord('S'):
             name='Saved Images/Frame_' + str(frameNumber)+'.png'
             cv2.imwrite(name,result)
+
+        if inputKey == ord('z'):
+            global ShadeAmbient
+            ShadeAmbient = not ShadeAmbient
+            update(OriginalImage)
+
+        if inputKey == ord('x'):
+            global ShadeDiffuse
+            ShadeDiffuse = not ShadeDiffuse
+            update(OriginalImage)
+
+        if inputKey == ord('c'):
+            global ShadeSpecular
+            ShadeSpecular = not ShadeSpecular
+            update(OriginalImage)
 
         if (speed>0):
             update(image)
@@ -394,7 +400,6 @@ def back_face_culling(face_normals, camera):
     angles = np.array(angles)
 
     idx = angles <= 0
-    #print angles
     return idx
 
 def textureFace(image,face,currentCam,texturePath):
@@ -486,40 +491,45 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     g = np.zeros((shadeRes, shadeRes))
     b = np.zeros((shadeRes, shadeRes))
 
+    r_ambient = copy(r)
+    g_ambient = copy(g)
+    b_ambient = copy(b)
+
 
     #Ambient
-    r_ambient = r + IA[0] * ka[0]
-    g_ambient = g + IA[1] * ka[1]
-    b_ambient = b + IA[2] * ka[2]
+    if ShadeAmbient:
+        r_ambient = r + IA[0] * ka[0]
+        g_ambient = g + IA[1] * ka[1]
+        b_ambient = b + IA[2] * ka[2]
+
 
     #Diffuse
     #Interpolate normals
     normal_matrix = interpolated_matrix(shadeRes, faceCorner_Normals, True)
     point_matrix = interpolated_matrix(shadeRes, points, False)
 
-    i_diffuse = diffuse(point_matrix, normal_matrix, light_source)
-    r_diffuse = i_diffuse * IP[0] * kd[0]
-    g_diffuse = i_diffuse * IP[1] * kd[1]
-    b_diffuse = i_diffuse * IP[2] * kd[2]
+    r_diffuse = copy(r)
+    g_diffuse = copy(g)
+    b_diffuse = copy(b)
 
-    d = calculate_distances(point_matrix, light_source)
-    #print "min", d.min(), "max", d.max()
-    #d = 1 / d ** 2
-    #d = d - d.min()
-    #d = d / d.max()
-    #return (d.T, d.T, d.T)
+    if ShadeDiffuse:
+        i_diffuse = diffuse(point_matrix, normal_matrix, light_source)
+        r_diffuse = i_diffuse * IP[0] * kd[0]
+        g_diffuse = i_diffuse * IP[1] * kd[1]
+        b_diffuse = i_diffuse * IP[2] * kd[2]
+
+    r_specular = copy(r)
+    g_specular = copy(g)
+    b_specular = copy(b)
+    
+    if ShadeSpecular:
+        i_specular = speculate(point_matrix, normal_matrix, light_source, camera_position, alpha)
+        r_specular = i_specular * IP[0] * ks[0]
+        g_specular = i_specular * IP[1] * ks[1]
+        b_specular = i_specular * IP[2] * ks[2]
 
 
-
-    i_specular = speculate(point_matrix, normal_matrix, light_source, camera_position, alpha)
-    r_specular = i_specular * IP[0] * ks[0]
-    g_specular = i_specular * IP[1] * ks[1]
-    b_specular = i_specular * IP[2] * ks[2]
-
-
-    #i_specular = 0
-
-    r_final = r_ambient + r_diffuse + r_specular #+ r_specular + r_diffused
+    r_final = r_ambient + r_diffuse + r_specular
     g_final = g_ambient + g_diffuse + g_specular
     b_final = b_ambient + b_diffuse + b_specular
 
@@ -534,7 +544,6 @@ def interpolated_matrix(shadeRes, corners, normalize):
     return normal_matrix
 
 def diffuse(point_matrix, normal_matrix, light_source):
-    #print "light src", light_source
     x, y, _ = point_matrix.shape
     i_diffuse_res = np.empty((x,y))
     for i in range(x):
@@ -590,10 +599,6 @@ def calculate_distances(points, light_source):
 
 def calculate_face_normals():
     return np.array([GetFaceNormal(face) for face in Faces])
-    #top_normal = GetFaceNormal(TopFace)
-
-    #print "top", top_normal
-    #return np.array([top_normal])
 
 def draw_face_normals(image, camera, face_centers, normals):
     #find pairs of points (cube_center -> cube_center + normal)
@@ -665,6 +670,10 @@ TextureMap=True
 ProjectPattern=False
 debug=False
 Teapot = True
+
+ShadeAmbient = True
+ShadeDiffuse = True
+ShadeSpecular = True
 
 tempSpeed=1
 frameNumber=0
