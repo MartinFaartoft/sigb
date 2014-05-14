@@ -178,13 +178,12 @@ As part of the assignment, we were given a function that applies a shadematrix t
   \label{fig:whitemask}
 \end{figure}
 
-
 \item Apply the shading, by multiplying each color channel with the corresponding shading channel, and ensure each pixel lies in the interval $[0;255]$.
 
 \item Finally merge the three channels back into a single image, and return it.
 \end{itemize}
 
-\todo{In your report describe the algorithm used above, and describe the alternative methods that can be used instead, and their differences}
+The \texttt{ShadeFace} algorithm only works for shading rectangular faces, it could be improved by working on triangles instead. This improvement would allow \texttt{ShadeFace} to handle any polygon, since a polygon can be split into triangles, using 'polygon triangulation'. The calculations of the shade matrix would not need to be changed dramatically because of this. It could work on triangles with no changes to the basic idea (bilinear interpolation inside a convex face).
 
 As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realistic shading. \emph{phong\_shading.avi} on the DVD shows a sequence shaded by our implementation of Phong shading.
 
@@ -195,6 +194,8 @@ As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realis
   \label{fig:full_shading}
 \end{figure}
 
+\subsection{Moving the Light Source}
+We have implemented a way to move the light source around in the scene, \todo{vis Marcus' resultater her}
 
 \section{Conclusion}
 In this report, we have documented our implementation of illumination and shading, and given example frames and sequences. The solution works as expected, but only in a very specific setting. A point of further improvement would be to offer a more generic solutions. Firstly the order of which the faces are drawn is essential for the cube to be drawn correctly, the top face must be drawn last, at the moment the ordering of the faces are hard coded, which is fine for the cube, but any other figure could possibly fail. A solution would be to implement the painters algorithm, ensuring that the back most polygon is drawn first and the outmost polygon drawn last. Secondly it is only possible to calculate the shading of a square polygon in the function \texttt{CalculateShadeMatrix}, which means that if we wanted to shade another type of geometrical figure it must be constructed of squares, or the code should be refactored to handle all kinds of polygons, the last is of course preferable.
