@@ -70,10 +70,15 @@ def update(img):
             if TextureMap:
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
-                draw_face_normals(image, cam2, FaceCenterPoints, face_normals) #hack: draw before texturing to show parts of obscured normals
+                if DrawFaceNormals:
+                    draw_face_normals(image, cam2, FaceCenterPoints, face_normals) #hack: draw before texturing to show parts of obscured normals
 
                 ''' <013> Here Remove the hidden faces'''
-                idx = back_face_culling(face_normals, cam2)
+                idx = range(len(face_normals))
+                
+                if BackFaceCulling:
+                    idx = back_face_culling(face_normals, cam2)
+                
                 faces_to_be_drawn = np.array(Faces)[idx]
                 textures_to_be_drawn = np.array(FaceTextures)[idx]
                 face_corner_normals = np.array(CornerNormals)[idx]
@@ -85,7 +90,8 @@ def update(img):
                     image = textureFace(image, f, cam2, texture)
                     image = ShadeFace(image, f, corner_normals, cam2)
 
-                draw_face_normals(image, cam2, FaceCenterPoints[idx], face_normals[idx])
+                if DrawFaceNormals:
+                    draw_face_normals(image, cam2, FaceCenterPoints[idx], face_normals[idx])
 
 
             if ProjectPattern:
@@ -275,6 +281,16 @@ def run(speed,video):
         if inputKey == ord('c'):
             global ShadeSpecular
             ShadeSpecular = not ShadeSpecular
+            update(OriginalImage)
+
+        if inputKey == ord('v'):
+            global BackFaceCulling
+            BackFaceCulling = not BackFaceCulling
+            update(OriginalImage)
+
+        if inputKey == ord('b'):
+            global DrawFaceNormals
+            DrawFaceNormals = not DrawFaceNormals
             update(OriginalImage)
 
         if (speed>0):
@@ -674,6 +690,8 @@ Teapot = True
 ShadeAmbient = True
 ShadeDiffuse = True
 ShadeSpecular = True
+BackFaceCulling = True
+DrawFaceNormals = False
 
 tempSpeed=1
 frameNumber=0
@@ -718,12 +736,12 @@ DownFace = box[i,j]
 
 
 ''' <000> Here Call the calibrateCamera from the SIGBTools to calibrate the camera and saving the data'''
-Faces = [RightFace, LeftFace, UpFace, DownFace, TopFace]
+Faces = [TopFace, RightFace, LeftFace, UpFace, DownFace]
 FaceCenterPoints = CalculateFaceCenterPoints(Faces)
-FaceTextures = ['Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg', 'Images/Top.jpg']
+FaceTextures = ['Images/Top.jpg', 'Images/Right.jpg', 'Images/Left.jpg', 'Images/Up.jpg', 'Images/Down.jpg']
 
 t, r, l, u, d = CalculateFaceCornerNormals(TopFace, RightFace, LeftFace, UpFace, DownFace)
-CornerNormals = [r, l, u, d, t]
+CornerNormals = [t, r, l, u, d]
 
 #calibrateCamera(5, (9,6), 2.0, 0)
 ''' <001> Here Load the numpy data files saved by the cameraCalibrate2'''
