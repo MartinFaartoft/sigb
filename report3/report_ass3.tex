@@ -154,7 +154,7 @@ Figure \ref{fig:diffuse} shows a frame rendered with only diffuse shading.
 Specular reflection models the light reflected by glossy surfaces. It falls of when the angle between the reflection $r$ and the view vector $v$ increases.
 
 The reflection vector can be found as:
-\[r=2 \cdot (n \cdot i \cdot n - i\]
+\[r=2 \cdot (n \cdot i) \cdot n - i\]
 Where $n$ is the normal of the surface the light is being reflected in, and $i$ is the direction of the incoming light.\\
 
 The reflection vector can then be used to calculate the specular reflection.
@@ -230,7 +230,7 @@ As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realis
 \end{figure}
 
 \subsection{Moving the Light Source}
-We have implemented a way to move the light source around in the scene, the \emph{moving\_light.mp4} shows a sequence where the light describes a circle above and around the center of the cube. The camera can also be moved by clicking the mouse, but this is not shown in the sequence.
+We have implemented a way to move the light source around in the scene, the \emph{moving\_light.mp4} shows a sequence where the light describes a circle above and around the center of the cube. The light source can also be moved by clicking the mouse, but this is not shown in the sequence.
 
 \section{Conclusion}
 In this report, we have documented our implementation of illumination and shading, and given example frames and sequences. The solution works as expected, but only in a very specific setting. A point of further improvement would be to offer a more generic solutions. Firstly the order of which the faces are drawn is essential for the cube to be drawn correctly, the top face must be drawn last, at the moment the ordering of the faces are hard coded, which is fine for the cube, but any other figure could possibly fail. A solution would be to implement the painters algorithm, ensuring that the back most polygon is drawn first and the outmost polygon drawn last. Secondly it is only possible to calculate the shading of a square polygon in the function \texttt{CalculateShadeMatrix}, which means that if we wanted to shade another type of geometrical figure it must be constructed of squares, or the code should be refactored to handle all kinds of polygons, the last is of course preferable.
