@@ -32,6 +32,7 @@ def findChessBoardCorners(image):
 
 def update(img):
     image=copy(img)
+    #raw = copy (img)
 
     if Undistorting:  #Use previous stored camera matrix and distortion coefficient to undistort the image
         ''' <004> Here Undistort the image'''
@@ -66,7 +67,7 @@ def update(img):
             coordinate_system = getCoordinateSystemChessPlane()
             transformed_coordinate_system = projectChessBoardPoints(cam2,coordinate_system)
             drawCoordinateSystem(image,transformed_coordinate_system)
-            
+
             if TextureMap:
                 ''' <012>  calculate the normal vectors of the cube faces and draw these normal vectors on the center of each face'''
                 face_normals = calculate_face_normals()
@@ -75,10 +76,10 @@ def update(img):
 
                 ''' <013> Here Remove the hidden faces'''
                 idx = range(len(face_normals))
-                
+
                 if BackFaceCulling:
                     idx = back_face_culling(face_normals, cam2)
-                
+
                 faces_to_be_drawn = np.array(Faces)[idx]
                 textures_to_be_drawn = np.array(FaceTextures)[idx]
                 face_corner_normals = np.array(CornerNormals)[idx]
@@ -167,7 +168,7 @@ def run(speed,video):
     #--------------------------------video
     capture = cv2.VideoCapture(video)
 
-    resultFile = "recording.avi"
+    resultFile = "camera_position/moving_light.avi"
 
 
 
@@ -490,7 +491,9 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     cc = camera.center()
     camera_position = np.array([cc[0], cc[1], cc[2]])
     #light_source = camera_position
-    light_source = global_light_source
+    #light_source = global_light_source
+    light_source = get_camera_for_frame(frameNumber)
+
     IA = np.matrix([5.0, 5.0, 5.0]).T
     #Point light IA=[IpR,IpG,IpB]
     IP = np.array([5.0, 5.0, 5.0]).T
@@ -500,7 +503,7 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     ka = np.matrix([0.2, 0.2, 0.2]).T
     kd = np.array([0.3, 0.3, 0.3]).T
     ks = np.array([0.7, 0.7, 0.7]).T
-    alpha = 50
+    alpha = 100
 
     #ambient: I_ambient(x) = I_a * k_a(x)
     r = np.zeros((shadeRes, shadeRes))
@@ -537,7 +540,7 @@ def CalculateShadeMatrix(image, shadeRes, points, faceCorner_Normals, camera):
     r_specular = copy(r)
     g_specular = copy(g)
     b_specular = copy(b)
-    
+
     if ShadeSpecular:
         i_specular = speculate(point_matrix, normal_matrix, light_source, camera_position, alpha)
         r_specular = i_specular * IP[0] * ks[0]
@@ -661,6 +664,14 @@ def getPyramidPoints(center, size,chessSquare_size):
     return array(points).T
 
 
+def get_camera_for_frame(frame_num, z=-10.0):
+    rad = frame_num / 8.0
+
+    x = math.cos(rad) * 10 + 8
+    y = math.sin(rad) * 10 + 5
+    print "camera", x,y,z
+    return np.array([x, y, z])
+
 
 '''-------------------MAIN BODY--------------------------------------------------------------------'''
 '''--------------------------------------------------------------------------------------------------------------'''
@@ -677,7 +688,7 @@ global chessSquare_size
 
 
 global_light_source = np.array([10.0, 10.0, -10.0])
-
+#variables
 ProcessFrame=True
 Undistorting=False
 WireFrame=False
@@ -758,4 +769,5 @@ C = Camera(P)
 ''' <003a> Find homography H_cs^1 '''
 
 #run(1, 0)
-run(1,"sequence.mov")
+run(1,"converted.m4v")
+videoWriter.close()
