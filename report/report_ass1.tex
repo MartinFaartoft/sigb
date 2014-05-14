@@ -74,6 +74,8 @@
 \thispagestyle{empty}
 \setcounter{page}{1}
 \newpage
+\tableofcontents
+\newpage
 
 \section{Introduction}
 In the following, we will experiment with, and discuss different approaches to detecting major eye features. Figure \ref{fig:eye_features} gives the names of the eye features that are used throughout this report.
@@ -186,7 +188,9 @@ A method to enhance the BLOB detection of pupil detection is k-means clustering.
 \label{fig:kmeans_small}
 \end{figure}
 
-For performance reasons, the k-means procedure can not be calculated from the original image, the clustering is therefore done on a resized 70x70 pixel image. To reduce the impact of noise, the resized image is filtered with a Gaussian filter. It is clear in figure \ref{fig:kmeans_small} that even for a very high K, the pupil is not a separate cluster, Experiments has revealed that at a K value in the range of 10 to 20 gives a reasonably clustered image, while not having a massive impact on performance.\\
+It would be infeasable to calculate the k-means procedure on the original image. The clustering is therefore done on a downsampled 70x70 pixel image. To reduce the impact of noise, the resized image is filtered with a Gaussian filter. It is clear in Figure \ref{fig:kmeans_small} that even for a very high K, the pupil is not a separate cluster, Experiments has revealed that at a K value in the range of 10 to 20 gives a reasonably clustered image, while not having a massive impact on performance.
+
+Another parameter to tweak would be the size of the downsampling. A smaller downsampling yields less pixels to classify, which in some cases would yield a better performance, and vice versa.
 
 Each pixel in the reduced picture is assigned to a cluster(label), selecting the pixels in the label with the lowest mean value, we can create a binary image, which now can be resized to the original image size. Because the cluster also contains pixels from other regions than the pupil area, the resulting binary image, on which we can do BLOB detection, is not optimal. Figure \ref{fig:kmeans} shows this.
 
@@ -346,7 +350,7 @@ Figure \ref{fig:glint} shows the glints in ‘eye1.avi’. Because glints are ve
 \label{fig:glint}
 \end{figure}
 
-\paragraph{Morphology} To mitigate the false positives, we make use of morphology to remove small “spots” of white by first closing and then opening, we get rid of a lot of unwanted glints, as can be seen in figure \ref{fig:glint_morph}
+\paragraph{Morphology} To mitigate the false positives, we make use of morphology to remove small “spots” of white by first closing and then opening, we get rid of a lot of unwanted glints, as can be seen in Figure \ref{fig:glint_morph}
 
 \begin{figure}[H]
 \centering
@@ -464,12 +468,12 @@ The radius with the highest value in the accumulator table is thus the circle th
 \begin{figure}[H]
 \centering
   \includegraphics[width=.8\linewidth]{houghcanny}
-  \caption{The canny edge image on which the circles in figure (a) are found}
+  \caption{The canny edge image on which the circles in Figure \ref{fig:circhoughavg} are found}
   \label{fig:canny}
 \end{figure}
-In figure (a) the method positively identifies the limbus and some false positives.
+In Figure \ref{fig:circhoughavg} the method positively identifies the limbus and some false positives.
 
-In figure (b) the method yields more circles above some given threshold since the perspective distortion exhibits a limbus that appears to be more circular than it actually is.
+In Figure \ref{fig:circhoughgood} the method yields more circles above some given threshold since the perspective distortion exhibits a limbus that appears to be more circular than it actually is.
 
 \paragraph{Discussion} % (fold)
 \label{par:discussion}
