@@ -141,7 +141,7 @@ Where $I_s(x)$ is the intensity of the incoming specular light in the point $x$,
 \section{Shading}
 After calculating the illumination, what remains is to calculate the shading in each point of the scene.
 \subsection{Flat Shading}
-Flat shading is simply calculating a single shading value for each polygon. Flat shading gives unrealistic results, but is extremely quick to calculate. Figure TODO shows an example of a scene with flat shading, and \emph{flat\_shading.avi} on the DVD shows a sequence with flat shading. 
+Flat shading is simply calculating a single shading value for each polygon. Flat shading gives unrealistic results, but is extremely quick to calculate. Figure TODO shows an example of a scene with flat shading, and \emph{flat\_shading.avi} in the attached .zip file shows a sequence with flat shading. 
 
 \subsection{Phong Shading}
 To improve on flat shading, Phong shading calculates multiple shading values for each polygon, resulting in a more realistic shading of the scene.\\
@@ -185,7 +185,7 @@ As part of the assignment, we were given a function that applies a shadematrix t
 
 The \texttt{ShadeFace} algorithm only works for shading rectangular faces, it could be improved by working on triangles instead. This improvement would allow \texttt{ShadeFace} to handle any polygon, since a polygon can be split into triangles, using 'polygon triangulation'. The calculations of the shade matrix would not need to be changed dramatically because of this. It could work on triangles with no changes to the basic idea (bilinear interpolation inside a convex face).
 
-As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realistic shading. \emph{phong\_shading.avi} on the DVD shows a sequence shaded by our implementation of Phong shading.
+As shown in Figure \ref{fig:full_shading}, Phong shading achieves a quite realistic shading. \emph{phong\_shading.avi} in the attached .zip file shows a sequence shaded by our implementation of Phong shading.
 
 \begin{figure}[H]
   \centering
