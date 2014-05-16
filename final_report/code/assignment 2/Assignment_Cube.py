@@ -430,7 +430,7 @@ WireFrame=False
 ShowText=True
 TextureMap=True
 ProjectPattern=False
-debug=True
+debug = False
 Teapot = True
 
 tempSpeed=1
