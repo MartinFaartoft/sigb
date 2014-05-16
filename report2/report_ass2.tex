@@ -88,7 +88,7 @@ In this report we will experiment with homographies, texture mapping, projection
 In this section, we will take a video of a person walking around the ITU atrium, and map his movement onto an overview map of the ITU building. This effectively eliminates the perspective, and allows for easy measurement of speed, acceleration and heading.
 
 \subsection{Theory}
-Both the ground floor of the ITU, and the overview map, can be described as a plane. To convert a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3 \times 3$ matrix that is capable of describing the transformation between any two planes.
+Both the ground floor of the ITU, and the overview map, can be described as a plane. To transfer a point from one plane to the other, the homography that describes the transformation is needed. A homography is a $3 \times 3$ matrix that is capable of describing the transformation between any two planes.
 \begin{center}
 $H =
 \begin{bmatrix}
@@ -117,7 +117,7 @@ y \\
 $
 \end{center}
 
-The homography has 8 degrees of freedom ($h_{3,3}$ is always 1), meaning that we need to solve 8 equations with 8 unknows, to form H. This is done by choosing at least 4 points in one of the planes, and the 4 points that corresponds to those, in the other plane. These points allows opencv to calculate the homography. We experimented with using just 4 points, but got really inconsistent results, so we ended up using 6 pairs of reference points for the homography calculation.
+The homography has 8 degrees of freedom ($h_{3,3}$ is always 1), meaning that we need to solve 8 equations with 8 unknows, to find H. This is done by choosing at least 4 points in one of the planes, and the corresponding 4 points in the other plane. This is enough to calculate the homography. We used opencv to solve the linear set of equations.\footnote{We experimented with using just 4 points, but got very inconsistent results, so we ended up using 6 pairs of reference points for the homography calculation}
 
 \subsection{Experiment}
 Using the calculated homography, we can map coordinates from the video sequence \texttt{sunclipds.avi} to the corresponding coordinates on the overview map \texttt{ITUMap.bmp}. Figure \ref{fig:persontracking1} shows a frame from the video sequence, and the corresponding position of the tracked person on the overview map.
@@ -141,7 +141,28 @@ Using the calculated homography, we can map coordinates from the video sequence 
 \end{figure}
 
 
-It is important to note, that this approach only holds for movement within a plane, so when the subject in the video starts moving up the stairs, he leaves the plane that is the floor of the atrium, and the overview map coordinates stops being accurate. In the actual sequence, this is hard to detect, because the stairs have a very small slope.
+It is important to note, that this approach only holds for movement within a plane, so when the subject in the video starts moving up the stairs, he leaves the plane that is the floor of the atrium, and the overview map coordinates stops being accurate. In the actual sequence, this is hard to detect, because the stairs have a very small slope.\\
+
+Figure \ref{fig:tracking2} shows the path taken by the person walking, both in the video view and in the overhead map view.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.4\textwidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{video_tracking}
+  \caption{}
+  \label{fig:video_tracking}
+\end{subfigure}
+\begin{subfigure}{1\textwidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{map_tracking}
+  \caption{}
+  \label{fig:map_tracking}
+\end{subfigure}
+\caption{The path described by the tracked person walking.}
+\label{fig:tracking2}
+\end{figure}
+
 
 A video of the views in Figure \ref{fig:persontracking} (a) and (b) called \texttt{displaytrace.mp4} can be found in the attached .zip file.
 

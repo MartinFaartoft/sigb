@@ -287,8 +287,10 @@ def showFloorTrackingData():
     fn = "GroundFloorData/sunclipds.avi"
     cap = cv2.VideoCapture(fn)
     running, imgOrig = cap.read()
+    first = copy(imgOrig)
     imSize = np.shape(imgOrig)
     print imSize
+    map_img = cv2.imread('Images/ITUMap.bmp')
 
     resultFile = "a.avi"
     resultFile_2 = "b.avi"
@@ -311,10 +313,18 @@ def showFloorTrackingData():
             cv2.imshow("boxes",imgOrig);
             videoWriter.write(imgOrig)
             disp_img = displayTrace(boxes[1], videoWriter_2)
-            print k
+            print boxes[1][0]
+            p_vid = boxes[1][0]
+            cv2.circle(first, p_vid, 1, boxColors[1])
+            p_map = multiplyPointByHomography(p_vid, H)
+            cv2.circle(map_img, p_map, 1, boxColors[1])
+
+            #print k
             if k == 1:
                 cv2.imwrite("displayTrace.png",disp_img)
             cv2.waitKey(1)
+    cv2.imwrite('le_tracking.png', first)
+    cv2.imwrite('le_map.png', map_img)
 
 def angle_cos(p0, p1, p2):
     d1, d2 = p0-p1, p2-p1
