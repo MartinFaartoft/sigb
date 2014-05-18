@@ -1,6 +1,6 @@
 % Author: Till Tantau
 % Source: The PGF/TikZ manual
-\documentclass[a4paper,11pt]{book}
+\documentclass[a4paper,11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
 \usepackage{amsmath}    % need for subequations
@@ -25,6 +25,10 @@
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
 \usepackage{fixltx2e}    % use for textsubscript
 \usepackage[linesnumbered,boxed,ruled]{algorithm2e}
+\newcommand\invisiblesection[1]{%
+  \refstepcounter{section}%
+  \addcontentsline{toc}{section}{\protect\numberline{\thechapter}#1}%
+  \sectionmark{#1}}
 % \newcommand{\BigO}[1]{\ensuremath{\operatorname{O}\left(#1\right)}}
 \newcommand{\BigO}[1]{\ensuremath{\mathop{}\mathopen{}\mathcal{O}\mathopen{}\left(#1\right)}}
 \graphicspath{ {./images/} }
@@ -61,7 +65,7 @@
 \bibliographystyle{plain}
 \begin{document}
 
-\date{May 18th 2014\\ IT University of Copenhagen}
+\date{May 21st 2014\\ IT University of Copenhagen}
 \title{Final report\\SIGB Spring 2014}
 
 \author{Marcus Gregersen\\
@@ -71,17 +75,18 @@
 \and Mads Westi\\
 \texttt{mwek@itu.dk}}
 \clearpage\maketitle
+\tableofcontents
 \thispagestyle{empty}
 \pagestyle{empty}
-\chapter{Assignment 1 - Eye Tracking}
+\invisiblesection{Assignment 1}
 \thispagestyle{empty}
 \pagestyle{empty}
 \includepdf[fitpaper=true, pages=-]{../report/report_ass1.pdf}
-\chapter{Assignment 2 - Homographies, Textures, Projection and Augmentation}
+\invisiblesection{Assignment 2}
 \thispagestyle{empty}
 \pagestyle{empty}
 \includepdf[fitpaper=true, pages=-]{../report2/report_ass2.pdf}
-\chapter{Assignment 3 - Shading}
+\invisiblesection{Assignment 3}
 \thispagestyle{empty}
 \pagestyle{empty}
 \includepdf[fitpaper=true, pages=-]{../report3/report_ass3.pdf}
